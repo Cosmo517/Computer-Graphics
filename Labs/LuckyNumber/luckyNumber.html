@@ -1,0 +1,57 @@
+<html lang="en">
+    <HEAD>
+        <meta charset="UTF-8">
+        <title>Lucky Number Game</title>
+    </HEAD>
+    <body style="background-color: #999999;">
+        <div style="display: flex; justify-content: center;"><button id="play" >Play Game</button></div>
+        <div style="display: flex; justify-content: center;">Result: <span id="results"> </div>
+        <div style="display: flex; justify-content: center;">Wins: <span id="wins">0</span> </div>
+        <div style="display: flex; justify-content: center;">Losses: <span id="losses">0</span> </div>
+        <div style="display: flex; justify-content: center;"><img id="faces" src="./src/HappyFace.png"></div>
+
+        <script>
+            class LuckyNumberGame {
+                constructor() {
+                    this.wins = 0;
+                    this.losses = 0;
+                }
+
+                playGame() {
+                    const results = document.getElementById("results")
+                    const winSpan = document.getElementById("wins")
+                    const lossSpan = document.getElementById("losses")
+                    const firstNum = Math.floor(Math.random() * 100) + 1;
+                    const secondNum = Math.floor(Math.random() * 100) + 1;
+
+                    if (secondNum > firstNum) {
+                        this.wins++;
+                        results.innerHTML = `You win... 1st number: ${firstNum}, 2nd number: ${secondNum}`
+                        winSpan.innerHTML = `${this.wins}`
+                    } else {
+                        this.losses++;
+                        results.innerHTML = `You lose... 1st number: ${firstNum}, 2nd number: ${secondNum}`
+                        lossSpan.innerHTML = `${this.losses}`
+                    }
+                    
+                    const image = document.getElementById("faces")
+                    if (this.wins > this.losses) {
+                        image.src = "./src/HappyFace.png"
+                    } else if (this.wins == this.losses) {
+                        image.src = "./src/NeutralFace.png"
+                    } else {
+                        image.src = "./src/SadFace.png"
+                    }
+                }
+            }
+
+            const luckyGame = new LuckyNumberGame()
+
+            function run() {
+                luckyGame.playGame()
+            }
+
+            document.getElementById("play").addEventListener("click", run)
+        </script>
+    </body>
+</html>
