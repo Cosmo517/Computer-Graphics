@@ -2,9 +2,6 @@
     <HEAD>
         <meta charset="UTF-8">
         <title>Slot Machine Game</title>
-    </HEAD>
-    <body style="background-color: #999999;">
-        <div class="play-button-div"><button class="play-button" id="play" >Play</button></div>
         <style>
             .slot-container {
                 display: grid;
@@ -39,6 +36,7 @@
                 background-color: white;
                 border: 2px solid black;
                 transition-duration: 0.4s;
+                box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
             }
 
             .play-button:hover {
@@ -46,14 +44,64 @@
                 border: 2px solid white;
                 color: white;
             }
+
+            .win-table {
+                display: grid;
+                place-items: center;
+                margin-top: 20px;
+            }
+
+            .win-row {
+                display: flex;
+            }
         </style>
+    </HEAD>
+    <body style="background-color: #999999;">
+        <div class="play-button-div"><button class="play-button" id="play" >Play</button></div>
+        <div class="win-table">
+            <div class="win-row">
+                <img src="./src/Skull.png" width="64" height="64">
+                <img src="./src/Skull.png" width="64" height="64">
+                <img src="./src/Skull.png" width="64" height="64">
+                <div style="font-size: 50px;">=</div>
+                <div style="font-size: 50px;">14</div>
+            </div>
+            <div class="win-row">
+                <img src="./src/QuestionMark.png" width="64" height="64">
+                <img src="./src/QuestionMark.png" width="64" height="64">
+                <img src="./src/QuestionMark.png" width="64" height="64">
+                <div style="font-size: 50px;">=</div>
+                <div style="font-size: 50px;">7</div>
+            </div>
+            <div class="win-row">
+                <img src="./src/Skull.png" width="64" height="64">
+                <img src="./src/Skull.png" width="64" height="64">
+                <img src="./src/QuestionMark.png" width="64" height="64">
+                <div style="font-size: 50px;">=</div>
+                <div style="font-size: 50px;">3</div>
+            </div>
+            <div class="win-row">
+                <img src="./src/QuestionMark.png" width="64" height="64">
+                <img src="./src/QuestionMark.png" width="64" height="64">
+                <img src="./src/Diamond.png" width="64" height="64">
+                <div style="font-size: 50px;">=</div>
+                <div style="font-size: 50px;">2</div>
+            </div>
+            <div class="win-row">
+                <img src="./src/Skull.png" width="64" height="64">
+                <img src="./src/QuestionMark.png" width="64" height="64">
+                <img src="./src/QuestionMark.png" width="64" height="64">
+                <div style="font-size: 50px;">=</div>
+                <div style="font-size: 50px;">1</div>
+            </div>
+        </div>
         <script>
             class SlotMachine {
                 constructor(container) {
                     this.lastWon = 0;
                     this.nums = [];
-                    this.imageNames = ["7.png", "Apple.png", "Cherry.png", "Diamond.png",
-                                        "Grapes.png", "Lemon.png", "Skull.png"];
+                    this.imageNames = ["Skull.png", "Apple.png", "Cherry.png", "Diamond.png",
+                                        "Grapes.png", "Lemon.png", "7.png"];
                     this.imagesDOM = [];
 
                     // Add images to DOM
