@@ -182,19 +182,28 @@
                 }
 
                 playAll() {
-                    if (this.money > 0) {
-                        for (let i = 0; i < this.machines.length; i++) {
-                            if (this.money == 0)
-                                continue;
-                            this.money--;
+                    let playedMachines = [];
+                    let intervals = [];
+                    for (let i = 0; i < this.machines.length; i++) {
+                        if (this.money == 0)
+                            continue;
+                        this.money--;
+                        intervals.push(setInterval(() => {
                             this.machines[i].play()
-                        }
+                        }, 100));
+                        playedMachines.push(i);
+                    }
 
-                        let moneyEarned = 0;
+                    let moneyEarned = 0;
 
-                        for (let i = 0; i < this.machines.length; i++) {
-                            moneyEarned += this.machines[i].lastWon;
-                        }
+                    setTimeout(() => { 
+                        intervals.forEach(interval => {
+                            clearInterval(interval);
+                        });
+
+                        playedMachines.forEach(machineIndex => {
+                            moneyEarned += this.machines[machineIndex].lastWon;
+                        })
 
                         this.money += moneyEarned;
                         
@@ -203,7 +212,31 @@
                         } else {
                             this.section.textContent = `You lost! Money earned: ${moneyEarned}. Total money: ${this.money}`;
                         }
-                    }
+                    }, 3000)
+
+
+                    // if (this.money > 0) {
+                    //     for (let i = 0; i < this.machines.length; i++) {
+                    //         if (this.money == 0)
+                    //             continue;
+                    //         this.money--;
+                    //         this.machines[i].play()
+                    //     }
+
+                    //     let moneyEarned = 0;
+
+                    //     for (let i = 0; i < this.machines.length; i++) {
+                    //         moneyEarned += this.machines[i].lastWon;
+                    //     }
+
+                    //     this.money += moneyEarned;
+                        
+                    //     if (moneyEarned > 0) {
+                    //         this.section.textContent = `You won! Money earned: ${moneyEarned}. Total money: ${this.money}`;
+                    //     } else {
+                    //         this.section.textContent = `You lost! Money earned: ${moneyEarned}. Total money: ${this.money}`;
+                    //     }
+                    // }
                 }
             }
 
