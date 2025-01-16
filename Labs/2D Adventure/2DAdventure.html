@@ -124,7 +124,7 @@
                     }
 
                     // Draw Trees
-                    const totalTrees = 10;
+                    const totalTrees = 15;
                     let currentTrees = 0;
 
                     while (currentTrees < totalTrees) {
@@ -136,6 +136,59 @@
                             this.obstacles[yTest][xTest] = 2
                             currentTrees++;
                         }
+                    }
+
+                    // Grab a random location that is traversable
+                    let xTest = 0;
+                    let yTest = 0;
+                    do {
+                        xTest = Math.floor(Math.random() * (this.canvasWidth / 64));
+                        yTest = Math.floor(Math.random() * (this.canvasHeight / 64));
+                    } while (this.obstacles[yTest][xTest] != 0)
+
+                    // If we cannot traverse to every square, regenerate the map
+                    if (this.checkUnreachableSpots(structuredClone(this.obstacles), xTest, yTest, 0)) {
+                        console.log("Found unreachable spot... Redrawing map");
+                        for (let i = 0; i < this.canvasHeight / 64; i++) {
+                            for (let j = 0; j < this.canvasWidth / 64; j++) {
+                                if (this.obstacles[i][j] == 2) {
+                                    this.obstacles[i][j] = 0;
+                                }
+                            }
+                        }
+                        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+                        this.drawMap();
+                    }
+                }
+
+                checkUnreachableSpots(obstacles, x, y, depth) {
+                    obstacles[y][x] = 10;
+
+                    // + 1 is going down for y axis
+                    if (obstacles[y + 1][x] == 0) {
+                        this.checkUnreachableSpots(obstacles, x, y + 1, depth + 1);
+                    }
+                    if (obstacles[y - 1][x] == 0) {
+                        this.checkUnreachableSpots(obstacles, x, y - 1, depth + 1);
+                    }
+                    if (obstacles[y][x + 1] == 0) {
+                        this.checkUnreachableSpots(obstacles, x + 1, y, depth + 1);
+                    }
+                    if (obstacles[y][x - 1] == 0) {
+                        this.checkUnreachableSpots(obstacles, x - 1, y, depth + 1);
+                    }
+
+                    // Check if there is an unreachable spot... if there is
+                    // return true, otherwise false
+                    if (depth == 0) {
+                        for (let i = 0; i < this.canvasHeight / 64; i++) {
+                            for (let j = 0; j < this.canvasWidth / 64; j++) {
+                                if (obstacles[i][j] == 0) {
+                                    return true;
+                                }
+                            }
+                        }
+                        return false;
                     }
                 }
 
