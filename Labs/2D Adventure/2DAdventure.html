@@ -1,0 +1,150 @@
+<html lang="en">
+    <HEAD>
+        <meta charset="UTF-8">
+        <title>2D Adventure</title>
+        <style>
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+        </style>
+    </HEAD>
+    <body>
+		<CANVAS id="myCanvas" width="640" height="384">
+			Your browser does not support canvas.
+		</CANVAS>
+        <script>
+            class Main {
+                constructor(ctx) {
+                    this.ctx = ctx;
+                    this.player = 0;
+                    this.enemies = [];
+                    this.obstacles = [];
+                    this.canvasWidth = 640;
+                    this.canvasHeight = 384;
+
+                    // for (let i = 0; i < this.canvasHeight / 64; i++) {
+                    //     const row = [];
+                    //     for (let j = 0; j < this.canvasWidth / 64; i++) {
+                    //         row.push(0);
+                    //     }
+                    //     this.obstacles.push(row)
+                    // }
+
+                    this.drawMap()
+                }
+
+                drawBrick(xStart, yStart) {
+                    this.ctx.beginPath();
+
+                    // Top line
+                    this.ctx.moveTo(xStart, yStart);
+                    this.ctx.lineTo(xStart + 64, yStart);
+
+                    // Left side vertical
+                    this.ctx.moveTo(xStart, yStart);
+                    this.ctx.lineTo(xStart, yStart + 64);
+
+                    // Right side vertical
+                    this.ctx.moveTo(xStart + 64, yStart);
+                    this.ctx.lineTo(xStart + 64, yStart + 64);
+
+                    // Bottom horizontal
+                    this.ctx.moveTo(xStart, yStart + 64);
+                    this.ctx.lineTo(xStart + 64, yStart + 64);
+
+                    let newYStart = yStart
+                    for (let i = 0; i < 3; i++) {
+                        // Vert lines down 13 units
+                        this.ctx.moveTo(xStart + 8, newYStart);
+                        this.ctx.lineTo(xStart + 8, newYStart + 13);
+                        this.ctx.moveTo(xStart + 32, newYStart);
+                        this.ctx.lineTo(xStart + 32, newYStart + 13)
+                        this.ctx.moveTo(xStart + 56, newYStart);
+                        this.ctx.lineTo(xStart + 56, newYStart + 13);
+
+                        // 2nd line horizontal 
+                        if (i != 2) {
+                            this.ctx.moveTo(xStart, newYStart + 13);
+                            this.ctx.lineTo(xStart + 64, newYStart + 13);
+                        } else { 
+                            break;
+                        }
+
+                        newYStart += 13;
+
+                        // Vert lines down 13 units
+                        this.ctx.moveTo(xStart + 16, newYStart);
+                        this.ctx.lineTo(xStart + 16, newYStart + 13);
+                        this.ctx.moveTo(xStart + 48, newYStart);
+                        this.ctx.lineTo(xStart + 48, newYStart + 13)
+
+                        // 2nd line horizontal
+                        this.ctx.moveTo(xStart, newYStart + 13);
+                        this.ctx.lineTo(xStart + 64, newYStart + 13);
+
+                        newYStart += 13;
+                    }
+                    
+                    this.ctx.stroke();
+                }
+
+                drawMap() {
+                    // Draw brick border
+                    for (let y = 0; y < this.canvasHeight / 64; y++) {
+                        for (let x = 0; x < this.canvasWidth / 64; x++) {
+                            if (y == 0 || y == (this.canvasHeight / 64) - 1) {
+                                this.drawBrick(x * 64, y * 64);
+                            }
+
+                            if ((y != 0 && y != (this.canvasHeight / 64) - 1) && (x == 0 || x == (this.canvasWidth / 64) - 1)) {
+                                this.drawBrick(x * 64, y * 64);
+                            }
+                        }
+                    }
+                }
+
+                update() {
+
+                }
+            }
+
+            class Character {
+                constructor(hp, mhp, atk, def, x, y, image) {
+                    this.hp = hp;
+                    this.mhp = mhp;
+                    this.atk = atk;
+                    this.def = def;
+                    this.x = x;
+                    this.y = y;
+                    this.image = image;
+                }
+
+                damage(enemy) {
+                    this.hp -= Math.max(enemy.atk - this.def, 1) * (Math.floor(Math.random() * 6) + 1);
+                }
+            }
+
+            class Player extends Character {
+                constructor(hp, mhp, atk, def, x, y, image) {
+                    super(hp, mhp, atk, def, x, y, image);
+                }
+            }
+
+            class Monster extends Character {
+                constructor(hp, mhp, atk, def, x, y, image) {
+                    super(hp, mhp, atk, def, x, y, image);
+                }
+            }
+
+            const canvas = document.getElementById("myCanvas");
+
+            canvas.width = 768;
+            canvas.height = 384;
+
+            const ctx = canvas.getContext("2d");   
+
+            const game = new Main(ctx);
+        </script>
+    </body>
+</html>
