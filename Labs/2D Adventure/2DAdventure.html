@@ -10,7 +10,7 @@
         </style>
     </HEAD>
     <body>
-		<CANVAS id="myCanvas" width="640" height="384">
+		<CANVAS id="myCanvas" width="896" height="512">
 			Your browser does not support canvas.
 		</CANVAS>
         <script>
@@ -19,17 +19,19 @@
                     this.ctx = ctx;
                     this.player = 0;
                     this.enemies = [];
+                    // 0 is free, 1 is wall, 2 is tree
+                    // 3 is potion, 4 is player, 5 is monster
                     this.obstacles = [];
-                    this.canvasWidth = 640;
-                    this.canvasHeight = 384;
+                    this.canvasWidth = 896;
+                    this.canvasHeight = 512;
 
-                    // for (let i = 0; i < this.canvasHeight / 64; i++) {
-                    //     const row = [];
-                    //     for (let j = 0; j < this.canvasWidth / 64; i++) {
-                    //         row.push(0);
-                    //     }
-                    //     this.obstacles.push(row)
-                    // }
+                    for (let i = 0; i < this.canvasHeight / 64; i++) {
+                        const row = [];
+                        for (let j = 0; j < this.canvasWidth / 64; j++) {
+                            row.push(0);
+                        }
+                        this.obstacles.push(row)
+                    }
 
                     this.drawMap()
                 }
@@ -89,17 +91,50 @@
                     this.ctx.stroke();
                 }
 
+                drawTree(xStart, yStart) {
+                    this.ctx.beginPath();
+                    
+                    this.ctx.strokeStyle = "black";
+                    this.ctx.fillStyle = "brown";
+                    this.ctx.fillRect(xStart + 24, yStart + 24, 16, 40);
+                    this.ctx.stroke();
+
+                    this.ctx.strokeStyle = "black";
+                    this.ctx.fillStyle = "green"
+                    this.ctx.arc(xStart + 32 , yStart + 24, 24, 0, Math.PI * 2, 1);
+                    this.ctx.fill();
+
+                    this.ctx.stroke();
+                }
+
                 drawMap() {
                     // Draw brick border
                     for (let y = 0; y < this.canvasHeight / 64; y++) {
                         for (let x = 0; x < this.canvasWidth / 64; x++) {
                             if (y == 0 || y == (this.canvasHeight / 64) - 1) {
                                 this.drawBrick(x * 64, y * 64);
+                                this.obstacles[y][x] = 1;
                             }
 
                             if ((y != 0 && y != (this.canvasHeight / 64) - 1) && (x == 0 || x == (this.canvasWidth / 64) - 1)) {
                                 this.drawBrick(x * 64, y * 64);
+                                this.obstacles[y][x] = 1;
                             }
+                        }
+                    }
+
+                    // Draw Trees
+                    const totalTrees = 10;
+                    let currentTrees = 0;
+
+                    while (currentTrees < totalTrees) {
+                        const xTest = Math.floor(Math.random() * (this.canvasWidth / 64));
+                        const yTest = Math.floor(Math.random() * (this.canvasHeight / 64));
+
+                        if (!this.obstacles[yTest][xTest]) {
+                            this.drawTree(xTest * 64, yTest * 64);
+                            this.obstacles[yTest][xTest] = 2
+                            currentTrees++;
                         }
                     }
                 }
@@ -139,8 +174,8 @@
 
             const canvas = document.getElementById("myCanvas");
 
-            canvas.width = 768;
-            canvas.height = 384;
+            canvas.width = 896;
+            canvas.height = 512;
 
             const ctx = canvas.getContext("2d");   
 
