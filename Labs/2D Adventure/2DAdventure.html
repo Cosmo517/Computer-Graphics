@@ -14,10 +14,16 @@
 			Your browser does not support canvas.
 		</CANVAS>
         <script>
+            // Latent Features:
+            // Need to add scaling feature (Extra Credit)
+            // Add async enemy movement
+            // Make enemy track player if they are within range?
+            // Make enemy "call for help" if its attacked (nearby enemy comes to help)
+
             class Main {
                 constructor(ctx) {
                     this.ctx = ctx;
-                    this.player = new Player(10, 10, 5, 3, -1, -1, "./src/Player.png");
+                    this.player = new Player(50, 50, 5, 3, -1, -1, "./src/Player.png");
                     this.enemies = [];
                     // 0 is free, 1 is wall, 2 is tree
                     // 3 is potion, 4 is player, 5 is monster
@@ -48,13 +54,16 @@
                         randomX = Math.floor(Math.random() * (this.canvasWidth / 64));
                         randomY = Math.floor(Math.random() * (this.canvasHeight / 64));
                     } while (this.obstacles[randomY][randomX] != 0);
+                    console.log("Spawning Player at: (" + randomX + ", " + randomY + ")")
 
                     this.player.render(randomX, randomY, this.ctx);
-                    this.obstacles[randomY][randomX] == 4;
-                    
                     // Add the monsters
+                    this.spawnMonster(new BasicGoblin(8, 8, 4, 3, -64, -64, "./src/GoblinMelee.png"));
+                    this.spawnMonster(new BasicGoblin(4, 4, 6, 2, -64, -64, "./src/GoblinArcher.png"));
+                    this.spawnMonster(new MageGoblin(6, 6, 3, 1, 4, -64,-64, "./src/GoblinMage.png"));
                 }
 
+                // A function to draw a single brick
                 drawBrick(xStart, yStart) {
                     this.ctx.beginPath();
 
@@ -110,6 +119,7 @@
                     this.ctx.stroke();
                 }
 
+                // A function to draw a single tree
                 drawTree(xStart, yStart) {
                     this.ctx.beginPath();
                     
@@ -126,6 +136,8 @@
                     this.ctx.stroke();
                 }
 
+                // Handle drawing the background of the map
+                // such as walls and trees
                 drawMap() {
                     // Draw brick border
                     for (let y = 0; y < this.canvasHeight / 64; y++) {
@@ -180,6 +192,8 @@
                     }
                 }
 
+                // Check to see if there is a dead zone on the map
+                // If there is, return true, otherwise, false
                 checkUnreachableSpots(obstacles, x, y, depth) {
                     obstacles[y][x] = 10;
 
@@ -211,6 +225,8 @@
                     }
                 }
 
+                // Handle adding a random potion to the map at 
+                // a random spot
                 addPotionToMap() {
                     const choosePotion = Math.floor(Math.random() * 2);
                     let potion = null;
@@ -233,6 +249,7 @@
                         potionImg.src = "./src/HealthPotion.png";
                         potion = new HealthPotion("Health Potion", randomX, randomY, potionImg, 5);
                         this.obstacles[randomY][randomX] = 3;
+                        this.potions.push(potion);
                     } else {
                         console.log("Spawning Regen Potion at: (" + randomX + ", " + randomY + ")")
                         const potionImg = new Image();
@@ -242,43 +259,225 @@
                         potionImg.src = "./src/RegenPotion.png";
                         potion = new RegenPotion("Regen Potion", randomX, randomY, "", 2, 5);
                         this.obstacles[randomY][randomX] = 3;
+                        this.potions.push(potion);
                     }
                 }
 
+                // Handle spawning a single monster by randomizing
+                // its starting position
+                spawnMonster(monster) {
+                    let randomX = 0;
+                    let randomY = 0;
+                    do {
+                        randomX = Math.floor(Math.random() * (this.canvasWidth / 64));
+                        randomY = Math.floor(Math.random() * (this.canvasHeight / 64));
+                        for (let i = 0; i < this.enemies.length; i++) {
+                            if (this.enemies[i].x == randomX && this.enemies[i].y == randomY) {
+                                continue;
+                            }
+                        }
+                    } while (this.obstacles[randomY][randomX] != 0 || (this.player.x == randomX && this.playerY == randomY));
+
+                    // Monster spawn is valid
+                    console.log("Spawning Monster at: (" + randomX + ", " + randomY + ")")
+                    this.enemies.push(monster);
+                    monster.render(randomX, randomY, this.ctx);
+                }
+
+                // Handle updating player movement, followed by each enemy
                 update(key) {
+                    // Handle player movement
                     if (key == "w") {
                         const charX = this.player.x;
                         const charY = this.player.y;
-                        if (!this.obstacles[charY - 1][charX] || this.obstacles[charY - 1][charX] == 3) {
-                            this.obstacles[charY][charX] = 0;
-                            this.obstacles[charY - 1][charX] = 4;
+                        let enemyPresent = false;
+
+                        // Check if enemy, if so, do damage
+                        for (let i = 0; i < this.enemies.length; i++) {
+                            if (this.enemies[i].x == charX && this.enemies[i].y == charY - 1) {
+                                enemyPresent = true;
+                                // Do damage to enemy
+                                this.enemies[i].damage(this.player);
+                                if (this.enemies[i].isDead) {
+                                    // Remove the enemy and shrink the array
+                                    this.enemies.splice(i, 1);
+                                }
+                            }
+                        }
+
+                        if (this.obstacles[charY - 1][charX] == 3) {
+                            // Find the potion, consume it
+                            for (let i = 0; i < this.potions.length; i++) {
+                                if (this.potions[i].x == charX && this.potions[i].y == charY - 1) {
+                                    this.obstacles[charY - 1][charX] = 0;
+                                    const healHP = this.potions[i].usePotion(this.player.mhp);
+                                    this.player.hp = Math.min(this.player.hp + healHP, this.player.mhp)
+                                    console.log("Used potion = " + healHP)
+                                }
+                            }
+                        }
+
+                        if ((!this.obstacles[charY - 1][charX] || this.obstacles[charY - 1][charX] == 3) && !enemyPresent) {
                             this.player.render(charX, charY - 1, this.ctx);
+                        } else {
+                            this.player.render(charX, charY, this.ctx);
                         }
                     } else if (key == "a") {
                         const charX = this.player.x;
                         const charY = this.player.y;
-                        if (!this.obstacles[charY][charX - 1] || this.obstacles[charY][charX - 1] == 3) {
-                            this.obstacles[charY][charX] = 0;
-                            this.obstacles[charY][charX - 1] = 4;
+                        let enemyPresent = false;
+
+                        // Check if enemy, if so, do damage
+                        for (let i = 0; i < this.enemies.length; i++) {
+                            if (this.enemies[i].x == charX - 1 && this.enemies[i].y == charY) {
+                                enemyPresent = true;
+                                // Do damage to enemy
+                                this.enemies[i].damage(this.player);
+                                if (this.enemies[i].isDead) {
+                                    // Remove the enemy and shrink the array
+                                    this.enemies.splice(i, 1);
+                                }
+                            }
+                        }
+
+                        if (this.obstacles[charY][charX - 1] == 3) {
+                            // Find the potion, consume it
+                            for (let i = 0; i < this.potions.length; i++) {
+                                if (this.potions[i].x == charX - 1 && this.potions[i].y == charY) {
+                                    this.obstacles[charY][charX - 1] = 0;
+                                    const healHP = this.potions[i].usePotion(this.player.mhp);
+                                    this.player.hp = Math.min(this.player.hp + healHP, this.player.mhp)
+                                    console.log("Used potion = " + healHP)
+                                }
+                            }
+                        }
+
+                        if ((!this.obstacles[charY][charX - 1] || this.obstacles[charY][charX - 1] == 3) && !enemyPresent) {
                             this.player.render(charX - 1, charY, this.ctx);
+                        } else {
+                            this.player.render(charX, charY, this.ctx);
                         }
                     } else if (key == "s") {
                         const charX = this.player.x;
                         const charY = this.player.y;
-                        if (!this.obstacles[charY + 1][charX] || this.obstacles[charY + 1][charX] == 3) {
-                            this.obstacles[charY][charX] = 0;
-                            this.obstacles[charY + 1][charX] = 4;
-                            this.player.render(charX, charY + 1, this.ctx);
+                        let enemyPresent = false;
+
+                        // Check if enemy, if so, do damage
+                        for (let i = 0; i < this.enemies.length; i++) {
+                            if (this.enemies[i].x == charX && this.enemies[i].y == charY + 1) {
+                                enemyPresent = true;
+                                // Do damage to enemy
+                                this.enemies[i].damage(this.player);
+                                if (this.enemies[i].isDead) {
+                                    // Remove the enemy and shrink the array
+                                    this.enemies.splice(i, 1);
+                                }
+                            }
                         }
+
+                        if (this.obstacles[charY + 1][charX] == 3) {
+                            // Find the potion, consume it
+                            for (let i = 0; i < this.potions.length; i++) {
+                                if (this.potions[i].x == charX && this.potions[i].y == charY + 1) {
+                                    this.obstacles[charY + 1][charX] = 0;
+                                    const healHP = this.potions[i].usePotion(this.player.mhp);
+                                    this.player.hp = Math.min(this.player.hp + healHP, this.player.mhp)
+                                    console.log("Used potion = " + healHP)
+                                }
+                            }
+                        }
+
+                        if ((!this.obstacles[charY + 1][charX] || this.obstacles[charY + 1][charX] == 3) && !enemyPresent) {
+                            this.player.render(charX, charY + 1, this.ctx);
+                        } else {
+                            this.player.render(charX, charY, this.ctx);
+                        }
+
                     } else if (key == "d") {
                         const charX = this.player.x;
                         const charY = this.player.y;
-                        if (!this.obstacles[charY][charX + 1] || this.obstacles[charY][charX + 1] == 3) {
-                            this.obstacles[charY][charX] = 0;
-                            this.obstacles[charY][charX + 1] = 4;
+                        let enemyPresent = false;
+
+                        // Check if enemy, if so, do damage
+                        for (let i = 0; i < this.enemies.length; i++) {
+                            if (this.enemies[i].x == charX + 1 && this.enemies[i].y == charY) {
+                                enemyPresent = true;
+                                // Do damage to enemy
+                                this.enemies[i].damage(this.player);
+                                if (this.enemies[i].isDead) {
+                                    // Remove the enemy and shrink the array
+                                    this.enemies.splice(i, 1);
+                                }
+                            }
+                        }
+
+                        if (this.obstacles[charY][charX + 1] == 3) {
+                            // Find the potion, consume it
+                            for (let i = 0; i < this.potions.length; i++) {
+                                if (this.potions[i].x == charX + 1 && this.potions[i].y == charY ) {
+                                    this.obstacles[charY][charX + 1] = 0;
+                                    const healHP = this.potions[i].usePotion(this.player.mhp);
+                                    this.player.hp = Math.min(this.player.hp + healHP, this.player.mhp)
+                                    console.log("Used potion = " + healHP)
+                                }
+                            }
+                        }
+
+                        if ((!this.obstacles[charY][charX + 1] || this.obstacles[charY][charX + 1] == 3) && !enemyPresent) {
                             this.player.render(charX + 1, charY, this.ctx);
+                        } else {
+                            this.player.render(charX, charY, this.ctx);
                         }
                     }
+
+                    if (this.enemies.length == 0) {
+                        alert("Congratulations! You win!");
+                    }
+
+                    // Handle enemy movement
+                    this.enemies.forEach(monster => {
+                        let dx = 0;
+                        let dy = 0;
+                        let freeSpace = false;
+
+                        do {
+                            // 1 - up, 2 - left, 3 - down, 4 - right
+                            let randomDir = Math.floor(Math.random() * 4 + 1);
+                            if (randomDir == 1) {
+                                dy = -1;
+                                dx = 0;
+                            } else if (randomDir == 2) {
+                                dx = -1;
+                                dy = 0;
+                            } else if (randomDir == 3) {
+                                dy = 1;
+                                dx = 0;
+                            } else if (randomDir == 4) {
+                                dx = 1;
+                                dy = 0;
+                            }
+
+                            // If this is the case, dont move, attack the player
+                            if (this.player.x == monster.x + dx && this.player.y == monster.y + dy) {
+                                this.player.damage(monster);
+                                if (this.player.hp <= 0) {
+                                    alert("Game over! You died!");
+                                }
+                                break;
+                            }
+
+                            for (let i = 0; i < this.enemies.length; i++) {
+                                if ((this.enemies[i].x == monster.x + dx && this.enemies[i].y == monster.y + dy) ||
+                                        this.obstacles[monster.y + dy][monster.x + dx] != 0) {
+                                    break;
+                                }
+                                freeSpace = true;
+                            }
+
+                        } while (!freeSpace);
+
+                        if (freeSpace) monster.render(monster.x + dx, monster.y + dy, this.ctx);
+                    });
                 }
             }
 
@@ -295,6 +494,18 @@
 
                 damage(enemy) {
                     this.hp -= Math.max(enemy.atk - this.def, 1) * (Math.floor(Math.random() * 6) + 1);
+
+                    if (this.hp <= 0) {
+                        ctx.clearRect(this.x * 64, this.y * 64, 64, 64);
+                    }
+                }
+
+                isDead() {
+                    if (this.hp <= 0) {
+                        return true;
+                    } else {
+                        return false;
+                    }
                 }
 
                 // Figure out how to render and place the character...
@@ -302,14 +513,25 @@
                     // Render the character at the new X/Y and clear the old player
                     ctx.clearRect(this.x * 64, this.y * 64, 64, 64);
 
+                    this.x = newX;
+                    this.y = newY;
+
                     const characterImg = new Image();
                     characterImg.onload = () => {
                         ctx.drawImage(characterImg, newX * 64, newY * 64, 64, 64);
+
+                        // Draw the health bar at the bottom of the image
+                        const greenHealth = this.hp / this.mhp;
+                        const greenHealthWidth = Math.floor(56 * greenHealth);
+                        const redHealthWidth = 56 - greenHealthWidth;
+                        ctx.fillStyle = "green";
+                        ctx.fillRect(newX * 64 + 8, newY * 64 + 48, greenHealthWidth, 8);
+                        ctx.stroke();
+                        ctx.fillStyle = "red";
+                        ctx.fillRect(newX * 64 + 8 + greenHealthWidth, newY * 64 + 48, redHealthWidth, 8);
+                        ctx.stroke();
                     };
                     characterImg.src = this.image;
-
-                    this.x = newX;
-                    this.y = newY;
                 }
             }
 
@@ -325,6 +547,19 @@
                 }
             }
 
+            class BasicGoblin extends Monster {
+                constructor(hp, mhp, atk, def, x, y, image) {
+                    super(hp, mhp, atk, def, x, y, image);
+                }
+            }
+
+            class MageGoblin extends Monster {
+                constructor(hp, mhp, atk, def, heal, x, y, image) {
+                    super(hp, mhp, atk, def, x, y, image);
+                    this.heal = heal;
+                }
+            }
+
             class Potion {
                 constructor(name, x, y, image) {
                     this.name = name;
@@ -333,7 +568,7 @@
                     this.image = image;
                 }
 
-                usePotion() {
+                usePotion(charMaxHP) {
                     // Throw an error here, as you cant use a
                     // potion that does not have an effect
                 }
@@ -345,9 +580,10 @@
                     this.healAmount = healAmount;
                 }
 
-                usePotion() {
-                    // Implement health potion here
-                    // either +5 hp or 25% of HP, whatever is greater
+                usePotion(charMaxHP) {
+                    // +5 hp or 25% of HP, whatever is greater
+
+                    return Math.max(5, Math.floor(0.25 * charMaxHP));
                 }
             }
 
@@ -358,9 +594,11 @@
                     this.duration = duration;
                 }
 
-                usePotion() {
+                usePotion(charMaxHP) {
                     // Implement health potion here
                     // either +5 hp or 25% of HP, whatever is greater
+
+                    return 5;
                 }
             }
 
