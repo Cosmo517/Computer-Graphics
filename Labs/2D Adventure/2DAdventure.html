@@ -469,6 +469,7 @@
                             for (let i = 0; i < this.enemies.length; i++) {
                                 if ((this.enemies[i].x == monster.x + dx && this.enemies[i].y == monster.y + dy) ||
                                         this.obstacles[monster.y + dy][monster.x + dx] != 0) {
+                                        freeSpace = false;
                                     break;
                                 }
                                 freeSpace = true;
