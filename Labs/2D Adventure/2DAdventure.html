@@ -13,17 +13,23 @@
 		<CANVAS id="myCanvas" width="896" height="512">
 			Your browser does not support canvas.
 		</CANVAS>
+        <input type="range" name="tileSize" id="tileSize" min="1" max="3"></input>
         <script>
             // Latent Features:
-            // Need to add scaling feature (Extra Credit)
             // Add async enemy movement
+            // For movement, just use 2 second intervals
+
             // Make enemy track player if they are within range?
+            // Not sure about this... Could have it detect the player 1 square away and
+            // instead of moving away, it attacks the player
+
             // Make enemy "call for help" if its attacked (nearby enemy comes to help)
+            // Most likely scrap this idea. Too much effort for what it is worth
 
             class Main {
                 constructor(ctx) {
                     this.ctx = ctx;
-                    this.player = new Player(50, 50, 5, 3, -1, -1, "./src/Player.png");
+                    this.player = new Player(20, 20, 5, 3, -1, -1, "./src/Player.png");
                     this.enemies = [];
                     // 0 is free, 1 is wall, 2 is tree
                     // 3 is potion, 4 is player, 5 is monster
@@ -31,10 +37,13 @@
                     this.potions = [];
                     this.canvasWidth = 896;
                     this.canvasHeight = 512;
+                    this.sliderValue = document.getElementById("tileSize").value
+                    this.scaler = Math.pow(2, this.sliderValue - 3);
+                    this.tileSize = 64 * this.scaler;
 
-                    for (let i = 0; i < this.canvasHeight / 64; i++) {
+                    for (let i = 0; i < this.canvasHeight / this.tileSize; i++) {
                         const row = [];
-                        for (let j = 0; j < this.canvasWidth / 64; j++) {
+                        for (let j = 0; j < this.canvasWidth / this.tileSize; j++) {
                             row.push(0);
                         }
                         this.obstacles.push(row)
@@ -44,23 +53,27 @@
                     this.drawMap();
 
                     // Then add potions
-                    this.addPotionToMap();
-                    this.addPotionToMap();
+                    for (let i = 0; i <  7 - 2 * this.sliderValue; i++) {
+                        this.addPotionToMap();
+                        this.addPotionToMap();
+                    }
 
                     // Add the player
                     let randomX = 0;
                     let randomY = 0;
                     do {
-                        randomX = Math.floor(Math.random() * (this.canvasWidth / 64));
-                        randomY = Math.floor(Math.random() * (this.canvasHeight / 64));
+                        randomX = Math.floor(Math.random() * (this.canvasWidth / this.tileSize));
+                        randomY = Math.floor(Math.random() * (this.canvasHeight / this.tileSize));
                     } while (this.obstacles[randomY][randomX] != 0);
                     console.log("Spawning Player at: (" + randomX + ", " + randomY + ")")
 
-                    this.player.render(randomX, randomY, this.ctx);
+                    this.player.render(randomX, randomY, this.ctx, this.tileSize, this.scaler);
                     // Add the monsters
-                    this.spawnMonster(new BasicGoblin(8, 8, 4, 3, -64, -64, "./src/GoblinMelee.png"));
-                    this.spawnMonster(new BasicGoblin(4, 4, 6, 2, -64, -64, "./src/GoblinArcher.png"));
-                    this.spawnMonster(new MageGoblin(6, 6, 3, 1, 4, -64,-64, "./src/GoblinMage.png"));
+                    for (let i = 0; i <  7 - 2 * this.sliderValue; i++) {
+                        this.spawnMonster(new BasicGoblin(8, 8, 4, 3, -64, -64, "./src/GoblinMelee.png"));
+                        this.spawnMonster(new BasicGoblin(4, 4, 6, 2, -64, -64, "./src/GoblinArcher.png"));
+                        this.spawnMonster(new MageGoblin(6, 6, 3, 1, 4, -64,-64, "./src/GoblinMage.png"));
+                    }
                 }
 
                 // A function to draw a single brick
@@ -69,51 +82,51 @@
 
                     // Top line
                     this.ctx.moveTo(xStart, yStart);
-                    this.ctx.lineTo(xStart + 64, yStart);
+                    this.ctx.lineTo(xStart + this.tileSize, yStart);
 
                     // Left side vertical
                     this.ctx.moveTo(xStart, yStart);
-                    this.ctx.lineTo(xStart, yStart + 64);
+                    this.ctx.lineTo(xStart, yStart + this.tileSize);
 
                     // Right side vertical
-                    this.ctx.moveTo(xStart + 64, yStart);
-                    this.ctx.lineTo(xStart + 64, yStart + 64);
+                    this.ctx.moveTo(xStart + this.tileSize, yStart);
+                    this.ctx.lineTo(xStart + this.tileSize, yStart + this.tileSize);
 
                     // Bottom horizontal
-                    this.ctx.moveTo(xStart, yStart + 64);
-                    this.ctx.lineTo(xStart + 64, yStart + 64);
+                    this.ctx.moveTo(xStart, yStart + this.tileSize);
+                    this.ctx.lineTo(xStart + this.tileSize, yStart + this.tileSize);
 
                     let newYStart = yStart
                     for (let i = 0; i < 3; i++) {
                         // Vert lines down 13 units
-                        this.ctx.moveTo(xStart + 8, newYStart);
-                        this.ctx.lineTo(xStart + 8, newYStart + 13);
-                        this.ctx.moveTo(xStart + 32, newYStart);
-                        this.ctx.lineTo(xStart + 32, newYStart + 13)
-                        this.ctx.moveTo(xStart + 56, newYStart);
-                        this.ctx.lineTo(xStart + 56, newYStart + 13);
+                        this.ctx.moveTo(xStart + 8 * this.scaler, newYStart);
+                        this.ctx.lineTo(xStart + 8 * this.scaler, newYStart + Math.ceil(13 * this.scaler));
+                        this.ctx.moveTo(xStart + 32 * this.scaler, newYStart);
+                        this.ctx.lineTo(xStart + 32 * this.scaler, newYStart + Math.ceil(13 * this.scaler))
+                        this.ctx.moveTo(xStart + 56 * this.scaler, newYStart);
+                        this.ctx.lineTo(xStart + 56 * this.scaler, newYStart + Math.ceil(13 * this.scaler));
 
                         // 2nd line horizontal 
                         if (i != 2) {
-                            this.ctx.moveTo(xStart, newYStart + 13);
-                            this.ctx.lineTo(xStart + 64, newYStart + 13);
+                            this.ctx.moveTo(xStart, newYStart + Math.ceil(13 * this.scaler));
+                            this.ctx.lineTo(xStart + 64 * this.scaler, newYStart + Math.ceil(13 * this.scaler));
                         } else { 
                             break;
                         }
 
-                        newYStart += 13;
+                        newYStart += Math.ceil(13 * this.scaler);
 
                         // Vert lines down 13 units
-                        this.ctx.moveTo(xStart + 16, newYStart);
-                        this.ctx.lineTo(xStart + 16, newYStart + 13);
-                        this.ctx.moveTo(xStart + 48, newYStart);
-                        this.ctx.lineTo(xStart + 48, newYStart + 13)
+                        this.ctx.moveTo(xStart + 16 * this.scaler, newYStart);
+                        this.ctx.lineTo(xStart + 16 * this.scaler, newYStart + Math.ceil(13 * this.scaler));
+                        this.ctx.moveTo(xStart + 48 * this.scaler, newYStart);
+                        this.ctx.lineTo(xStart + 48 * this.scaler, newYStart + Math.ceil(13 * this.scaler))
 
                         // 2nd line horizontal
-                        this.ctx.moveTo(xStart, newYStart + 13);
-                        this.ctx.lineTo(xStart + 64, newYStart + 13);
+                        this.ctx.moveTo(xStart, newYStart + Math.ceil(13 * this.scaler));
+                        this.ctx.lineTo(xStart + 64 * this.scaler, newYStart + Math.ceil(13 * this.scaler));
 
-                        newYStart += 13;
+                        newYStart += Math.ceil(13 * this.scaler);
                     }
                     
                     this.ctx.stroke();
@@ -125,12 +138,12 @@
                     
                     this.ctx.strokeStyle = "black";
                     this.ctx.fillStyle = "brown";
-                    this.ctx.fillRect(xStart + 24, yStart + 24, 16, 40);
+                    this.ctx.fillRect(xStart + (24 * this.scaler), yStart + (24 * this.scaler), 16 * this.scaler, 40 * this.scaler);
                     this.ctx.stroke();
 
                     this.ctx.strokeStyle = "black";
                     this.ctx.fillStyle = "green"
-                    this.ctx.arc(xStart + 32 , yStart + 24, 24, 0, Math.PI * 2, 1);
+                    this.ctx.arc(xStart + (32 * this.scaler) , yStart + (24 * this.scaler), 24 * this.scaler, 0, Math.PI * 2, 1);
                     this.ctx.fill();
 
                     this.ctx.stroke();
@@ -140,30 +153,30 @@
                 // such as walls and trees
                 drawMap() {
                     // Draw brick border
-                    for (let y = 0; y < this.canvasHeight / 64; y++) {
-                        for (let x = 0; x < this.canvasWidth / 64; x++) {
-                            if (y == 0 || y == (this.canvasHeight / 64) - 1) {
-                                this.drawBrick(x * 64, y * 64);
+                    for (let y = 0; y < this.canvasHeight / this.tileSize; y++) {
+                        for (let x = 0; x < this.canvasWidth / this.tileSize; x++) {
+                            if (y == 0 || y == (this.canvasHeight / this.tileSize) - 1) {
+                                this.drawBrick(x * this.tileSize, y * this.tileSize);
                                 this.obstacles[y][x] = 1;
                             }
 
-                            if ((y != 0 && y != (this.canvasHeight / 64) - 1) && (x == 0 || x == (this.canvasWidth / 64) - 1)) {
-                                this.drawBrick(x * 64, y * 64);
+                            if ((y != 0 && y != (this.canvasHeight / this.tileSize) - 1) && (x == 0 || x == (this.canvasWidth / this.tileSize) - 1)) {
+                                this.drawBrick(x * this.tileSize, y * this.tileSize);
                                 this.obstacles[y][x] = 1;
                             }
                         }
                     }
 
                     // Draw Trees
-                    const totalTrees = 15;
+                    const totalTrees = 15 * (7 - 2 * this.sliderValue);
                     let currentTrees = 0;
 
                     while (currentTrees < totalTrees) {
-                        const xTest = Math.floor(Math.random() * (this.canvasWidth / 64));
-                        const yTest = Math.floor(Math.random() * (this.canvasHeight / 64));
+                        const xTest = Math.floor(Math.random() * (this.canvasWidth / this.tileSize));
+                        const yTest = Math.floor(Math.random() * (this.canvasHeight / this.tileSize));
 
                         if (!this.obstacles[yTest][xTest]) {
-                            this.drawTree(xTest * 64, yTest * 64);
+                            this.drawTree(xTest * this.tileSize, yTest * this.tileSize);
                             this.obstacles[yTest][xTest] = 2
                             currentTrees++;
                         }
@@ -173,15 +186,15 @@
                     let xTest = 0;
                     let yTest = 0;
                     do {
-                        xTest = Math.floor(Math.random() * (this.canvasWidth / 64));
-                        yTest = Math.floor(Math.random() * (this.canvasHeight / 64));
+                        xTest = Math.floor(Math.random() * (this.canvasWidth / this.tileSize));
+                        yTest = Math.floor(Math.random() * (this.canvasHeight / this.tileSize));
                     } while (this.obstacles[yTest][xTest] != 0)
 
                     // If we cannot traverse to every square, regenerate the map
                     if (this.checkUnreachableSpots(structuredClone(this.obstacles), xTest, yTest, 0)) {
                         console.log("Found unreachable spot... Redrawing map");
-                        for (let i = 0; i < this.canvasHeight / 64; i++) {
-                            for (let j = 0; j < this.canvasWidth / 64; j++) {
+                        for (let i = 0; i < this.canvasHeight / this.tileSize; i++) {
+                            for (let j = 0; j < this.canvasWidth / this.tileSize; j++) {
                                 if (this.obstacles[i][j] == 2) {
                                     this.obstacles[i][j] = 0;
                                 }
@@ -214,8 +227,8 @@
                     // Check if there is an unreachable spot... if there is
                     // return true, otherwise false
                     if (depth == 0) {
-                        for (let i = 0; i < this.canvasHeight / 64; i++) {
-                            for (let j = 0; j < this.canvasWidth / 64; j++) {
+                        for (let i = 0; i < this.canvasHeight / this.tileSize; i++) {
+                            for (let j = 0; j < this.canvasWidth / this.tileSize; j++) {
                                 if (obstacles[i][j] == 0) {
                                     return true;
                                 }
@@ -235,8 +248,8 @@
                     let randomY = 0;
 
                     do {
-                        randomX = Math.floor(Math.random() * (this.canvasWidth / 64));
-                        randomY = Math.floor(Math.random() * (this.canvasHeight / 64));
+                        randomX = Math.floor(Math.random() * (this.canvasWidth / this.tileSize));
+                        randomY = Math.floor(Math.random() * (this.canvasHeight / this.tileSize));
                     } while (this.obstacles[randomY][randomX] != 0);
 
                     // 1 is health potion, 0 is regen potion
@@ -244,7 +257,7 @@
                         console.log("Spawning Health Potion at: (" + randomX + ", " + randomY + ")")
                         const potionImg = new Image();
                         potionImg.onload = () => {
-                            this.ctx.drawImage(potionImg, randomX * 64, randomY * 64, 64, 64);
+                            this.ctx.drawImage(potionImg, randomX * this.tileSize, randomY * this.tileSize, this.tileSize, this.tileSize);
                         };
                         potionImg.src = "./src/HealthPotion.png";
                         potion = new HealthPotion("Health Potion", randomX, randomY, potionImg, 5);
@@ -254,7 +267,7 @@
                         console.log("Spawning Regen Potion at: (" + randomX + ", " + randomY + ")")
                         const potionImg = new Image();
                         potionImg.onload = () => {
-                            this.ctx.drawImage(potionImg, randomX * 64, randomY * 64, 64, 64);
+                            this.ctx.drawImage(potionImg, randomX * this.tileSize, randomY * this.tileSize, this.tileSize, this.tileSize);
                         };
                         potionImg.src = "./src/RegenPotion.png";
                         potion = new RegenPotion("Regen Potion", randomX, randomY, "", 2, 5);
@@ -269,8 +282,8 @@
                     let randomX = 0;
                     let randomY = 0;
                     do {
-                        randomX = Math.floor(Math.random() * (this.canvasWidth / 64));
-                        randomY = Math.floor(Math.random() * (this.canvasHeight / 64));
+                        randomX = Math.floor(Math.random() * (this.canvasWidth / this.tileSize));
+                        randomY = Math.floor(Math.random() * (this.canvasHeight / this.tileSize));
                         for (let i = 0; i < this.enemies.length; i++) {
                             if (this.enemies[i].x == randomX && this.enemies[i].y == randomY) {
                                 continue;
@@ -281,7 +294,7 @@
                     // Monster spawn is valid
                     console.log("Spawning Monster at: (" + randomX + ", " + randomY + ")")
                     this.enemies.push(monster);
-                    monster.render(randomX, randomY, this.ctx);
+                    monster.render(randomX, randomY, this.ctx, this.tileSize, this.scaler);
                 }
 
                 // Handle updating player movement, followed by each enemy
@@ -297,7 +310,7 @@
                             if (this.enemies[i].x == charX && this.enemies[i].y == charY - 1) {
                                 enemyPresent = true;
                                 // Do damage to enemy
-                                this.enemies[i].damage(this.player);
+                                this.enemies[i].damage(this.player, this.tileSize);
                                 if (this.enemies[i].isDead) {
                                     // Remove the enemy and shrink the array
                                     this.enemies.splice(i, 1);
@@ -318,9 +331,9 @@
                         }
 
                         if ((!this.obstacles[charY - 1][charX] || this.obstacles[charY - 1][charX] == 3) && !enemyPresent) {
-                            this.player.render(charX, charY - 1, this.ctx);
+                            this.player.render(charX, charY - 1, this.ctx, this.tileSize, this.scaler);
                         } else {
-                            this.player.render(charX, charY, this.ctx);
+                            this.player.render(charX, charY, this.ctx, this.tileSize, this.scaler);
                         }
                     } else if (key == "a") {
                         const charX = this.player.x;
@@ -332,7 +345,7 @@
                             if (this.enemies[i].x == charX - 1 && this.enemies[i].y == charY) {
                                 enemyPresent = true;
                                 // Do damage to enemy
-                                this.enemies[i].damage(this.player);
+                                this.enemies[i].damage(this.player, this.tileSize);
                                 if (this.enemies[i].isDead) {
                                     // Remove the enemy and shrink the array
                                     this.enemies.splice(i, 1);
@@ -353,9 +366,9 @@
                         }
 
                         if ((!this.obstacles[charY][charX - 1] || this.obstacles[charY][charX - 1] == 3) && !enemyPresent) {
-                            this.player.render(charX - 1, charY, this.ctx);
+                            this.player.render(charX - 1, charY, this.ctx, this.tileSize, this.scaler);
                         } else {
-                            this.player.render(charX, charY, this.ctx);
+                            this.player.render(charX, charY, this.ctx, this.tileSize, this.scaler);
                         }
                     } else if (key == "s") {
                         const charX = this.player.x;
@@ -367,7 +380,7 @@
                             if (this.enemies[i].x == charX && this.enemies[i].y == charY + 1) {
                                 enemyPresent = true;
                                 // Do damage to enemy
-                                this.enemies[i].damage(this.player);
+                                this.enemies[i].damage(this.player, this.tileSize);
                                 if (this.enemies[i].isDead) {
                                     // Remove the enemy and shrink the array
                                     this.enemies.splice(i, 1);
@@ -388,9 +401,9 @@
                         }
 
                         if ((!this.obstacles[charY + 1][charX] || this.obstacles[charY + 1][charX] == 3) && !enemyPresent) {
-                            this.player.render(charX, charY + 1, this.ctx);
+                            this.player.render(charX, charY + 1, this.ctx, this.tileSize, this.scaler);
                         } else {
-                            this.player.render(charX, charY, this.ctx);
+                            this.player.render(charX, charY, this.ctx), this.tileSize, this.scaler;
                         }
 
                     } else if (key == "d") {
@@ -403,7 +416,7 @@
                             if (this.enemies[i].x == charX + 1 && this.enemies[i].y == charY) {
                                 enemyPresent = true;
                                 // Do damage to enemy
-                                this.enemies[i].damage(this.player);
+                                this.enemies[i].damage(this.player, this.tileSize);
                                 if (this.enemies[i].isDead) {
                                     // Remove the enemy and shrink the array
                                     this.enemies.splice(i, 1);
@@ -424,9 +437,9 @@
                         }
 
                         if ((!this.obstacles[charY][charX + 1] || this.obstacles[charY][charX + 1] == 3) && !enemyPresent) {
-                            this.player.render(charX + 1, charY, this.ctx);
+                            this.player.render(charX + 1, charY, this.ctx, this.tileSize, this.scaler);
                         } else {
-                            this.player.render(charX, charY, this.ctx);
+                            this.player.render(charX, charY, this.ctx, this.tileSize, this.scaler);
                         }
                     }
 
@@ -459,7 +472,7 @@
 
                             // If this is the case, dont move, attack the player
                             if (this.player.x == monster.x + dx && this.player.y == monster.y + dy) {
-                                this.player.damage(monster);
+                                this.player.damage(monster, this.tileSize);
                                 if (this.player.hp <= 0) {
                                     alert("Game over! You died!");
                                 }
@@ -477,7 +490,7 @@
 
                         } while (!freeSpace);
 
-                        if (freeSpace) monster.render(monster.x + dx, monster.y + dy, this.ctx);
+                        if (freeSpace) monster.render(monster.x + dx, monster.y + dy, this.ctx, this.tileSize, this.scaler);
                     });
                 }
             }
@@ -493,11 +506,11 @@
                     this.image = image;
                 }
 
-                damage(enemy) {
+                damage(enemy, tileSize, scaler) {
                     this.hp -= Math.max(enemy.atk - this.def, 1) * (Math.floor(Math.random() * 6) + 1);
 
                     if (this.hp <= 0) {
-                        ctx.clearRect(this.x * 64, this.y * 64, 64, 64);
+                        ctx.clearRect(this.x * tileSize, this.y * tileSize, tileSize, tileSize);
                     }
                 }
 
@@ -510,26 +523,26 @@
                 }
 
                 // Figure out how to render and place the character...
-                render(newX, newY, ctx) {
+                render(newX, newY, ctx, tileSize, scaler) {
                     // Render the character at the new X/Y and clear the old player
-                    ctx.clearRect(this.x * 64, this.y * 64, 64, 64);
+                    ctx.clearRect(this.x * tileSize, this.y * tileSize, tileSize, tileSize);
 
                     this.x = newX;
                     this.y = newY;
 
                     const characterImg = new Image();
                     characterImg.onload = () => {
-                        ctx.drawImage(characterImg, newX * 64, newY * 64, 64, 64);
+                        ctx.drawImage(characterImg, newX * tileSize, newY * tileSize, tileSize, tileSize);
 
                         // Draw the health bar at the bottom of the image
                         const greenHealth = this.hp / this.mhp;
-                        const greenHealthWidth = Math.floor(56 * greenHealth);
-                        const redHealthWidth = 56 - greenHealthWidth;
+                        const greenHealthWidth = Math.floor(56 * scaler * greenHealth);
+                        const redHealthWidth = 56 * scaler  - greenHealthWidth;
                         ctx.fillStyle = "green";
-                        ctx.fillRect(newX * 64 + 8, newY * 64 + 48, greenHealthWidth, 8);
+                        ctx.fillRect(newX * tileSize + (8 * scaler), newY * tileSize + (48 * scaler), greenHealthWidth, 8 * scaler);
                         ctx.stroke();
                         ctx.fillStyle = "red";
-                        ctx.fillRect(newX * 64 + 8 + greenHealthWidth, newY * 64 + 48, redHealthWidth, 8);
+                        ctx.fillRect(newX * tileSize + (8 * scaler) + greenHealthWidth, newY * tileSize + (48 * scaler), redHealthWidth, 8 * scaler);
                         ctx.stroke();
                     };
                     characterImg.src = this.image;
