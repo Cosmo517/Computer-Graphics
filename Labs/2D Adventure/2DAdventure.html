@@ -13,12 +13,14 @@
 		<CANVAS id="myCanvas" width="896" height="512">
 			Your browser does not support canvas.
 		</CANVAS>
+
+        <audio id="music">
+            <source src="./src//Music.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+
         <input type="range" name="tileSize" id="tileSize" min="1" max="3"></input>
         <script>
-            // Its possible for a monster to have no moves left
-            // make a condition to break from the monsters movement
-            //
-
             // Latent Features:
             // Add async enemy movement
             // For movement, just use 2 second intervals
@@ -33,7 +35,7 @@
             class Main {
                 constructor(ctx) {
                     this.ctx = ctx;
-                    this.player = new Player(20, 20, 1, 3, -1, -1, "./src/Player.png");
+                    this.player = new Player(20, 20, 3, 3, -1, -1, "./src/Player.png");
                     this.enemies = [];
                     // 0 is free, 1 is wall, 2 is tree
                     // 3 is potion, 4 is player, 5 is monster
@@ -69,15 +71,16 @@
                         randomX = Math.floor(Math.random() * (this.canvasWidth / this.tileSize));
                         randomY = Math.floor(Math.random() * (this.canvasHeight / this.tileSize));
                     } while (this.obstacles[randomY][randomX] != 0);
-                    console.log("Spawning Player at: (" + randomX + ", " + randomY + ")")
 
                     this.player.render(randomX, randomY, this.ctx, this.tileSize, this.scaler);
                     // Add the monsters
                     for (let i = 0; i <  7 - 2 * this.sliderValue; i++) {
-                        this.spawnMonster(new BasicGoblin(20, 20, 4, 3, -64, -64, "./src/GoblinMelee.png"));
-                        this.spawnMonster(new BasicGoblin(16, 16, 6, 2, -64, -64, "./src/GoblinArcher.png"));
-                        this.spawnMonster(new MageGoblin(12, 12, 3, 1, 4, -64,-64, "./src/GoblinMage.png"));
+                        this.spawnMonster(new BasicGoblin(16, 16, 2, 3, -64, -64, "./src/GoblinMelee.png"));
+                        this.spawnMonster(new BasicGoblin(12, 12, 3, 2, -64, -64, "./src/GoblinArcher.png"));
+                        this.spawnMonster(new MageGoblin(8, 8, 3, 1, 4, -64,-64, "./src/GoblinMage.png"));
                     }
+                    const audioElement = document.getElementById("music");
+                    audioElement.play();
                 }
 
                 // A function to draw a single brick
@@ -196,7 +199,6 @@
 
                     // If we cannot traverse to every square, regenerate the map
                     if (this.checkUnreachableSpots(structuredClone(this.obstacles), xTest, yTest, 0)) {
-                        console.log("Found unreachable spot... Redrawing map");
                         for (let i = 0; i < this.canvasHeight / this.tileSize; i++) {
                             for (let j = 0; j < this.canvasWidth / this.tileSize; j++) {
                                 if (this.obstacles[i][j] == 2) {
@@ -258,7 +260,6 @@
 
                     // 1 is health potion, 0 is regen potion
                     if (choosePotion) {
-                        console.log("Spawning Health Potion at: (" + randomX + ", " + randomY + ")")
                         const potionImg = new Image();
                         potionImg.onload = () => {
                             this.ctx.drawImage(potionImg, randomX * this.tileSize, randomY * this.tileSize, this.tileSize, this.tileSize);
@@ -268,7 +269,6 @@
                         this.obstacles[randomY][randomX] = 3;
                         this.potions.push(potion);
                     } else {
-                        console.log("Spawning Regen Potion at: (" + randomX + ", " + randomY + ")")
                         const potionImg = new Image();
                         potionImg.onload = () => {
                             this.ctx.drawImage(potionImg, randomX * this.tileSize, randomY * this.tileSize, this.tileSize, this.tileSize);
@@ -296,7 +296,6 @@
                     } while (this.obstacles[randomY][randomX] != 0 || (this.player.x == randomX && this.playerY == randomY));
 
                     // Monster spawn is valid
-                    console.log("Spawning Monster at: (" + randomX + ", " + randomY + ")")
                     this.enemies.push(monster);
                     monster.render(randomX, randomY, this.ctx, this.tileSize, this.scaler);
                 }
@@ -317,7 +316,6 @@
                                 this.enemies[i].damage(this.player, this.tileSize);
                                 // this.enemies[i].render(this.enemies[i].x, this.enemies[i].y, this.ctx, this.tileSize, this.scaler)
                                 if (this.enemies[i].isDead()) {
-                                    console.log("Enemy dead");
                                     // Remove the enemy and shrink the array
                                     this.enemies.splice(i, 1);
                                 }
@@ -331,7 +329,6 @@
                                     this.obstacles[charY - 1][charX] = 0;
                                     const healHP = this.potions[i].usePotion(this.player.mhp);
                                     this.player.hp = Math.min(this.player.hp + healHP, this.player.mhp)
-                                    console.log("Used potion = " + healHP)
                                 }
                             }
                         }
@@ -355,7 +352,6 @@
                                 // this.enemies[i].render(this.enemies[i].x, this.enemies[i].y, this.ctx, this.tileSize, this.scaler)
                                 if (this.enemies[i].isDead()) {
                                     // Remove the enemy and shrink the array
-                                    console.log("Enemy dead");
                                     this.enemies.splice(i, 1);
                                 }
                             }
@@ -368,7 +364,6 @@
                                     this.obstacles[charY][charX - 1] = 0;
                                     const healHP = this.potions[i].usePotion(this.player.mhp);
                                     this.player.hp = Math.min(this.player.hp + healHP, this.player.mhp)
-                                    console.log("Used potion = " + healHP)
                                 }
                             }
                         }
@@ -392,7 +387,6 @@
                                 // this.enemies[i].render(this.enemies[i].x, this.enemies[i].y, this.ctx, this.tileSize, this.scaler)
                                 if (this.enemies[i].isDead()) {
                                     // Remove the enemy and shrink the array
-                                    console.log("Enemy dead");
                                     this.enemies.splice(i, 1);
                                 }
                             }
@@ -405,7 +399,6 @@
                                     this.obstacles[charY + 1][charX] = 0;
                                     const healHP = this.potions[i].usePotion(this.player.mhp);
                                     this.player.hp = Math.min(this.player.hp + healHP, this.player.mhp)
-                                    console.log("Used potion = " + healHP)
                                 }
                             }
                         }
@@ -430,7 +423,6 @@
                                 // this.enemies[i].render(this.enemies[i].x, this.enemies[i].y, this.ctx, this.tileSize, this.scaler)
                                 if (this.enemies[i].isDead()) {
                                     // Remove the enemy and shrink the array
-                                    console.log("Enemy dead");
                                     this.enemies.splice(i, 1);
                                 }
                             }
@@ -443,7 +435,6 @@
                                     this.obstacles[charY][charX + 1] = 0;
                                     const healHP = this.potions[i].usePotion(this.player.mhp);
                                     this.player.hp = Math.min(this.player.hp + healHP, this.player.mhp)
-                                    console.log("Used potion = " + healHP)
                                 }
                             }
                         }
@@ -496,11 +487,6 @@
 
                             // Make sure we dont move onto another monsters space
                             for (let i = 0; i < this.enemies.length; i++) {
-                                console.log("Total enemies: " + this.enemies.length);
-                                console.log("Checking enemy: " + (this.enemies[i].constructor.name));
-                                if (this.enemies[i].isDead()) {
-                                    console.log("Checked enemy is dead...");
-                                }
                                 if ((this.enemies[i].x == monster.x + dx && this.enemies[i].y == monster.y + dy) ||
                                         this.obstacles[monster.y + dy][monster.x + dx] != 0) {
                                         freeSpace = false;
@@ -530,11 +516,7 @@
                 damage(enemy, tileSize, scaler) {
                     const damageDealt = Math.max(enemy.atk - this.def, 1) * (Math.floor(Math.random() * 6) + 1)
                     this.hp -= damageDealt;
-                    console.log("Damage dealt from : " + enemy.constructor.name + ", damage: " + damageDealt);
-                    console.log("HP: " + this.hp);
-
                     if (this.isDead()) {
-                        console.log("clearing character")
                         ctx.clearRect(this.x * tileSize, this.y * tileSize, tileSize, tileSize);
                     }
                 }
