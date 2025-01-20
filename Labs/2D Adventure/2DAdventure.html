@@ -79,8 +79,21 @@
                         this.spawnMonster(new BasicGoblin(12, 12, 3, 2, -64, -64, "./src/GoblinArcher.png"));
                         this.spawnMonster(new MageGoblin(8, 8, 3, 1, 4, -64,-64, "./src/GoblinMage.png"));
                     }
+
                     const audioElement = document.getElementById("music");
                     audioElement.play();
+
+                    // Start monster movement
+                    const intervals = [];
+                    for (let i = 0; i < this.enemies.length; i++) {
+                        intervals.push(setInterval(() => {
+                            if (this.enemies[i].isDead()) {
+                                clearInterval[i];
+                            }
+
+                            this.monsterMove(this.enemies[i]);
+                        }, 300));
+                    }
                 }
 
                 // A function to draw a single brick
@@ -308,6 +321,8 @@
                             if (this.enemies[i].isDead()) {
                                 // Remove the enemy and shrink the array
                                 this.enemies.splice(i, 1);
+                            } else {
+                                this.enemies[i].render(this.enemies[i].x, this.enemies[i].y, this.ctx, this.tileSize, this.scaler);
                             }
                             return true;
                         }
@@ -334,6 +349,58 @@
                         } else {
                             this.player.render(charX, charY, this.ctx, this.tileSize, this.scaler);
                         }
+                }
+
+                monsterMove(monster) {
+                    let dx = 0;
+                    let dy = 0;
+                    let freeSpace = false;
+                    let attempts = 0;
+
+                    do {
+                        // 1 - up, 2 - left, 3 - down, 4 - right
+                        let randomDir = Math.floor(Math.random() * 4 + 1);
+                        if (randomDir == 1) {
+                            dy = -1;
+                            dx = 0;
+                        } else if (randomDir == 2) {
+                            dx = -1;
+                            dy = 0;
+                        } else if (randomDir == 3) {
+                            dy = 1;
+                            dx = 0;
+                        } else if (randomDir == 4) {
+                            dx = 1;
+                            dy = 0;
+                        }
+
+                        // If player is on the tile the monster wants to move to,
+                        // attack the player
+                        if (this.player.x == monster.x + dx && this.player.y == monster.y + dy) {
+                            this.player.damage(monster, this.tileSize);
+                            monster.render(monster.x , monster.y, this.ctx, this.tileSize, this.scaler);
+                            if (this.player.hp <= 0) {
+                                let userResponse = confirm("Game over! You lost!");
+                                location.reload();
+                            }
+                            break;
+                        }
+
+                        // Make sure we dont move onto another monsters space
+                        for (let i = 0; i < this.enemies.length; i++) {
+                            if ((this.enemies[i].x == monster.x + dx && this.enemies[i].y == monster.y + dy) ||
+                                    this.obstacles[monster.y + dy][monster.x + dx] != 0) {
+                                    freeSpace = false;
+                                break;
+                            }
+                            freeSpace = true;
+                        }
+                        attempts++;
+                    } while (!freeSpace && attempts < 50);
+
+                    // Double check if we need to rerender the monster or not
+                    // It could have failed to move and is stuck
+                    if (freeSpace) monster.render(monster.x + dx, monster.y + dy, this.ctx, this.tileSize, this.scaler);
                 }
 
                 // Handle updating player movement, followed by each enemy
@@ -396,58 +463,6 @@
                         let userResponse = confirm("Congruations! You won!");
                         location.reload();
                     }
-
-                    // Handle enemy movement
-                    this.enemies.forEach(monster => {
-                        let dx = 0;
-                        let dy = 0;
-                        let freeSpace = false;
-                        let attempts = 0;
-                        do {
-                            // 1 - up, 2 - left, 3 - down, 4 - right
-                            let randomDir = Math.floor(Math.random() * 4 + 1);
-                            if (randomDir == 1) {
-                                dy = -1;
-                                dx = 0;
-                            } else if (randomDir == 2) {
-                                dx = -1;
-                                dy = 0;
-                            } else if (randomDir == 3) {
-                                dy = 1;
-                                dx = 0;
-                            } else if (randomDir == 4) {
-                                dx = 1;
-                                dy = 0;
-                            }
-
-                            // If player is on the tile the monster wants to move to,
-                            // attack the player
-                            if (this.player.x == monster.x + dx && this.player.y == monster.y + dy) {
-                                this.player.damage(monster, this.tileSize);
-                                monster.render(monster.x , monster.y, this.ctx, this.tileSize, this.scaler);
-                                if (this.player.hp <= 0) {
-                                    let userResponse = confirm("Game over! You lost!");
-                                    location.reload();
-                                }
-                                break;
-                            }
-
-                            // Make sure we dont move onto another monsters space
-                            for (let i = 0; i < this.enemies.length; i++) {
-                                if ((this.enemies[i].x == monster.x + dx && this.enemies[i].y == monster.y + dy) ||
-                                        this.obstacles[monster.y + dy][monster.x + dx] != 0) {
-                                        freeSpace = false;
-                                    break;
-                                }
-                                freeSpace = true;
-                            }
-                            attempts++;
-                        } while (!freeSpace && attempts < 50);
-
-                        // Double check if we need to rerender the monster or not
-                        // It could have failed to move and is stuck
-                        if (freeSpace) monster.render(monster.x + dx, monster.y + dy, this.ctx, this.tileSize, this.scaler);
-                    });
                 }
             }
 
