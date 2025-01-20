@@ -300,150 +300,96 @@
                     monster.render(randomX, randomY, this.ctx, this.tileSize, this.scaler);
                 }
 
+                checkForEnemyAndDamage(xPosition, yPosition) {
+                    for (let i = 0; i < this.enemies.length; i++) {
+                        if (this.enemies[i].x == xPosition && this.enemies[i].y == yPosition) {
+                            // Do damage to enemy
+                            this.enemies[i].damage(this.player, this.tileSize);
+                            if (this.enemies[i].isDead()) {
+                                // Remove the enemy and shrink the array
+                                this.enemies.splice(i, 1);
+                            }
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+
+                checkForPotion(xPosition, yPosition) {
+                    if (this.obstacles[yPosition][xPosition] == 3) {
+                        // Find the potion, consume it
+                        for (let i = 0; i < this.potions.length; i++) {
+                            if (this.potions[i].x == xPosition && this.potions[i].y == yPosition) {
+                                this.obstacles[yPosition][xPosition] = 0;
+                                const healHP = this.potions[i].usePotion(this.player.mhp);
+                                this.player.hp = Math.min(this.player.hp + healHP, this.player.mhp)
+                            }
+                        }
+                    }
+                }
+
+                handleMove(charX, charY, xPosition, yPosition, enemyPresent) {
+                    if ((!this.obstacles[yPosition][xPosition] || this.obstacles[yPosition][xPosition] == 3) && !enemyPresent) {
+                            this.player.render(xPosition, yPosition, this.ctx, this.tileSize, this.scaler);
+                        } else {
+                            this.player.render(charX, charY, this.ctx, this.tileSize, this.scaler);
+                        }
+                }
+
                 // Handle updating player movement, followed by each enemy
                 update(key) {
-                    // Handle player movement
                     if (key == "w") {
                         const charX = this.player.x;
                         const charY = this.player.y;
                         let enemyPresent = false;
 
                         // Check if enemy, if so, do damage
-                        for (let i = 0; i < this.enemies.length; i++) {
-                            if (this.enemies[i].x == charX && this.enemies[i].y == charY - 1) {
-                                enemyPresent = true;
-                                // Do damage to enemy
-                                this.enemies[i].damage(this.player, this.tileSize);
-                                // this.enemies[i].render(this.enemies[i].x, this.enemies[i].y, this.ctx, this.tileSize, this.scaler)
-                                if (this.enemies[i].isDead()) {
-                                    // Remove the enemy and shrink the array
-                                    this.enemies.splice(i, 1);
-                                }
-                            }
-                        }
+                        enemyPresent = this.checkForEnemyAndDamage(charX, charY - 1);
 
-                        if (this.obstacles[charY - 1][charX] == 3) {
-                            // Find the potion, consume it
-                            for (let i = 0; i < this.potions.length; i++) {
-                                if (this.potions[i].x == charX && this.potions[i].y == charY - 1) {
-                                    this.obstacles[charY - 1][charX] = 0;
-                                    const healHP = this.potions[i].usePotion(this.player.mhp);
-                                    this.player.hp = Math.min(this.player.hp + healHP, this.player.mhp)
-                                }
-                            }
-                        }
-
-                        if ((!this.obstacles[charY - 1][charX] || this.obstacles[charY - 1][charX] == 3) && !enemyPresent) {
-                            this.player.render(charX, charY - 1, this.ctx, this.tileSize, this.scaler);
-                        } else {
-                            this.player.render(charX, charY, this.ctx, this.tileSize, this.scaler);
-                        }
+                        // Check for potion and consume it
+                        this.checkForPotion(charX, charY - 1);
+                        
+                        // Determine if the player moves or hits a wall
+                        this.handleMove(charX, charY, charX, charY - 1, enemyPresent);
                     } else if (key == "a") {
                         const charX = this.player.x;
                         const charY = this.player.y;
                         let enemyPresent = false;
 
                         // Check if enemy, if so, do damage
-                        for (let i = 0; i < this.enemies.length; i++) {
-                            if (this.enemies[i].x == charX - 1 && this.enemies[i].y == charY) {
-                                enemyPresent = true;
-                                // Do damage to enemy
-                                this.enemies[i].damage(this.player, this.tileSize);
-                                // this.enemies[i].render(this.enemies[i].x, this.enemies[i].y, this.ctx, this.tileSize, this.scaler)
-                                if (this.enemies[i].isDead()) {
-                                    // Remove the enemy and shrink the array
-                                    this.enemies.splice(i, 1);
-                                }
-                            }
-                        }
+                        enemyPresent = this.checkForEnemyAndDamage(charX - 1, charY);
 
-                        if (this.obstacles[charY][charX - 1] == 3) {
-                            // Find the potion, consume it
-                            for (let i = 0; i < this.potions.length; i++) {
-                                if (this.potions[i].x == charX - 1 && this.potions[i].y == charY) {
-                                    this.obstacles[charY][charX - 1] = 0;
-                                    const healHP = this.potions[i].usePotion(this.player.mhp);
-                                    this.player.hp = Math.min(this.player.hp + healHP, this.player.mhp)
-                                }
-                            }
-                        }
-
-                        if ((!this.obstacles[charY][charX - 1] || this.obstacles[charY][charX - 1] == 3) && !enemyPresent) {
-                            this.player.render(charX - 1, charY, this.ctx, this.tileSize, this.scaler);
-                        } else {
-                            this.player.render(charX, charY, this.ctx, this.tileSize, this.scaler);
-                        }
+                        // Check for potion and consume it
+                        this.checkForPotion(charX - 1, charY);
+                        
+                        // Determine if the player moves or hits a wall
+                        this.handleMove(charX, charY, charX - 1, charY, enemyPresent);
                     } else if (key == "s") {
                         const charX = this.player.x;
                         const charY = this.player.y;
                         let enemyPresent = false;
 
                         // Check if enemy, if so, do damage
-                        for (let i = 0; i < this.enemies.length; i++) {
-                            if (this.enemies[i].x == charX && this.enemies[i].y == charY + 1) {
-                                enemyPresent = true;
-                                // Do damage to enemy
-                                this.enemies[i].damage(this.player, this.tileSize);
-                                // this.enemies[i].render(this.enemies[i].x, this.enemies[i].y, this.ctx, this.tileSize, this.scaler)
-                                if (this.enemies[i].isDead()) {
-                                    // Remove the enemy and shrink the array
-                                    this.enemies.splice(i, 1);
-                                }
-                            }
-                        }
+                        enemyPresent = this.checkForEnemyAndDamage(charX, charY + 1);
 
-                        if (this.obstacles[charY + 1][charX] == 3) {
-                            // Find the potion, consume it
-                            for (let i = 0; i < this.potions.length; i++) {
-                                if (this.potions[i].x == charX && this.potions[i].y == charY + 1) {
-                                    this.obstacles[charY + 1][charX] = 0;
-                                    const healHP = this.potions[i].usePotion(this.player.mhp);
-                                    this.player.hp = Math.min(this.player.hp + healHP, this.player.mhp)
-                                }
-                            }
-                        }
-
-                        if ((!this.obstacles[charY + 1][charX] || this.obstacles[charY + 1][charX] == 3) && !enemyPresent) {
-                            this.player.render(charX, charY + 1, this.ctx, this.tileSize, this.scaler);
-                        } else {
-                            this.player.render(charX, charY, this.ctx), this.tileSize, this.scaler;
-                        }
-
+                        // Check for potion and consume it
+                        this.checkForPotion(charX, charY + 1);
+                        
+                        // Determine if the player moves or hits a wall
+                        this.handleMove(charX, charY, charX, charY + 1, enemyPresent);
                     } else if (key == "d") {
                         const charX = this.player.x;
                         const charY = this.player.y;
                         let enemyPresent = false;
 
                         // Check if enemy, if so, do damage
-                        for (let i = 0; i < this.enemies.length; i++) {
-                            if (this.enemies[i].x == charX + 1 && this.enemies[i].y == charY) {
-                                enemyPresent = true;
-                                // Do damage to enemy
-                                this.enemies[i].damage(this.player, this.tileSize);
-                                // this.enemies[i].render(this.enemies[i].x, this.enemies[i].y, this.ctx, this.tileSize, this.scaler)
-                                if (this.enemies[i].isDead()) {
-                                    // Remove the enemy and shrink the array
-                                    this.enemies.splice(i, 1);
-                                }
-                            }
-                        }
+                        enemyPresent = this.checkForEnemyAndDamage(charX + 1, charY);
 
-                        if (this.obstacles[charY][charX + 1] == 3) {
-                            // Find the potion, consume it
-                            for (let i = 0; i < this.potions.length; i++) {
-                                if (this.potions[i].x == charX + 1 && this.potions[i].y == charY ) {
-                                    this.obstacles[charY][charX + 1] = 0;
-                                    const healHP = this.potions[i].usePotion(this.player.mhp);
-                                    this.player.hp = Math.min(this.player.hp + healHP, this.player.mhp)
-                                }
-                            }
-                        }
-
-                        if ((!this.obstacles[charY][charX + 1] || this.obstacles[charY][charX + 1] == 3) && !enemyPresent) {
-                            this.player.render(charX + 1, charY, this.ctx, this.tileSize, this.scaler);
-                        } else {
-                            this.player.render(charX, charY, this.ctx, this.tileSize, this.scaler);
-                        }
+                        // Check for potion and consume it
+                        this.checkForPotion(charX + 1, charY);
+                        
+                        // Determine if the player moves or hits a wall
+                        this.handleMove(charX, charY, charX + 1, charY, enemyPresent);
                     }
 
                     if (this.enemies.length == 0) {
@@ -474,7 +420,8 @@
                                 dy = 0;
                             }
 
-                            // If this is the case, dont move, attack the player
+                            // If player is on the tile the monster wants to move to,
+                            // attack the player
                             if (this.player.x == monster.x + dx && this.player.y == monster.y + dy) {
                                 this.player.damage(monster, this.tileSize);
                                 monster.render(monster.x , monster.y, this.ctx, this.tileSize, this.scaler);
@@ -497,6 +444,8 @@
                             attempts++;
                         } while (!freeSpace && attempts < 50);
 
+                        // Double check if we need to rerender the monster or not
+                        // It could have failed to move and is stuck
                         if (freeSpace) monster.render(monster.x + dx, monster.y + dy, this.ctx, this.tileSize, this.scaler);
                     });
                 }
