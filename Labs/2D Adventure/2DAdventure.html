@@ -22,15 +22,9 @@
         <input type="range" name="tileSize" id="tileSize" min="1" max="3"></input>
         <script>
             // Latent Features:
-            // Add async enemy movement
-            // For movement, just use 2 second intervals
-
             // Make enemy track player if they are within range?
             // Not sure about this... Could have it detect the player 1 square away and
             // instead of moving away, it attacks the player
-
-            // Make enemy "call for help" if its attacked (nearby enemy comes to help)
-            // Most likely scrap this idea. Too much effort for what it is worth
 
             class Main {
                 constructor(ctx) {
@@ -75,9 +69,9 @@
                     this.player.render(randomX, randomY, this.ctx, this.tileSize, this.scaler);
                     // Add the monsters
                     for (let i = 0; i <  7 - 2 * this.sliderValue; i++) {
-                        this.spawnMonster(new BasicGoblin(16, 16, 2, 3, -64, -64, "./src/GoblinMelee.png"));
-                        this.spawnMonster(new BasicGoblin(12, 12, 3, 2, -64, -64, "./src/GoblinArcher.png"));
-                        this.spawnMonster(new MageGoblin(8, 8, 3, 1, 4, -64,-64, "./src/GoblinMage.png"));
+                        this.spawnMonster(new BasicGoblin(18, 18, 2, 4, -64, -64, "./src/GoblinMelee.png"));
+                        this.spawnMonster(new BasicGoblin(14, 14, 3, 3, -64, -64, "./src/GoblinArcher.png"));
+                        this.spawnMonster(new MageGoblin(10, 10, 3, 2, 4, -64,-64, "./src/GoblinMage.png"));
                     }
 
                     const audioElement = document.getElementById("music");
@@ -336,7 +330,7 @@
                         for (let i = 0; i < this.potions.length; i++) {
                             if (this.potions[i].x == xPosition && this.potions[i].y == yPosition) {
                                 this.obstacles[yPosition][xPosition] = 0;
-                                const healHP = this.potions[i].usePotion(this.player.mhp);
+                                const healHP = this.potions[i].usePotion(this.player);
                                 this.player.hp = Math.min(this.player.hp + healHP, this.player.mhp)
                             }
                         }
@@ -377,8 +371,19 @@
                         // If player is on the tile the monster wants to move to,
                         // attack the player
                         if (this.player.x == monster.x + dx && this.player.y == monster.y + dy) {
-                            this.player.damage(monster, this.tileSize);
-                            monster.render(monster.x , monster.y, this.ctx, this.tileSize, this.scaler);
+                            if (monster.constructor.name == "MageGoblin") {
+                                const healOrAttack = Math.floor(Math.random() * 2);
+                                if (healOrAttack) {
+                                    this.player.damage(monster, this.tileSize);
+                                } else {
+                                    monster.hp = Math.min(monster.hp + monster.heal, monster.mhp);
+                                    monster.render(monster.x, monster.y, this.ctx, this.tileSize, this.scaler);
+                                }
+                            } else {
+                                this.player.damage(monster, this.tileSize);
+                            }
+
+                            this.player.render(this.player.x , this.player.y, this.ctx, this.tileSize, this.scaler);    
                             if (this.player.hp <= 0) {
                                 let userResponse = confirm("Game over! You lost!");
                                 location.reload();
@@ -543,6 +548,14 @@
                     super(hp, mhp, atk, def, x, y, image);
                     this.heal = heal;
                 }
+
+                damage(enemy, tileSize, scaler) {
+                    const damageDealt = Math.max(enemy.atk - this.def, 1) * (Math.floor(Math.random() * 6) + 1)
+                    this.hp -= damageDealt;
+                    if (this.isDead()) {
+                        ctx.clearRect(this.x * tileSize, this.y * tileSize, tileSize, tileSize);
+                    }
+                }
             }
 
             class Potion {
@@ -565,10 +578,10 @@
                     this.healAmount = healAmount;
                 }
 
-                usePotion(charMaxHP) {
+                usePotion(character) {
                     // +5 hp or 25% of HP, whatever is greater
 
-                    return Math.max(5, Math.floor(0.25 * charMaxHP));
+                    return Math.max(5, Math.floor(0.25 * character.mhp));
                 }
             }
 
@@ -579,11 +592,18 @@
                     this.duration = duration;
                 }
 
-                usePotion(charMaxHP) {
+                usePotion(character) {
                     // Implement health potion here
                     // either +5 hp or 25% of HP, whatever is greater
-
-                    return 5;
+                    let count = 0;
+                    const interval = setInterval(() => {
+                        character.hp = Math.min(this.hps + character.hp, character.mhp);
+                        count++;
+                        if (count >= this.duration) {
+                            clearInterval(interval);
+                        }
+                    }, 1000);
+                    return 0;
                 }
             }
 
