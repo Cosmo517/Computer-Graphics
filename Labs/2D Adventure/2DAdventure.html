@@ -18,14 +18,9 @@
             <source src="./src//Music.mp3" type="audio/mpeg">
             Your browser does not support the audio element.
         </audio>
-
+        <label for="tileSize">Tile Size</label>
         <input type="range" name="tileSize" id="tileSize" min="1" max="3"></input>
         <script>
-            // Latent Features:
-            // Make enemy track player if they are within range?
-            // Not sure about this... Could have it detect the player 1 square away and
-            // instead of moving away, it attacks the player
-
             class Main {
                 constructor(ctx) {
                     this.ctx = ctx;
@@ -307,6 +302,8 @@
                     monster.render(randomX, randomY, this.ctx, this.tileSize, this.scaler);
                 }
 
+                // Check to see if there is an enemy in the x/y position
+                // if there is, do damage to it
                 checkForEnemyAndDamage(xPosition, yPosition) {
                     for (let i = 0; i < this.enemies.length; i++) {
                         if (this.enemies[i].x == xPosition && this.enemies[i].y == yPosition) {
@@ -324,6 +321,8 @@
                     return false;
                 }
 
+                // Check if there is a potion on the x/y position
+                // if there is, we will consume it
                 checkForPotion(xPosition, yPosition) {
                     if (this.obstacles[yPosition][xPosition] == 3) {
                         // Find the potion, consume it
@@ -337,14 +336,16 @@
                     }
                 }
 
+                // Handle player movement
                 handleMove(charX, charY, xPosition, yPosition, enemyPresent) {
                     if ((!this.obstacles[yPosition][xPosition] || this.obstacles[yPosition][xPosition] == 3) && !enemyPresent) {
-                            this.player.render(xPosition, yPosition, this.ctx, this.tileSize, this.scaler);
-                        } else {
-                            this.player.render(charX, charY, this.ctx, this.tileSize, this.scaler);
-                        }
+                        this.player.render(xPosition, yPosition, this.ctx, this.tileSize, this.scaler);
+                    } else {
+                        this.player.render(charX, charY, this.ctx, this.tileSize, this.scaler);
+                    }
                 }
 
+                // Handle monsters moving and attacking
                 monsterMove(monster) {
                     let dx = 0;
                     let dy = 0;
@@ -408,11 +409,11 @@
                     if (freeSpace) monster.render(monster.x + dx, monster.y + dy, this.ctx, this.tileSize, this.scaler);
                 }
 
-                // Handle updating player movement, followed by each enemy
+                // Handle updating player movement
                 update(key) {
+                    const charX = this.player.x;
+                    const charY = this.player.y;
                     if (key == "w") {
-                        const charX = this.player.x;
-                        const charY = this.player.y;
                         let enemyPresent = false;
 
                         // Check if enemy, if so, do damage
@@ -424,8 +425,6 @@
                         // Determine if the player moves or hits a wall
                         this.handleMove(charX, charY, charX, charY - 1, enemyPresent);
                     } else if (key == "a") {
-                        const charX = this.player.x;
-                        const charY = this.player.y;
                         let enemyPresent = false;
 
                         // Check if enemy, if so, do damage
@@ -437,8 +436,6 @@
                         // Determine if the player moves or hits a wall
                         this.handleMove(charX, charY, charX - 1, charY, enemyPresent);
                     } else if (key == "s") {
-                        const charX = this.player.x;
-                        const charY = this.player.y;
                         let enemyPresent = false;
 
                         // Check if enemy, if so, do damage
@@ -450,8 +447,6 @@
                         // Determine if the player moves or hits a wall
                         this.handleMove(charX, charY, charX, charY + 1, enemyPresent);
                     } else if (key == "d") {
-                        const charX = this.player.x;
-                        const charY = this.player.y;
                         let enemyPresent = false;
 
                         // Check if enemy, if so, do damage
@@ -482,6 +477,7 @@
                     this.image = image;
                 }
 
+                // Determine damage dealt to this character by an enemy
                 damage(enemy, tileSize, scaler) {
                     const damageDealt = Math.max(enemy.atk - this.def, 1) * (Math.floor(Math.random() * 6) + 1)
                     this.hp -= damageDealt;
@@ -490,6 +486,7 @@
                     }
                 }
 
+                // Check to see if the character is dead
                 isDead() {
                     if (this.hp <= 0) {
                         return true;
@@ -498,7 +495,7 @@
                     }
                 }
 
-                // Figure out how to render and place the character...
+                // Determine character rendering
                 render(newX, newY, ctx, tileSize, scaler) {
                     // Render the character at the new X/Y and clear the old player
                     ctx.clearRect(this.x * tileSize, this.y * tileSize, tileSize, tileSize);
@@ -548,14 +545,6 @@
                     super(hp, mhp, atk, def, x, y, image);
                     this.heal = heal;
                 }
-
-                damage(enemy, tileSize, scaler) {
-                    const damageDealt = Math.max(enemy.atk - this.def, 1) * (Math.floor(Math.random() * 6) + 1)
-                    this.hp -= damageDealt;
-                    if (this.isDead()) {
-                        ctx.clearRect(this.x * tileSize, this.y * tileSize, tileSize, tileSize);
-                    }
-                }
             }
 
             class Potion {
@@ -567,8 +556,7 @@
                 }
 
                 usePotion(charMaxHP) {
-                    // Throw an error here, as you cant use a
-                    // potion that does not have an effect
+                    throw new Error("Cannot consume empty potion");
                 }
             }
 
@@ -579,8 +567,6 @@
                 }
 
                 usePotion(character) {
-                    // +5 hp or 25% of HP, whatever is greater
-
                     return Math.max(5, Math.floor(0.25 * character.mhp));
                 }
             }
@@ -593,8 +579,6 @@
                 }
 
                 usePotion(character) {
-                    // Implement health potion here
-                    // either +5 hp or 25% of HP, whatever is greater
                     let count = 0;
                     const interval = setInterval(() => {
                         character.hp = Math.min(this.hps + character.hp, character.mhp);
