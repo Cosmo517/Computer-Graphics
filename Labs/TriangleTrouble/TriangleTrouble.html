@@ -1,0 +1,187 @@
+<!DOCTYPE HTML>
+<HTML lang="en">
+	<Head>
+	<Title>Triangle Trouble</TITLE>		
+
+		<script id="2dVertexShader" type="notjs">
+            attribute vec2 a_position;
+            attribute vec3 a_color;
+            varying vec3 v_color;
+            void main() {
+                gl_Position = vec4(a_position, 0.0, 1.0);
+                v_color = a_color;
+            }
+        </script>
+            
+        <script id="2dFragmentShader" type="notjs">
+            precision mediump float;
+            varying vec3 v_color;
+            void main() {
+                gl_FragColor = vec4(v_color, 1.0);
+            }
+        </script>
+
+		<script>
+		class InitWebGLProgram {
+			constructor(webgl) {
+				this.webgl = webgl;
+			}
+
+            // This will create a shader given the type and source
+			createShader(type, source) {
+                // Start by creating the shader, attaching a source, and then compiling it
+				const shader = this.webgl.createShader(type);
+				this.webgl.shaderSource(shader, source);
+				this.webgl.compileShader(shader);
+
+                // If we fail to compile the shader, return null
+				if (!this.webgl.getShaderParameter(shader, this.webgl.COMPILE_STATUS)) {
+					console.error("Shader compile error", this.webgl.getShaderInfoLog(shader));
+					return null;
+				}
+
+				return shader;
+			}
+
+            // This will create our shader program given the vertex and fragment shader
+			createProgram(vsSource, fsSource) {
+				// Create our vertex and fragment shader, and create our program
+                const vs = this.createShader(this.webgl.VERTEX_SHADER, vsSource);
+				const fs = this.createShader(this.webgl.FRAGMENT_SHADER, fsSource);
+				const program = this.webgl.createProgram();
+
+                // Attach our shaders and start to link the program
+				this.webgl.attachShader(program, vs);
+				this.webgl.attachShader(program, fs);
+				this.webgl.linkProgram(program);
+				
+                // Return null if we fail to link our shader program
+                if (!this.webgl.getProgramParameter(program, this.webgl.LINK_STATUS)) {
+					console.error("Shader program failed to link");
+					return null;
+				}
+
+				return program;
+			}
+		}
+	
+		class Shape {
+			constructor(webgl) {
+				this.webgl = webgl;
+				this.mode = webgl.TRIANGLES;
+
+                // Vertices given, X/Y/R/G/B
+				this.vertices = new Float32Array([
+					0,  0.5,  1.0, 0.0, 0.0,
+					1,  0.5,  0.0, 1.0, 0.0,
+					0.5, 1.0,  0.0, 0.0, 1.0,
+					0.5, 0.0,  1.0, 0, 1.0,
+					0, -1.0,  0.0, 1.0, 1.0,
+					-0.5, 0.0, 1.0, 1.0, 0
+				]);
+
+                // Create our vertex buffer and bind the buffer & data
+				this.vertexBuffer = webgl.createBuffer();
+				webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vertexBuffer);
+				webgl.bufferData(webgl.ARRAY_BUFFER, this.vertices, webgl.STATIC_DRAW);
+			}
+
+            // Change the render mode based on the 
+            // select drop down box
+			setRenderMode(mode) {
+                if (mode === 0) {
+                    this.mode = this.webgl.TRIANGLES;
+                } else if (mode === 1) {
+                    this.mode = this.webgl.TRIANGLE_STRIP;
+                } else if (mode === 2) {
+                    this.mode = this.webgl.TRIANGLE_FAN;
+                }
+			}
+
+            // This will render our shader program
+			render(program) {
+				const webgl = this.webgl;
+
+                // Clear our color buffer and depth buffer
+				webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
+
+                // Grab our position and color
+				const position = webgl.getAttribLocation(program, "a_position");
+				const color = webgl.getAttribLocation(program, "a_color");
+				webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vertexBuffer);
+                
+                // Set the vertex positions up
+				webgl.vertexAttribPointer(position, 2, webgl.FLOAT, false, 20, 0);
+				webgl.enableVertexAttribArray(position);
+
+                // Set the vertex colors up
+				webgl.vertexAttribPointer(color, 3, webgl.FLOAT, false, 20, 8);
+				webgl.enableVertexAttribArray(color);
+
+                // Draws the shape baesd on the current mode
+				webgl.drawArrays(this.mode, 0, 6);
+			}
+		}
+		
+		class main {
+			constructor() {
+				this.canvas = document.getElementById("myCanvas");
+				this.webgl = this.canvas.getContext("webgl");
+
+                // If webgl isnt supported, end early
+				if (!this.webgl) {
+                    alert("WebGL not supported"); 
+                    return; 
+                }
+                
+                // Clear the color
+				this.webgl.clearColor(0, 0, 0, 1);
+				this.programManager = new InitWebGLProgram(this.webgl);
+				this.program = this.programManager.createProgram(this.getShaderSource("2dVertexShader"),
+                                                                this.getShaderSource("2dFragmentShader"));
+				this.webgl.useProgram(this.program);
+				this.shape = new Shape(this.webgl);
+				this.render();
+			}
+
+            // Hook to set the render mode and then rerender the shape
+			updateRender(mode) {
+				this.shape.setRenderMode(mode);
+				this.render();
+			}
+
+            // Render the shape
+			render() {
+				this.shape.render(this.program);
+			}
+
+            // Grab the content of the shader source
+            getShaderSource(id) {
+                return document.getElementById(id).textContent.trim();
+            }   
+		}
+		</script>
+	</Head>
+	<BODY>
+		<select id="renderMode">
+			<option value="0">Triangles</option>
+			<option value="1">Triangle Strip</option>
+			<option value="2">Triangle Fan</option>
+		</select>
+
+		<CANVAS id="myCanvas" width="640" height="400">
+			Your browser does not support canvas.
+		</CANVAS>
+		
+        <SCRIPT>
+			var canvas = document.getElementById("myCanvas");
+            var gl = canvas.getContext("webgl");
+            var m = new main();
+
+            // Allow the changing of the rendering modes
+			document.getElementById("renderMode").addEventListener("change", function() {
+				m.updateRender(parseInt(this.value));
+			});
+		</SCRIPT>
+	</BODY>
+</HTML>
