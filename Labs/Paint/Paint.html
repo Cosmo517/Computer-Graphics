@@ -482,25 +482,18 @@
 			static rightClick() {
 				m.handleRightClick();
 			}
-		}
-		
-		
+		}	
 		</script>
-		
-		
 
 	</Head>
 	<BODY style="padding: 15px;">
-		<HEADER>
-		
-		</HEADER>
+		<HEADER></HEADER>
 		
 		<CANVAS id="myCanvas" width="640" height="400" style = "border: 1px solid #000;">
 			Your browser does not support canvas.
 		</CANVAS>
 		
 		<button id="clearCanvas">Clear Canvas</button>
-		
 		
 		<select id="shapeSel" size ='1'>
 			<option value="Box">Box</option>
@@ -516,9 +509,8 @@
 
 		<input id="outline" type="radio" name="style" value="outline">Outline</input>
 		
-		<FOOTER>
-		
-		</FOOTER>
+		<FOOTER></FOOTER>
+
 		<SCRIPT>
 			const canvas = document.getElementById("myCanvas");
 			const gl = canvas.getContext("webgl");
@@ -549,12 +541,6 @@
 
 			fillRadio.addEventListener("change", main.changeStyle);
 			outlineRadio.addEventListener("change", main.changeStyle);
-
-			
 		</SCRIPT>
-		
 	</BODY>
-	
 </HTML>
-		
-		
