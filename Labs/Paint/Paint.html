@@ -1,0 +1,560 @@
+<!DOCTYPE HTML>
+<HTML lang="en">
+	<Head>
+	<Title>"Paint Program"</TITLE>
+		<script id="2dVertexShader" type="notjs">
+			attribute vec4 a_position;	
+			attribute vec3 vert_color;
+			varying vec3 fragColor;
+			void main()
+			{
+				fragColor = vert_color;
+				gl_Position=a_position;
+			}		
+		</SCRIPT>
+		
+		<script id="2dFragmentShader" type="notjs">
+			precision mediump float;
+			varying vec3 fragColor;
+			void main()
+			{
+				//gl_FragColor = vec4(0,0,1,1); //Between 0 and 1.
+				gl_FragColor = vec4(fragColor,1);
+			}
+		</script>
+		
+		<script>
+		class WebGL_Interface {
+			constructor() {
+				this.canvas = document.getElementById("myCanvas");
+				this.gl = this.canvas.getContext("webgl");
+				if (!this.gl) {
+					alert("WebGL not supported");
+					return;
+				}
+				
+				this.initShaders();
+				this.shapes = [];
+			}
+    
+			// This will initialize the webgl shaders
+			initShaders() {
+				const gl = this.gl;
+				
+				const vertexShaderSource = document.getElementById("2dVertexShader").textContent;
+				const fragmentShaderSource = document.getElementById("2dFragmentShader").textContent;
+				
+				const vertexShader = this.createShader(gl.VERTEX_SHADER, vertexShaderSource);
+				const fragmentShader = this.createShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
+				
+				this.program = this.createProgram(vertexShader, fragmentShader);
+				gl.useProgram(this.program);
+				
+				this.positionAttrib = gl.getAttribLocation(this.program, "a_position");
+				this.colorAttrib = gl.getAttribLocation(this.program, "vert_color");
+			}
+
+			// This will compile the webgl shader
+			createShader(type, source) {
+				const shader = this.gl.createShader(type);
+				this.gl.shaderSource(shader, source);
+				this.gl.compileShader(shader);
+				if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
+					console.error("Shader compile error:", this.gl.getShaderInfoLog(shader));
+					this.gl.deleteShader(shader);
+					return null;
+				}
+				return shader;
+			}
+
+			// This will create the webgl program
+			createProgram(vertexShader, fragmentShader) {
+				const program = this.gl.createProgram();
+				this.gl.attachShader(program, vertexShader);
+				this.gl.attachShader(program, fragmentShader);
+				this.gl.linkProgram(program);
+				if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
+					console.error("Program link error:", this.gl.getProgramInfoLog(program));
+					return null;
+				}
+				return program;
+			}
+    
+			// This will store a shape, and render it
+			addShape(shape) {
+				this.shapes.push(shape);
+				this.render();
+			}
+
+			// This will clear the webgl canvas
+			clearCanvas() {
+				this.shapes = [];
+				this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+			}
+			
+			// This will render all the shapes to the webgl canvas
+			render() {
+				const gl = this.gl;
+				gl.clear(gl.COLOR_BUFFER_BIT);
+				this.shapes.forEach(shape => shape.draw(gl, this.positionAttrib, this.colorAttrib));
+			}
+		}
+		
+		class Shape {
+			constructor(gl, drawShapeType, drawShapeStyle) {
+				this.gl = gl;
+				this.isFinished = false;
+				this.vertCount = 0; 
+				// Stores the vertices, 6 entries per vertice
+				// X Y Z R G B
+				this.positions = []; 
+				this.positionBuffer = gl.createBuffer();
+				// Shape type - Box, Circle, etc. Shape style - Fill or Outline
+				this.drawShapeType = drawShapeType;
+				this.drawShapeStyle = drawShapeStyle;
+				
+				gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.positions), gl.STATIC_DRAW);
+			}
+
+			// This will add a point
+			addPoint(x, y, color) {
+				this.positions.push(x, y, 0, color[0], color[1], color[2]);
+				gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.positions), gl.STATIC_DRAW);
+				this.vertCount++;
+
+				// Check if the shape is finished based on the shape type and vertex count
+				if (this.drawShapeType == "Box" && this.vertCount == 2) {
+					// We pop the last vertice and store it in a temp array
+					let tempPositions = [];
+					for (let i = 0; i < 6; i++) {
+						tempPositions.push(this.positions.pop());
+					}
+					
+					// Depending on the shape style, we add the extra vertices for fill or outline
+					if (this.drawShapeStyle) {
+						// Add the verticies for fill for a triangle_strip
+						this.positions.push(tempPositions[5], this.positions[1], 0, color[0], color[1], color[2]); 
+						this.positions.push(this.positions[0], tempPositions[4], 0, color[0], color[1], color[2]);
+						this.positions.push(tempPositions[5], tempPositions[4], tempPositions[3], tempPositions[2], tempPositions[1], tempPositions[0]);		
+					} else {
+						// Add the verticies for outline for a line_loop
+						this.positions.push(this.positions[0], tempPositions[4], 0, color[0], color[1], color[2]);
+						this.positions.push(tempPositions[5], tempPositions[4], tempPositions[3], tempPositions[2], tempPositions[1], tempPositions[0]);
+						this.positions.push(tempPositions[5], this.positions[1], 0, color[0], color[1], color[2]);
+					}
+
+					// Make sure to increase the vert count since we are adding an additional 2 vertices
+					this.vertCount += 2;
+					gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+					gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.positions), gl.STATIC_DRAW);
+					this.isFinished = true;
+				}
+				else if (this.drawShapeType == "Circle" && this.vertCount == 2) {
+					// The first position is considered the center
+					// The second vertice is the radius
+
+					// Pop the last vertice and store it in a temp array
+					let tempPositions = [];
+					for (let i = 0; i < 6; i++) {
+						tempPositions.push(this.positions.pop());
+					}
+					this.vertCount--;
+
+					const centerX = this.positions[0];
+					const centerY = this.positions[1];
+					
+					// Calculate the aspect ratio as it is needed to adjust for a rectangular sized canvas
+					const aspectRatio = this.gl.canvas.width / this.gl.canvas.height;
+
+					// Calculate the radius of the circle (i.e. the distance from the first point to the second point)
+					let radius = Math.sqrt(Math.pow((tempPositions[5] - centerX) * aspectRatio, 2) + Math.pow(tempPositions[4] - centerY, 2));
+
+					// If we have an outline shape style, we dont need the center vertice
+					if (!this.drawShapeStyle) {
+						for (let i = 0; i < 6; i++) {
+							this.positions.pop();
+						}
+						this.vertCount--;
+					}
+
+					// Generate 30 vertices for the circle based on the radius, and the current center
+					// Allows the circle to look like a circle
+					for (let i = 0; i <= 30; i++) {
+						let angle = i * 2 * Math.PI / 30;
+						// Adjust the x by the aspect ratio so it doesnt look like an eclipse if the
+						// canvas is a rectangle
+						let adjustedX = centerX + radius * Math.cos(angle) / aspectRatio;
+						this.positions.push(adjustedX, centerY + radius * Math.sin(angle), 0, color[0], color[1], color[2]);
+						this.vertCount++;
+					}
+
+					gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+					gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.positions), gl.STATIC_DRAW);
+					this.isFinished = true;
+				}
+				else if (this.drawShapeType == "Triangle" && this.vertCount == 3) {
+					this.isFinished = true;
+				}
+			}
+			
+			// THis will  temporarily add a point
+			tempAdd(x, y, color)
+			{
+				this.positions.push(x, y, 0, color[0], color[1], color[2]);
+				this.vertCount++;
+
+				if (this.drawShapeType == "Box" && this.vertCount == 2) {
+					// We first pop the last vertice and store it in a temp array
+					let tempPositions = [];
+					for (let i = 0; i < 6; i++) {
+						tempPositions.push(this.positions.pop());
+					}
+					
+					// Depending on the shape style, we add the vertices for fill or outline
+					if (this.drawShapeStyle) {
+						// Add the verticies for fill for a triangle_strip
+						this.positions.push(tempPositions[5], this.positions[1], 0, color[0], color[1], color[2]); 
+						this.positions.push(this.positions[0], tempPositions[4], 0, color[0], color[1], color[2]);
+						this.positions.push(tempPositions[5], tempPositions[4], tempPositions[3], tempPositions[2], tempPositions[1], tempPositions[0]);		
+					} else {
+						// Add the verticies for outline for a line_loop
+						this.positions.push(this.positions[0], tempPositions[4], 0, color[0], color[1], color[2]);
+						this.positions.push(tempPositions[5], tempPositions[4], tempPositions[3], tempPositions[2], tempPositions[1], tempPositions[0]);
+						this.positions.push(tempPositions[5], this.positions[1], 0, color[0], color[1], color[2]);
+					}
+
+					// Make sure to increase the vert count since we are adding an additional 2 vertices
+					this.vertCount += 2;
+				} else if (this.drawShapeType == "Circle" && this.vertCount == 2) {
+					// The first position is considered the center
+					// The second vertice is the radius
+
+					// Pop the last vertice and store it in a temp array
+					let tempPositions = [];
+					for (let i = 0; i < 6; i++) {
+						tempPositions.push(this.positions.pop());
+					}
+
+					// Make sure to decrease vertcount since we are removing a vertice
+					this.vertCount--;
+
+					const centerX = this.positions[0];
+					const centerY = this.positions[1];
+					// Calculate the aspect ratio to adjust the circle for a rectangular canvas
+					const aspectRatio = this.gl.canvas.width / this.gl.canvas.height;
+
+					// Calculate radius of circle (i.e distance formula)
+					let radius = Math.sqrt(Math.pow((tempPositions[5] - centerX) * aspectRatio, 2) + Math.pow(tempPositions[4] - centerY, 2));
+
+					// If we have an outline shape style, we dont need the center vertice
+					if (!this.drawShapeStyle) {
+						for (let i = 0; i < 6; i++) {
+							this.positions.pop();
+						}
+						this.vertCount--;
+					}
+
+					// Generate 30 vertices for the circle based on the radius, and the current center
+					for (let i = 0; i <= 30; i++) {
+						let angle = i * 2 * Math.PI / 30;
+						// Adjust the x by the aspect ratio so it doesnt look like an eclipse if the
+						// canvas is a rectangle
+						let adjustedX = centerX + radius * Math.cos(angle) / aspectRatio;
+						this.positions.push(adjustedX, centerY + radius * Math.sin(angle), 0, color[0], color[1], color[2]);
+						this.vertCount++;
+					}
+					
+
+					gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+					// Load the points
+					gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.positions), gl.STATIC_DRAW);
+
+					if (!this.drawShapeStyle) {
+						// We need to add the center position again but to the beginning of the array
+						// Because the user hasn't actually created the circle yet and we don't want
+						// to render the center in the "outline"
+						this.positions.unshift(centerX, centerY, 0, color[0], color[1], color[2]);
+					}
+				}
+				
+				// If we are not drawing a circle, we need to load the points
+				if (this.drawShapeType != "Circle") {
+					gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+					// load the points
+					gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.positions), gl.STATIC_DRAW);
+				}
+			}
+			
+			// This will remove the last 6 vertices
+			tempRemove()
+			{
+				if (this.drawShapeType == "Box") {
+					// Remove the last 3 vertices 
+					for (let i = 0; i < 18; i++) {
+						this.positions.pop();
+					}
+					this.vertCount -= 3;
+				} else if (this.drawShapeType == "Circle") {
+					// Remove the last 31 vertices if fill is selected
+					if (this.drawShapeStyle) {
+						for (let i = 0; i < 31 * 6; i++) {
+							this.positions.pop();
+						}
+
+						this.vertCount -= 31;
+					} else {
+						// Remove the last 30 vertices if outline is selected and set the vert count to 1
+						// Basically only keep the center vertice
+						this.positions.splice(6);
+						this.vertCount = 1;
+					}
+				}
+				else {
+					// Remove the last vertice
+					for (let i = 0; i < 6; i++) {
+						this.positions.pop();
+					}
+					this.vertCount--;
+				}
+				
+				gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.positions), gl.STATIC_DRAW);
+			}
+
+			// This function renders the shape
+			render(program) {
+				const gl = this.gl;
+				
+				gl.useProgram(program);
+				
+				gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+				
+				const positionAttrib = gl.getAttribLocation(program, "a_position");
+				gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
+				gl.enableVertexAttribArray(positionAttrib);
+				
+				const colorAttrib = gl.getAttribLocation(program, "vert_color");
+				gl.vertexAttribPointer(colorAttrib, 3, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
+				gl.enableVertexAttribArray(colorAttrib);
+				
+				// Depending on the shape, render it using the correct draw type
+				if (this.drawShapeType == "Box") {
+					gl.drawArrays(this.drawShapeStyle ? gl.TRIANGLE_STRIP : gl.LINE_LOOP, 0, this.vertCount);
+				}
+				else if (this.drawShapeType == "Line") {
+					gl.drawArrays(gl.LINE_STRIP, 0, this.vertCount);
+				}
+				else if (this.drawShapeType == "Circle") {
+					gl.drawArrays(this.drawShapeStyle ? gl.TRIANGLE_FAN : gl.LINE_STRIP, 0, this.vertCount);
+				}
+				else if (this.drawShapeType == "Triangle") {
+					gl.drawArrays(this.drawShapeStyle ? gl.TRIANGLES : gl.LINE_LOOP, 0, this.vertCount);
+				}
+				else if (this.drawShapeType == "N-Polygon") {
+					if (this.vertCount > 2) {
+						gl.drawArrays(this.drawShapeStyle ? gl.TRIANGLE_FAN : gl.LINE_LOOP, 0, this.vertCount);
+					} else {
+						gl.drawArrays(gl.LINE_LOOP, 0, this.vertCount);
+					}
+				}
+			}
+
+		}
+		
+		class main {	
+			constructor() {
+				this.x = 10;
+				this.myWEBGL = new WebGL_Interface();
+				this.program = this.myWEBGL.program;
+				this.myShapes = [];
+				this.drawShapeType = "Triangle";
+				this.drawShapeStyle = 1;
+				this.shapeColor = [1, 0, 0]; // R, G, B
+			}
+			
+			// This is activated when the mouse is clicked
+			mouseClickHandle(event) {
+				var rect = canvas.getBoundingClientRect();
+				var realX = event.clientX - rect.left;
+				var realY = event.clientY - rect.top;
+
+				var x = -1 + 2 * realX / myCanvas.width;
+				var y = -1 + 2 * (myCanvas.height - realY) / myCanvas.height;
+
+				if (this.myShapes.length == 0 || this.myShapes[this.myShapes.length - 1].isFinished) {
+					var temp = new Shape(this.myWEBGL.gl, this.drawShapeType, this.drawShapeStyle);
+					temp.addPoint(x, y, this.shapeColor);
+					this.myShapes.push(temp);
+				}
+				else {
+					this.myShapes[this.myShapes.length - 1].addPoint(x, y, this.shapeColor);
+				}
+				this.renderAll();
+			}
+			
+			// This is activated when the mouse moves
+			mouseMove(event) {
+				if (this.myShapes.length != 0 && !this.myShapes[this.myShapes.length - 1].isFinished) {
+					var rect = canvas.getBoundingClientRect();
+					var realX = event.clientX - rect.left;
+					var realY = event.clientY - rect.top;
+					
+					var x = -1 + 2 * realX / myCanvas.width;
+					var y = -1 + 2 * (myCanvas.height - realY) / myCanvas.height;
+
+					// Make separate functionalities to handle the different shapes for their outline when drawing
+					this.myShapes[this.myShapes.length - 1].tempAdd(x, y, this.shapeColor)
+					this.renderAll();
+					this.myShapes[this.myShapes.length - 1].tempRemove()
+				}
+			}
+			
+			// This handles rendering all the shapes
+			renderAll() {
+				for (let i = 0; i < this.myShapes.length; i++) {
+					this.myShapes[i].render(this.program, this.drawShapeType, this.drawShapeStyle);
+				}
+			}
+			
+			// This handles the clear button action
+			clearButtonHandle()
+			{
+				this.myWEBGL.clearCanvas();
+				this.myShapes = [];
+			}
+			
+			// This will change the color so that we can draw with it
+			changeColorHandle(colorValue) {
+				const r = parseInt(colorValue.substring(1, 3), 16) / 255;
+				const g = parseInt(colorValue.substring(3, 5), 16) / 255;
+				const b = parseInt(colorValue.substring(5, 7), 16) / 255;
+				this.shapeColor = [r, g, b];
+			}
+
+			handleShapeSelect(event) {
+				this.drawShapeType = event.value;
+			}
+			
+			handleChangeStyle(event) {
+				this.drawShapeStyle = event.target.value == "fill" ? 1 : 0;
+			}
+
+			handleRightClick() {
+				if ((this.drawShapeType == "Line" || this.drawShapeType == "N-Polygon") && this.myShapes.length != 0) {
+					this.myShapes[this.myShapes.length - 1].isFinished = true;
+					// Remove the last line since the user stopped drawing
+					this.renderAll();
+				}
+			}
+
+			// == STATIC FUNCTIONS BELOW == \\
+
+			// This handles mouse clicks 
+			static mouseClicks(event) {
+				m.mouseClickHandle(event);
+			}
+
+			// This handles the shape selection
+			static shapeSelect() {
+				m.handleShapeSelect(this);
+			}
+			
+			// This handles the clear button
+			static clearButton() {
+				m.clearButtonHandle();
+			}
+			
+			// This handles the mouse movement
+			static mouseM(event) {
+				m.mouseMove(event);
+			}
+
+			static changeColor(event) {
+				m.changeColorHandle(event.target.value);			
+			}
+
+			static changeStyle(event) {
+				m.handleChangeStyle(event);
+			}
+
+			static rightClick() {
+				m.handleRightClick();
+			}
+		}
+		
+		
+		</script>
+		
+		
+
+	</Head>
+	<BODY style="padding: 15px;">
+		<HEADER>
+		
+		</HEADER>
+		
+		<CANVAS id="myCanvas" width="640" height="400" style = "border: 1px solid #000;">
+			Your browser does not support canvas.
+		</CANVAS>
+		
+		<button id="clearCanvas">Clear Canvas</button>
+		
+		
+		<select id="shapeSel" size ='1'>
+			<option value="Box">Box</option>
+			<option value="Line">Line</option>
+			<option value="Circle">Circle</option>
+			<option value="Triangle" selected>Triangle</option>
+			<option value="N-Polygon">N-Polygon</option>
+		</select>
+		
+		<input type="color" id="colorpicker" value="#ff0000"/>
+
+		<input id="fill" type="radio" name="style" value="fill" checked>Fill</input>
+
+		<input id="outline" type="radio" name="style" value="outline">Outline</input>
+		
+		<FOOTER>
+		
+		</FOOTER>
+		<SCRIPT>
+			const canvas = document.getElementById("myCanvas");
+			const gl = canvas.getContext("webgl");
+			
+			const m = new main();
+			
+			canvas.addEventListener("click", main.mouseClicks);
+			canvas.addEventListener("mousemove", main.mouseM);
+
+			// This will prevent the default context menu, and will
+			// allow for a custom right click action (ending the line)
+			canvas.oncontextmenu=function(e){
+				e.preventDefault();
+				main.rightClick();
+			};
+
+			const shapeSel = document.getElementById("shapeSel");
+			shapeSel.addEventListener("click", main.shapeSelect);
+			
+			const clearCanvasButton = document.getElementById("clearCanvas");
+			clearCanvasButton.addEventListener("click", main.clearButton);
+
+			const colorSelect = document.getElementById("colorpicker");
+			colorSelect.addEventListener("change", main.changeColor);
+
+			const fillRadio = document.getElementById("fill");
+			const outlineRadio = document.getElementById("outline");
+
+			fillRadio.addEventListener("change", main.changeStyle);
+			outlineRadio.addEventListener("change", main.changeStyle);
+
+			
+		</SCRIPT>
+		
+	</BODY>
+	
+</HTML>
+		
+		
