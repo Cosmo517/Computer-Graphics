@@ -1,0 +1,315 @@
+<!DOCTYPE HTML>
+<HTML lang="en">
+    <Head>
+        <Title>Placement</TITLE>
+        <script id="2dVertexShader" type="notjs">
+            attribute vec4 a_position;	
+            attribute vec3 vert_color;
+            varying vec3 fragColor;
+            uniform vec3 transform;
+            uniform vec3 rotation;		
+            
+            // Use a function to position the object
+            vec4 PositionObject(vec4 pos) {
+                mat4 translateM = mat4(1.0, 0.0, 0.0, 0.0,
+                                        0.0, 1.0, 0.0, 0.0,
+                                        0.0, 0.0, 1.0, 0.0,
+                                        transform.x, transform.y, transform.z, 1.0);
+                return translateM * pos;	
+            }
+            
+            // Use a function to Rotate the object
+            vec4 RotateObject(vec4 pos) {
+                vec3 c = cos(rotation);
+                vec3 s = sin(rotation);
+                fragColor = vert_color;
+
+            	//Surprise!  we have to go column firt when we enter the matrix.
+            
+                mat4 rotateX = mat4(1.0, 0.0,  0.0, 0.0,
+                                    0.0, c.x, -s.x, 0.0,
+                                    0.0, s.x,  c.x, 0.0,
+                                    0.0, 0.0,  0.0, 1.0);
+
+                mat4 rotateY = mat4(c.y, 0.0, -s.y, 0.0,
+                                    0.0, 1.0,  0.0, 0.0,
+                                    s.y, 0.0,  c.y, 0.0,
+                                    0.0, 0.0,  0.0, 1.0);
+
+                mat4 rotateZ = mat4(c.z, -s.z, 0.0, 0.0,
+                                    s.z,  c.z, 0.0, 0.0,
+                                    0.0,  0.0, 1.0, 0.0,
+                                    0.0,  0.0, 0.0, 1.0);
+
+                return rotateY * rotateX * rotateZ * pos;
+            }
+            
+            void main() {
+                gl_Position = PositionObject(RotateObject(a_position));
+            }
+        </SCRIPT>
+        <script id="2dFragmentShader" type="notjs">
+            precision mediump float;
+            varying vec3 fragColor;
+            
+            void main() {
+            	//gl_FragColor = vec4(0, 0, 1, 1); //Between 0 and 1.
+                gl_FragColor = vec4(fragColor, 1);
+            }
+        </script>
+        <script>
+            class DiceEightSides {
+                constructor(rotateX, rotateY, rotateZ, startX, startY, startZ, moveX, moveY, moveZ) {
+                    // Store if the shape should rotate in a certain direction
+                    this.rotateX = rotateX;
+                    this.rotateY = rotateY;
+                    this.rotateZ = rotateZ;
+
+                    // Store the starting point of the shape (center)
+                    this.startX = startX;
+                    this.startY = startY;
+                    this.startZ = startZ;
+
+                    // Store how the speed of the shape in each direction
+                    this.moveX = moveX;
+                    this.moveY = moveY;
+                    this.moveZ = moveZ;
+                    
+                    this.buffer = gl.createBuffer();
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+
+                    // Define the vertices for each face of the die
+                    this.vertices = [	
+                        // Face 1
+                        0, 0.25, 0,   1.0, 0.341, 0.2,
+                        0, 0, 0.25,   1.0, 0.341, 0.2,
+                        0.25, 0, 0,   1.0, 0.341, 0.2,
+
+                        // Face 2
+                        0, 0.25, 0,   0.2, 1.0, 0.341,
+                        0.25, 0, 0,   0.2, 1.0, 0.341,
+                        0, 0, -0.25,  0.2, 1.0, 0.341,
+
+                        // Face 3
+                        0, 0.25, 0,   0.2, 0.341, 1.0,
+                        0, 0, -0.25,  0.2, 0.341, 1.0,
+                        -0.25, 0, 0,  0.2, 0.341, 1.0,
+
+                        // Face 4
+                        0, 0.25, 0,   1.0, 0.2, 0.659,
+                        -0.25, 0, 0,  1.0, 0.2, 0.659,
+                        0, 0, 0.25,   1.0, 0.2, 0.659,
+
+                        // Face 5
+                        0, -0.25, 0,   1.0, 0.843, 0.0,
+                        0, 0, 0.25,    1.0, 0.843, 0.0,
+                        0.25, 0, 0,    1.0, 0.843, 0.0,
+
+                        // Face 6
+                        0, -0.25, 0,   0.502, 0.0, 0.502,
+                        0.25, 0, 0,    0.502, 0.0, 0.502,
+                        0, 0, -0.25,   0.502, 0.0, 0.502,
+
+                        // Face 7
+                        0, -0.25, 0,   0.0, 1.0, 1.0,
+                        0, 0, -0.25,   0.0, 1.0, 1.0,
+                        -0.25, 0, 0,   0.0, 1.0, 1.0,
+
+                        // Face 8
+                        0, -0.25, 0,   0.647, 0.165, 0.165,
+                        -0.25, 0, 0,   0.647, 0.165, 0.165,
+                        0, 0, 0.25,    0.647, 0.165, 0.165,
+                    ];
+
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+                    // Set the starting location to the given startX/Y/Z
+                    this.loc = [this.startX, this.startY, this.startZ];
+                    this.rot = [0.0,0.0,0.0];
+                }
+            
+                render(program) {
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    
+                    const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+                    let size = 3;
+                    let type = gl.FLOAT;
+                    let normalize = false;
+                    let stride = 6 * Float32Array.BYTES_PER_ELEMENT;
+                    let offset = 0;
+
+                    gl.enableVertexAttribArray(positionAttributeLocation);
+                    gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+                    
+                    // Now we have to do this for color
+                    const colorAttributeLocation = gl.getAttribLocation(program,"vert_color");
+
+                    // We don't have to bind because we already have the correct buffer bound.
+                    size = 3;
+                    type = gl.FLOAT;
+                    normalize = false;
+                    stride = 6*Float32Array.BYTES_PER_ELEMENT;
+                    offset = 3*Float32Array.BYTES_PER_ELEMENT;
+
+                    gl.enableVertexAttribArray(colorAttributeLocation);
+                    gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
+
+                    let tranLoc  = gl.getUniformLocation(program, 'transform');
+                    gl.uniform3fv(tranLoc, new Float32Array(this.loc));
+                    let thetaLoc = gl.getUniformLocation(program, 'rotation');
+                    gl.uniform3fv(thetaLoc, new Float32Array(this.rot));
+                    
+                    let primitiveType = gl.TRIANGLES;
+                    offset = 0;
+                    let count = 24;
+                    gl.drawArrays(primitiveType, offset, count);
+                }
+            }
+        </script>
+
+        <script>
+            class WebGL_Interface {
+                constructor() {
+                    this.vertexShaderSource = document.getElementById("2dVertexShader").text;
+                    this.fragmentShaderSource = document.getElementById("2dFragmentShader").text;
+                    this.vertexShader = this.createShader(gl.VERTEX_SHADER, this.vertexShaderSource);
+                    this.fragmenShader = this.createShader(gl.FRAGMENT_SHADER, this.fragmentShaderSource);
+
+            		// Link to program
+                    this.program = this.createProgram(this.vertexShader,this.fragmenShader);
+
+                    // Setup our viewport
+                    gl.viewport(0,0, gl.canvas.width, gl.canvas.height);
+
+                    // Set clear colors
+                    gl.clearColor(1,1,1,1);
+                    gl.clear(gl.COLOR_BUFFER_BIT);
+
+            		// What program to use;
+                    gl.enable(gl.DEPTH_TEST);
+                    gl.useProgram(this.program);
+                }
+
+                createShader(type, source) {
+                    let shader = gl.createShader(type);
+                    gl.shaderSource(shader,source);
+                    gl.compileShader(shader);
+                    let success = gl.getShaderParameter(shader,gl.COMPILE_STATUS);
+
+                    if (success) {
+                        return shader;
+                    }
+
+            		// Else it didn't work
+                    console.error(gl.getShaderInfoLog(shader));
+                    gl.deleteShader(shader);
+                }
+                
+                createProgram(vs, fs) {
+                    let program = gl.createProgram();
+                    gl.attachShader(program,vs);
+                    gl.attachShader(program,fs);
+                    gl.linkProgram(program);
+                    let succsess = gl.getProgramParameter(program,gl.LINK_STATUS);
+
+                    if(succsess) {
+                        return program;
+                    }
+
+                    console.error(gl.getProgramInfoLog(program));
+                    gl.deleteProgram(program);	
+                }
+            }
+        </script>
+        <script>
+            myWebGL = null;
+            
+            function loop() {
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+                for(var i=0; i < m.myDice.length; i++) {
+                    // Only move and rotate the dice that need to be moved or rotated
+                    if (m.myDice[i].rotateX) {
+                        m.myDice[i].rot[0] += .01;
+                    }
+                    
+                    if (m.myDice[i].rotateY) {
+                        m.myDice[i].rot[1] += .01;
+                    }
+
+                    if (m.myDice[i].rotateZ) {
+                        m.myDice[i].rot[2] += .01;
+                    }
+
+                    if (m.myDice[i].moveX) {
+                        m.myDice[i].loc[0] += m.myDice[i].moveX;
+                    }
+
+                    if (m.myDice[i].moveY) {
+                        m.myDice[i].loc[1] += m.myDice[i].moveY;
+                    }
+
+                    if (m.myDice[i].moveZ) {
+                        m.myDice[i].loc[2] += m.myDice[i].moveZ;
+                    }
+
+                    // Lastly render the dice
+                    m.myDice[i].render(m.myWEBGL.program );
+                }
+            
+                requestAnimationFrame(loop);
+            }
+            
+            class main {
+                constructor() {
+                    this.myWEBGL = new WebGL_Interface();
+                    myWebGL = this.myWEBGL;
+
+                    // Store the list of dice
+                    this.myDice = [];
+
+                    // Static Dice
+                    this.myDice.push(new DiceEightSides(false, true, false, 0, 0.5, 0, 0, 0, 0));
+                    this.myDice.push(new DiceEightSides(true, false, false, -0.5, -0.5, 0, 0, 0, 0));
+                    this.myDice.push(new DiceEightSides(false, false, true, 0.5, -0.5, 0, 0, 0, 0));
+                }
+
+                randomSpeed() {
+                    let value;
+                    do {
+                        value = (Math.random() * 0.01) - 0.005;
+                    } while (value == 0)
+                    return value
+                }
+
+                static canvasHandle(event) {
+                    const rect = canvas.getBoundingClientRect();
+                    const realX = event.clientX - rect.left;
+                    const realY = event.clientY - rect.top;
+                                        
+                    const x = -1 + 2 * event.clientX / myCanvas.width;
+                    const y = -1 + 2 * (myCanvas.height - event.clientY) / myCanvas.height;
+                    
+                    let randomX = m.randomSpeed();
+                    let randomY = m.randomSpeed();
+                    let randomZ = 0;
+
+                    let temp = new DiceEightSides(false, false, false, 0, 0, 0, randomX, randomY, randomZ);
+                    m.myDice.push(temp);
+                }
+            }			
+            
+        </script>
+    </Head>
+    <BODY>
+        <CANVAS id="myCanvas" width="600" height="600" style = "border: 1px solid #000;">
+            Your browser does not support canvas.
+        </CANVAS>
+        <SCRIPT>
+            let canvas = document.getElementById("myCanvas");
+            let gl = canvas.getContext("webgl");
+            
+            let m = new main();
+            requestAnimationFrame(loop);			
+            canvas.addEventListener("click",main.canvasHandle);
+        </SCRIPT>
+    </BODY>
+</HTML>
