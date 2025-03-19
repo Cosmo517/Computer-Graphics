@@ -32,8 +32,10 @@ class Coin extends GameObject {
 
     // Deal with player hitting the coin
     onTriggerEnter(other) {
-        m.destroyObject(this.id)
-		m.increaseCoinCount();
+		if (other.name == "Player") {
+			m.destroyObject(this.id)
+			m.increaseCoinCount();
+		}
 	}
 
     render(program, verticeCount) {

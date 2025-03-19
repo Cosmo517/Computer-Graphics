@@ -1,4 +1,4 @@
-class Triangle extends GameObject {
+class Player extends GameObject {
 	constructor() {
 		super();
 		this.buffer = gl.createBuffer();
@@ -22,6 +22,8 @@ class Triangle extends GameObject {
 		-.2, -.2, 0, 1, 1, 0 
 		];
 		
+		this.bulletTimer = 0;
+
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 		this.loc = [0.0, 0.0, 0.0];
 		this.rot = [0.0, 0.0, 0.0];
@@ -56,12 +58,25 @@ class Triangle extends GameObject {
 				this.velocity[i] += forward[i] * 0.01;
 			}
 		}
+
 		if (m.checkKey("S")) {
 			for (let i = 0; i < 3; i++) {
 				this.velocity[i] -= forward[i] * 0.01;
 			}
 		}
 
+		let bulletLoc = [
+			this.loc[0] + forward[0] * 0.2,
+			this.loc[1] + forward[1] * 0.2,
+			this.loc[2] + forward[2]
+		];
+
+		if (m.checkKey(" ") && this.bulletTimer >= 30) {
+			m.createObject(1, Bullet, bulletLoc, this.rot, "Bullet")
+			this.bulletTimer = 0;
+		}
+
+		this.bulletTimer++;
 		this.Move();
 	}
 

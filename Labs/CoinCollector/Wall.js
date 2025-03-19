@@ -65,6 +65,13 @@ class Wall extends GameObject {
 		this.rot = [0.0, 0.0, 0.0];
 	}
     
+	onCollisionEnter(other) {
+		console.log(other.id)
+		if (other.name == "Bullet") {
+			m.destroyObject(other.id)
+		}
+	}
+
 	update() {
 		// dont perform any movement
 	}

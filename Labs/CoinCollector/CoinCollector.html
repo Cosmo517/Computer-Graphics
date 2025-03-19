@@ -5,8 +5,10 @@
         <script src="Transform.js"></script>
         <script src="GameObject.js"></script>
         <script src="Player.js"></script>
+		<script src="Enemy.js"></script>
 		<script src="Wall.js"></script>
 		<script src="Coin.js"></script>
+		<script src="Bullet.js"></script>
         <script src="WebGLInterface.js"></script>
 
 		<script id="2dVertexShader" type="notjs">
@@ -85,12 +87,11 @@
 						}
 					}
 				}
-				this.createObject(1, Triangle, [0, 0, 0], [0, 0, 0], "Player");
-				this.createObject(2, Coin, [0.5, 0.5, 0], [0, 0, 0], "Coin")
 
-				console.log(this.Visual);
-				console.log(this.Solid);
-				console.log(this.Trigger)
+				// Create test player, coin, and enemy objects
+				this.createObject(1, Player, [0, 0, 0], [0, 0, 0], "Player");
+				this.createObject(2, Coin, [0.5, 0.5, 0], [0, 0, 0], "Coin")
+				this.createObject(1, Enemy, [-0.5, 0.5, 0], [0, 0, 0], "Enemy")
 			}
 			
 			updateAll() {
