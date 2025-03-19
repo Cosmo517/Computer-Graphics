@@ -4,7 +4,7 @@
         <Title>"Coin Collector"</TITLE>
         <script src="Transform.js"></script>
         <script src="GameObject.js"></script>
-        <script src="Triangle.js"></script>
+        <script src="Player.js"></script>
 		<script src="Wall.js"></script>
 		<script src="Coin.js"></script>
         <script src="WebGLInterface.js"></script>
@@ -70,7 +70,8 @@
 				this.Solid = [];
 				this.Trigger = [];
 				this.ObjectCounter = 0;
-				
+				this.coins = 0;
+
 				this.myWEBGL = new WebGL_Interface();
 				this.program = this.myWEBGL.program;
 				this.keys = [];
@@ -80,15 +81,12 @@
 					for (let x = -9; x < 10; x += 1) {
 						if (y == 9 || y == -9 || x == 9 || x == -9) {
 							//console.log("Placing wall at (" + x + ", " + y + ")")
-							this.createObject(1, Wall, [x / 10, y / 10, 0], [0, 0, 0]);
+							this.createObject(1, Wall, [x / 10, y / 10, 0], [0, 0, 0], "Wall");
 						}
 					}
 				}
-
-				console.log(this.Solid)
-
-				this.createObject(1, Triangle, [0, 0, 0], [0, 0, 0]);
-				this.createObject(2, Coin, [0.5, 0.5, 0], [0, 0, 0])
+				this.createObject(1, Triangle, [0, 0, 0], [0, 0, 0], "Player");
+				this.createObject(2, Coin, [0.5, 0.5, 0], [0, 0, 0], "Coin")
 
 				console.log(this.Visual);
 				console.log(this.Solid);
@@ -129,7 +127,7 @@
 			}
 
 			
-			createObject(type, prefab, loc, rot) {
+			createObject(type, prefab, loc, rot, name) {
 				//type 0 = visual
 				//type 1 = solid
 				//type 2 = trigger
@@ -138,6 +136,7 @@
 				this.ObjectCounter++;
 				temp.id = id;
 				temp.prefab = prefab;
+				temp.name = name;
 				for(let i = 0; i < 3; i++) {
 					temp.loc[i] = loc[i];
 					temp.rot[i] = rot[i];
@@ -204,6 +203,12 @@
 				console.log("The click occurred on "+x+","+y);
 			}
 
+			increaseCoinCount() {
+				const coinCounter = document.getElementById("Coin-count");
+				this.coins++;
+				coinCounter.innerHTML = "Coins: " + this.coins;
+			}
+
 			
 			//Static call backs go down here
 			//   |
@@ -243,7 +248,7 @@
 			Your browser does not support canvas.
 		</CANVAS>
 		
-		<button id="myB">Clear Canvas</button>
+		<div id="Coin-count">Coins: 0</div>
 		
 		<SCRIPT>
 			var canvas = document.getElementById("myCanvas");
@@ -258,10 +263,6 @@
 		</SCRIPT>
 		
 		<FOOTER>
-		
 		</FOOTER>
-
-		
 	</BODY>
-	
 </HTML>

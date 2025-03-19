@@ -27,11 +27,13 @@ class Coin extends GameObject {
     
 	update() {
         this.rot[1] += 0.01;
+		this.Move();
 	}
 
     // Deal with player hitting the coin
     onTriggerEnter(other) {
-        console.log("TRIGGER!! " + other)
+        m.destroyObject(this.id)
+		m.increaseCoinCount();
 	}
 
     render(program, verticeCount) {

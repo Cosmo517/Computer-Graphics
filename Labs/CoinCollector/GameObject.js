@@ -19,12 +19,14 @@ class GameObject {
 			tempF[i] = this.loc[i];
 			tempF[i] += this.velocity[i];
 		}
+
+		
 		if (!this.isTrigger) {
 			var clear = true;
+			// Handle collisions with other solids
 			for (var so in m.Solid) {
 				if (m.Solid[so] != this) {
 					if (m.checkCollision(tempF, this.collisionRadius, m.Solid[so].loc, m.Solid[so].collisionRadius)) {
-						console.log("Checking: " + so)
 						try {
 							m.Solid[so].onCollisionEnter(this);
 						} catch {}
@@ -32,22 +34,26 @@ class GameObject {
 					}
 				}
 			}
+			
+			// Handle collisions with triggers
+			for (var tr in m.Trigger) {
+				if (m.Trigger[tr] != this) {
+					if (m.checkCollision(tempF, this.collisionRadius, m.Trigger[tr].loc, m.Trigger[tr].collisionRadius)) {
+						try {
+							m.Trigger[tr].onTriggerEnter(this);
+						} catch {}
+					}
+				}
+			}
+		
 			if (clear) {
 				this.loc = tempF;
 			}
 		} else {
 			this.loc = tempF;
-			for (var so in m.Trigger) {
-				console.log("COLLISION")
-				if (m.checkCollision(tempF, this.collisionRadius, m.Solid[so].loc, m.Solid[so].collisionRadius)) {
-					onTriggerEnter(m.Trigger[so])
-					try {
-						m.Solid[so].onTriggerEnter(this);
-					} catch {}
-				}
-			}
-			this.loc = tempF;
 		}
+		
+
 	}
 	
 	onCollisionEnter(other) {
