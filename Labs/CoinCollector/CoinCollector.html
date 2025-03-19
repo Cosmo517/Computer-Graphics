@@ -6,6 +6,7 @@
         <script src="GameObject.js"></script>
         <script src="Triangle.js"></script>
 		<script src="Wall.js"></script>
+		<script src="Coin.js"></script>
         <script src="WebGLInterface.js"></script>
 
 		<script id="2dVertexShader" type="notjs">
@@ -73,8 +74,25 @@
 				this.myWEBGL = new WebGL_Interface();
 				this.program = this.myWEBGL.program;
 				this.keys = [];
-				
-				this.createObject(1, Wall, [0, 0, 0], [0,0,0]);
+
+				// Create walls that surround the place
+				for (let y = -9; y < 10; y += 1) {
+					for (let x = -9; x < 10; x += 1) {
+						if (y == 9 || y == -9 || x == 9 || x == -9) {
+							//console.log("Placing wall at (" + x + ", " + y + ")")
+							this.createObject(1, Wall, [x / 10, y / 10, 0], [0, 0, 0]);
+						}
+					}
+				}
+
+				console.log(this.Solid)
+
+				this.createObject(1, Triangle, [0, 0, 0], [0, 0, 0]);
+				this.createObject(2, Coin, [0.5, 0.5, 0], [0, 0, 0])
+
+				console.log(this.Visual);
+				console.log(this.Solid);
+				console.log(this.Trigger)
 			}
 			
 			updateAll() {
@@ -105,8 +123,9 @@
 				}
 			}
 			
-			checkCollision(loc1,rad1,loc2, rad2) {
-				return false;
+			checkCollision(loc1, rad1, loc2, rad2) {
+				let distance = Math.sqrt(Math.pow(loc1[0] - loc2[0], 2) + Math.pow(loc1[1] - loc2[1], 2) + Math.pow(loc1[2] - loc2[2], 2));
+				return (rad1 + rad2) > distance;
 			}
 
 			
@@ -133,6 +152,7 @@
 						break;
 					case 2:
 						this.Trigger[id] = temp;
+						this.Trigger[id].isTrigger = true;
 						break;
 					default:
 						break;

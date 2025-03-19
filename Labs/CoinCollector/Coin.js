@@ -1,70 +1,40 @@
-class GameObject {
+class Coin extends GameObject {
 	constructor() {
-		this.loc = [0,0,0];
-		this.rot = [0,0,0];
-		this.isTrigger = false;
-		this.collisionRadius = 0.05;
-		this.velocity = [0,0,0];
-		this.angVelocity = [0,0,0];
-		this.name = "Default";
-		this.id = 0;
-		this.transform = new Transform();
-		this.prefab;
+		super();
+		this.buffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+		//Now we want to add color to our vertices information.
+		this.vertices = [];
+        this.generateVertices(0.1, 30);
+
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+		this.loc = [0.0, 0.0, 0.0];
+		this.rot = [0.0, 0.0, 0.0];
 	}
-	
-	// Assumes the velocity is working correctly
-	Move() {
-		var tempF = [0, 0, 0];
-		for (var i = 0; i < 3; i++) {
-			tempF[i] = this.loc[i];
-			tempF[i] += this.velocity[i];
-		}
-		if (!this.isTrigger) {
-			var clear = true;
-			for (var so in m.Solid) {
-				if (m.Solid[so] != this) {
-					if (m.checkCollision(tempF, this.collisionRadius, m.Solid[so].loc, m.Solid[so].collisionRadius)) {
-						console.log("Checking: " + so)
-						try {
-							m.Solid[so].onCollisionEnter(this);
-						} catch {}
-						clear = false;
-					}
-				}
-			}
-			if (clear) {
-				this.loc = tempF;
-			}
-		} else {
-			this.loc = tempF;
-			for (var so in m.Trigger) {
-				console.log("COLLISION")
-				if (m.checkCollision(tempF, this.collisionRadius, m.Solid[so].loc, m.Solid[so].collisionRadius)) {
-					onTriggerEnter(m.Trigger[so])
-					try {
-						m.Solid[so].onTriggerEnter(this);
-					} catch {}
-				}
-			}
-			this.loc = tempF;
-		}
-	}
-	
-	onCollisionEnter(other) {
-		// virtual function
-		// colliding with another object
-	}
-	
-	onTriggerEnter(other) {
-		// virtual function
-		// Colliding with some trigger and getting an event happen
-	}
-	
+
+    generateVertices(radius, segments) {
+        this.vertices.push(0.0, 0.0, 0.0, 1.0, 0.8431, 0.0);
+
+        for (let i = 0; i <= segments; i++) {
+            const angle = (i / segments) * Math.PI * 2;
+            const x = radius * Math.cos(angle);
+            const y = radius * Math.sin(angle);
+            const z = 0;
+            // Currently generates a flat coin, we can fix this later
+            this.vertices.push(x, y, z, 1.0, 0.8431, 0.0);
+        }
+    }
+    
 	update() {
-		console.error(this.name +" update() is NOT IMPLEMENTED!");
+        this.rot[1] += 0.01;
 	}
-	
-	render(program, verticeCount) {
+
+    // Deal with player hitting the coin
+    onTriggerEnter(other) {
+        console.log("TRIGGER!! " + other)
+	}
+
+    render(program, verticeCount) {
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 		
 		//First we bind the buffer for triangle 1
@@ -94,9 +64,10 @@ class GameObject {
 		gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
 		
 		
-		var primitiveType = gl.TRIANGLES;
+		var primitiveType = gl.TRIANGLE_FAN;
 		offset = 0;
 		var count = verticeCount / 6;
 		gl.drawArrays(primitiveType, offset, count);
     }
+
 }
