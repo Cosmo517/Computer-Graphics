@@ -110,15 +110,15 @@
 
 			renderAll() {
 				for(var i in this.Visual) {
-					this.Visual[i].render(this.program, this.Visual[i].vertices.length);
+					this.Visual[i].render(this.program, this.Visual[i].vertices.length, this.Visual[i].primitiveType);
 				}
 
 				for(var i in this.Solid) {
-					this.Solid[i].render(this.program, this.Solid[i].vertices.length);
+					this.Solid[i].render(this.program, this.Solid[i].vertices.length, this.Solid[i].primitiveType);
 				}
 
 				for(var i in this.Trigger) {
-					this.Trigger[i].render(this.program, this.Trigger[i].vertices.length);
+					this.Trigger[i].render(this.program, this.Trigger[i].vertices.length, this.Trigger[i].primitiveType);
 				}
 			}
 			

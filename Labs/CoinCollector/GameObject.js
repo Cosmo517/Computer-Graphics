@@ -10,6 +10,7 @@ class GameObject {
 		this.id = 0;
 		this.transform = new Transform();
 		this.prefab;
+		this.primitiveType = gl.TRIANGLES;
 	}
 	
 	// Assumes the velocity is working correctly
@@ -70,7 +71,7 @@ class GameObject {
 		console.error(this.name +" update() is NOT IMPLEMENTED!");
 	}
 	
-	render(program, verticeCount) {
+	render(program, verticeCount, primitiveType) {
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 		
 		//First we bind the buffer for triangle 1
@@ -99,8 +100,6 @@ class GameObject {
 		var thetaLoc = gl.getUniformLocation(program,'rotation');
 		gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
 		
-		
-		var primitiveType = gl.TRIANGLES;
 		offset = 0;
 		var count = verticeCount / 6;
 		gl.drawArrays(primitiveType, offset, count);
