@@ -70,6 +70,10 @@ class Wall extends GameObject {
 		if (other.name == "Bullet") {
 			m.destroyObject(other.id)
 		}
+		
+		if (other.name == "Enemy") {
+			other.reverseDirection = !other.reverseDirection
+		}
 	}
 
 	update() {

@@ -45,6 +45,10 @@ class Enemy extends GameObject {
             -0.1, 0, 0,   0.647, 0.165, 0.165,
             0, 0, 0.1,    0.647, 0.165, 0.165,
         ];
+
+        // 0 is for x, 1 is for y
+        this.randomDirection = Math.round(Math.random());
+        this.reverseDirection = false;
 		
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 		this.loc = [0.0, 0.0, 0.0];
@@ -65,6 +69,22 @@ class Enemy extends GameObject {
 	}
 
 	update() {
+        let forward = [
+            this.randomDirection ? 0 : 1,
+            this.randomDirection ? 1 : 0,
+			0
+		];
+
+		this.velocity = [0, 0, 0];
+
+        for (let i = 0; i < 3; i++) {
+            if (this.reverseDirection) {
+                this.velocity[i] += (forward[i] * -1) * 0.01;
+            } else {
+                this.velocity[i] += forward[i] * 0.01;
+            }
+        }
+
         this.rot[1] += 0.01;
 		this.Move();
 	}
