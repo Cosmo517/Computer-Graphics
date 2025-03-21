@@ -3,7 +3,7 @@ class Player extends GameObject {
 		super();
 		this.buffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-		//Now we want to add color to our vertices information.
+
 		this.vertices = [];
 		this.circleVertexEnd = 0;
 		this.triangleVertexEnd = 0;
@@ -12,7 +12,6 @@ class Player extends GameObject {
 		this.primitiveType = gl.TRIANGLE_FAN;
 		
 		this.bulletTimer = 0;
-		// this.circleVertexEnd = this.vertices.length;
 
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 		this.loc = [0.0, 0.0, 0.0];
@@ -22,7 +21,7 @@ class Player extends GameObject {
 	onCollisionEnter(other) {
 		if (other.name == "Enemy") {
 			m.destroyObject(this.id);
-			alert("Game Over!");
+			alert("Game Over! You Lose!");
 		}
 	}
 
@@ -34,8 +33,12 @@ class Player extends GameObject {
             const x = radius * Math.cos(angle);
             const y = radius * Math.sin(angle);
             const z = 0;
-            // Currently generates a flat coin, we can fix this later
-            this.vertices.push(x, y, z, 0.1764, 0.9019, 0.2745);
+
+			if (i >= 0 && i <= 2 ||i >= 12 && i <= 30) {
+				this.vertices.push(x, y, z, 0.0, 0.0, 0.0);
+			} else {
+				this.vertices.push(x, y, z, 0.1764, 0.9019, 0.2745);
+			}
         }
 
 		this.circleVertexEnd = this.vertices.length;
@@ -70,11 +73,8 @@ class Player extends GameObject {
 		for (let i = 0; i < triangleVertices.length; i++) {
 			this.vertices.push(triangleVertices[i])
 		}
-
 		
-
 		this.triangleVertexEnd = triangleVertices.length;
-		// console.log("Triangle Vertex End: " + this.triangleVertexEnd)
     }
 
     
@@ -161,8 +161,6 @@ class Player extends GameObject {
 		offset = 0;
 		const circleVerticeCount = this.circleVertexEnd / 6;
 		const triangleVerticeCount = this.triangleVertexEnd / 6;
-		console.log("Circle Vertice Count: " + circleVerticeCount)
-		// console.log("Triangle Vertice Count: " + triangleVerticeCount)
 		// Draw circle
 		gl.drawArrays(gl.TRIANGLE_FAN, offset, circleVerticeCount);
 		

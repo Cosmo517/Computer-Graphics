@@ -3,10 +3,10 @@ class Coin extends GameObject {
 		super();
 		this.buffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-		//Now we want to add color to our vertices information.
 		this.vertices = [];
-        this.generateVertices(0.1, 30);
+        this.generateVertices(0.05, 30);
 		this.primitiveType = gl.TRIANGLE_FAN;
+		this.collisionRadius = 0.07
 
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 		this.loc = [0.0, 0.0, 0.0];

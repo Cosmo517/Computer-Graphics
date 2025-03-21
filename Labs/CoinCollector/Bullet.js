@@ -3,7 +3,7 @@ class Bullet extends GameObject {
 		super();
 		this.buffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-		//Now we want to add color to our vertices information.
+
 		const r_inner = 0.01;
 		const r_outer = 0.025;
 		
