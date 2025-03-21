@@ -5,12 +5,14 @@ class Player extends GameObject {
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 		//Now we want to add color to our vertices information.
 		this.vertices = [];
+		this.circleVertexEnd = 0;
+		this.triangleVertexEnd = 0;
+
 		this.generateVertices(0.05, 30)
 		this.primitiveType = gl.TRIANGLE_FAN;
 		
 		this.bulletTimer = 0;
-		this.circleVertexEnd = this.vertices.length;
-		this.triangleVertexEnd = 0;
+		// this.circleVertexEnd = this.vertices.length;
 
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 		this.loc = [0.0, 0.0, 0.0];
@@ -35,42 +37,44 @@ class Player extends GameObject {
             // Currently generates a flat coin, we can fix this later
             this.vertices.push(x, y, z, 0.1764, 0.9019, 0.2745);
         }
-		// this.circleVertexEnd = this.vertices.length;
 
-		const triangleVertices = [
-			// Arm
-			0.02, 0.02, 0.0,   0.1764, 0.9019, 0.2745,
-			0.02, 0.1, 0.0,    0.1764, 0.9019, 0.2745,
-			0.04, 0.1, 0.0,    0.1764, 0.9019, 0.2745,
+		this.circleVertexEnd = this.vertices.length;
 
-			0.04, 0.1, 0.0,    0.1764, 0.9019, 0.2745,
-			0.04, 0.02, 0.0,   0.1764, 0.9019, 0.2745,
-			0.02, 0.02, 0.0,   0.1764, 0.9019, 0.2745,
-			
-			// Handle
-			0.04, 0.08, 0.0,   0, 0, 0,
-			0.04, 0.11, 0.0,   0, 0, 0,
-			0.0, 0.11, 0.0,    0, 0, 0,
+		const r_inner = 0.01;
+		const r_outer = 0.025;
 
-			0.0, 0.11, 0.0,    0, 0, 0,
-			0.0, 0.08, 0.0,    0, 0, 0,
-			0.02, 0.08, 0.0,   0, 0, 0,
-
-			// Barrel
-			0.0, 0.11, 0.0,    0, 0, 0,
-			0.0, 0.13, 0.0,    0, 0, 0,
-			0.02, 0.13, 0.0,   0, 0, 0,
-
-			0.02, 0.13, 0.0,   0, 0, 0,
-			0.02, 0.08, 0.0,   0, 0, 0,
-			0.0, 0.11, 0.0,    0, 0, 0,
+		let triangleVertices = [
+			// Top blade
+			-r_inner, r_inner, 0.0,  0, 0, 0,
+			0,        r_outer, 0.0,  0, 0, 0,
+			r_inner,  r_inner, 0.0,  0, 0, 0,
+		
+			// Right blade
+			r_inner,   r_inner, 0.0,  0, 0, 0,
+			r_outer,   0,       0.0,  0, 0, 0,
+			r_inner,  -r_inner, 0.0,  0, 0, 0,
+		
+			// Bottom blade
+			r_inner,  -r_inner, 0.0,  0, 0, 0,
+			0,        -r_outer, 0.0,  0, 0, 0,
+			-r_inner, -r_inner, 0.0,  0, 0, 0,
+		
+			// Left blade
+			-r_inner, -r_inner, 0.0,  0, 0, 0,
+			-r_outer,  0,       0.0,  0, 0, 0,
+			-r_inner,  r_inner, 0.0,  0, 0, 0,
 		];
+
+		triangleVertices = this.moveObject(0.02, 0.05, 0.0, triangleVertices);
 
 		for (let i = 0; i < triangleVertices.length; i++) {
 			this.vertices.push(triangleVertices[i])
 		}
 
-		this.triangleVertexEnd = this.circleVertexEnd + triangleVertices.length;
+		
+
+		this.triangleVertexEnd = triangleVertices.length;
+		// console.log("Triangle Vertex End: " + this.triangleVertexEnd)
     }
 
     
@@ -157,6 +161,8 @@ class Player extends GameObject {
 		offset = 0;
 		const circleVerticeCount = this.circleVertexEnd / 6;
 		const triangleVerticeCount = this.triangleVertexEnd / 6;
+		console.log("Circle Vertice Count: " + circleVerticeCount)
+		// console.log("Triangle Vertice Count: " + triangleVerticeCount)
 		// Draw circle
 		gl.drawArrays(gl.TRIANGLE_FAN, offset, circleVerticeCount);
 		

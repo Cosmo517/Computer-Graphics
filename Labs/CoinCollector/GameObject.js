@@ -12,6 +12,15 @@ class GameObject {
 		this.prefab;
 		this.primitiveType = gl.TRIANGLES;
 	}
+
+	moveObject(dx, dy, dz, vertices) {
+		for (let i = 0; i < this.vertices.length; i += 6) {
+			vertices[i] += dx;
+			vertices[i + 1] += dy;
+			vertices[i + 2] += dz;
+		}
+		return vertices;
+	}
 	
 	// Assumes the velocity is working correctly
 	Move() {
@@ -53,8 +62,6 @@ class GameObject {
 		} else {
 			this.loc = tempF;
 		}
-		
-
 	}
 	
 	onCollisionEnter(other) {
