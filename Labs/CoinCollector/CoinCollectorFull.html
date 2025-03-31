@@ -1,0 +1,940 @@
+<!DOCTYPE HTML>
+<HTML lang="en">
+	<Head>
+        <Title>"Coin Collector"</TITLE>
+        <script>
+            class Transform {
+                constructor() {
+                    this.forward = [0,0,1];
+                    this.right = [1,0,0];
+                    this.up = [0,1,0];
+                }
+                    
+                doRotations(RotAngles){
+                    this.xRot = [
+                        [1,0,0,0],
+                        [0,Math.cos(RotAngles[0]),-1*Math.sin(RotAngles[0]),0],
+                        [0,Math.sin(RotAngles[0]),Math.cos(RotAngles[0]),0],
+                        [0,0,0,1]
+                        ];	
+                        
+                    this.yRot = [
+                        [Math.cos(RotAngles[1]),0,Math.sin(RotAngles[1]),0],
+                        [0,1,0,0],
+                        [-1*Math.sin(RotAngles[1]),0,Math.cos(RotAngles[1]),0],
+                        [0,0,0,1]	
+                        ];
+
+                    this.zRot = [
+                        [Math.cos(RotAngles[2]),-1*Math.sin(RotAngles[2]),0,0],
+                        [Math.sin(RotAngles[2]),Math.cos(RotAngles[2]),0,0],
+                        [0,0,1,0],
+                        [0,0,0,1]
+                        ];
+
+                    this.forward = this.crossMultiply(this.zRot,this.crossMultiply(this.yRot,this.crossMultiply(this.xRot,[0,0,1,0])))
+                    this.right = this.crossMultiply(this.zRot,this.crossMultiply(this.yRot,this.crossMultiply(this.xRot,[1,0,0,0])))
+                    this.up = this.crossMultiply(this.zRot,this.crossMultiply(this.yRot,this.crossMultiply(this.xRot,[0,1,0,0])))
+                }	
+                        
+                crossMultiply(M,V) {
+                    var temp = [
+                        M[0][0]*V[0]+M[0][1]*V[1]+M[0][2] * V[2]+ M[0][3]*V[3],
+                        M[1][0]*V[0]+M[1][1]*V[1]+M[1][2] * V[2]+ M[1][3]*V[3],
+                        M[2][0]*V[0]+M[2][1]*V[1]+M[2][2] * V[2]+ M[2][3]*V[3],
+                        M[3][0]*V[0]+M[3][1]*V[1]+M[3][2] * V[2]+ M[3][3]*V[3]
+                    ];
+                    return temp;
+                }
+            }
+        </script>
+
+        <script>
+            class GameObject {
+                constructor() {
+                    this.loc = [0,0,0];
+                    this.rot = [0,0,0];
+                    this.isTrigger = false;
+                    this.collisionRadius = 0.05;
+                    this.velocity = [0,0,0];
+                    this.angVelocity = [0,0,0];
+                    this.name = "Default";
+                    this.id = 0;
+                    this.transform = new Transform();
+                    this.prefab;
+                    this.primitiveType = gl.TRIANGLES;
+                }
+
+                moveObject(dx, dy, dz, vertices) {
+                    for (let i = 0; i < this.vertices.length; i += 6) {
+                        vertices[i] += dx;
+                        vertices[i + 1] += dy;
+                        vertices[i + 2] += dz;
+                    }
+                    return vertices;
+                }
+                
+                // Assumes the velocity is working correctly
+                Move() {
+                    var tempF = [0, 0, 0];
+                    for (var i = 0; i < 3; i++) {
+                        tempF[i] = this.loc[i];
+                        tempF[i] += this.velocity[i];
+                    }
+
+                    
+                    if (!this.isTrigger) {
+                        var clear = true;
+                        // Handle collisions with other solids
+                        for (var so in m.Solid) {
+                            if (m.Solid[so] != this) {
+                                if (m.checkCollision(tempF, this.collisionRadius, m.Solid[so].loc, m.Solid[so].collisionRadius)) {
+                                    try {
+                                        m.Solid[so].onCollisionEnter(this);
+                                    } catch {}
+                                    clear = false;
+                                }
+                            }
+                        }
+                        
+                        // Handle collisions with triggers
+                        for (var tr in m.Trigger) {
+                            if (m.Trigger[tr] != this) {
+                                if (m.checkCollision(tempF, this.collisionRadius, m.Trigger[tr].loc, m.Trigger[tr].collisionRadius)) {
+                                    try {
+                                        m.Trigger[tr].onTriggerEnter(this);
+                                    } catch {}
+                                }
+                            }
+                        }
+                    
+                        if (clear) {
+                            this.loc = tempF;
+                        }
+                    } else {
+                        this.loc = tempF;
+                    }
+                }
+                
+                onCollisionEnter(other) {
+                    // virtual function
+                    // colliding with another object
+                }
+                
+                onTriggerEnter(other) {
+                    // virtual function
+                    // Colliding with some trigger and getting an event happen
+                }
+                
+                update() {
+                    console.error(this.name +" update() is NOT IMPLEMENTED!");
+                }
+                
+                render(program, verticeCount, primitiveType) {
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    
+                    //First we bind the buffer for triangle 1
+                    var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+                    var size = 3;          // 2 components per iteration
+                    var type = gl.FLOAT;   // the data is 32bit floats
+                    var normalize = false; // don't normalize the data
+                    var stride = 6*Float32Array.BYTES_PER_ELEMENT;	//Size in bytes of each element     // 0 = move forward size * sizeof(type) each iteration to get the next position
+                    var offset = 0;        // start at the beginning of the buffer
+                    gl.enableVertexAttribArray(positionAttributeLocation);
+                    gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+                    
+                    //Now we have to do this for color
+                    var colorAttributeLocation = gl.getAttribLocation(program,"vert_color");
+                    //We don't have to bind because we already have the correct buffer bound.
+                    size = 3;
+                    type = gl.FLOAT;
+                    normalize = false;
+                    stride = 6*Float32Array.BYTES_PER_ELEMENT;	//Size in bytes of each element
+                    offset = 3*Float32Array.BYTES_PER_ELEMENT;									//size of the offset
+                    gl.enableVertexAttribArray(colorAttributeLocation);
+                    gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
+                            
+                    var tranLoc  = gl.getUniformLocation(program,'transform');
+                    gl.uniform3fv(tranLoc,new Float32Array(this.loc));
+                    var thetaLoc = gl.getUniformLocation(program,'rotation');
+                    gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
+                    
+                    offset = 0;
+                    var count = verticeCount / 6;
+                    gl.drawArrays(primitiveType, offset, count);
+                }
+            }
+        </script>
+
+        <script>
+            class Player extends GameObject {
+                constructor() {
+                    super();
+                    this.buffer = gl.createBuffer();
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+
+                    this.vertices = [];
+                    this.circleVertexEnd = 0;
+                    this.triangleVertexEnd = 0;
+
+                    this.generateVertices(0.05, 30)
+                    this.primitiveType = gl.TRIANGLE_FAN;
+                    
+                    this.bulletTimer = 0;
+
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+                    this.loc = [0.0, 0.0, 0.0];
+                    this.rot = [0.0, 0.0, 0.0];
+                }
+
+                onCollisionEnter(other) {
+                    if (other.name == "Enemy") {
+                        m.destroyObject(this.id);
+                        alert("Game Over! You Lose!");
+                    }
+                }
+
+                generateVertices(radius, segments) {
+                    this.vertices.push(0.0, 0.0, 0.0, 0.1764, 0.9019, 0.2745);
+
+                    for (let i = 0; i <= segments; i++) {
+                        const angle = (i / segments) * Math.PI * 2;
+                        const x = radius * Math.cos(angle);
+                        const y = radius * Math.sin(angle);
+                        const z = 0;
+
+                        if (i >= 0 && i <= 2 ||i >= 12 && i <= 30) {
+                            this.vertices.push(x, y, z, 0.0, 0.0, 0.0);
+                        } else {
+                            this.vertices.push(x, y, z, 0.1764, 0.9019, 0.2745);
+                        }
+                    }
+
+                    this.circleVertexEnd = this.vertices.length;
+
+                    const r_inner = 0.01;
+                    const r_outer = 0.025;
+
+                    let triangleVertices = [
+                        // Top blade
+                        -r_inner, r_inner, 0.0,  0, 0, 0,
+                        0,        r_outer, 0.0,  0, 0, 0,
+                        r_inner,  r_inner, 0.0,  0, 0, 0,
+                    
+                        // Right blade
+                        r_inner,   r_inner, 0.0,  0, 0, 0,
+                        r_outer,   0,       0.0,  0, 0, 0,
+                        r_inner,  -r_inner, 0.0,  0, 0, 0,
+                    
+                        // Bottom blade
+                        r_inner,  -r_inner, 0.0,  0, 0, 0,
+                        0,        -r_outer, 0.0,  0, 0, 0,
+                        -r_inner, -r_inner, 0.0,  0, 0, 0,
+                    
+                        // Left blade
+                        -r_inner, -r_inner, 0.0,  0, 0, 0,
+                        -r_outer,  0,       0.0,  0, 0, 0,
+                        -r_inner,  r_inner, 0.0,  0, 0, 0,
+                    ];
+
+                    triangleVertices = this.moveObject(0.02, 0.05, 0.0, triangleVertices);
+
+                    for (let i = 0; i < triangleVertices.length; i++) {
+                        this.vertices.push(triangleVertices[i])
+                    }
+                    
+                    this.triangleVertexEnd = triangleVertices.length;
+                }
+
+                
+                update() {
+                    // Handle rotation
+                    if (m.checkKey("A")) {
+                        this.angVelocity = [0, 0, -0.01];
+                    } else if (m.checkKey("D")) {
+                        this.angVelocity = [0, 0, 0.01];
+                    } else {
+                        this.angVelocity = [0, 0, 0];
+                    }
+
+                    // Apply angular velocity
+                    for (let i = 0; i < 3; i++) {
+                        this.rot[i] += this.angVelocity[i];
+                    }
+
+                    // Handle forward/backward movement
+                    let forward = [
+                        Math.sin(this.rot[2]),
+                        Math.cos(this.rot[2]),
+                        0
+                    ];
+
+                    this.velocity = [0, 0, 0];
+
+                    if (m.checkKey("W")) {
+                        for (let i = 0; i < 3; i++) {
+                            this.velocity[i] += forward[i] * 0.01;
+                        }
+                    }
+
+                    if (m.checkKey("S")) {
+                        for (let i = 0; i < 3; i++) {
+                            this.velocity[i] -= forward[i] * 0.01;
+                        }
+                    }
+
+                    let bulletLoc = [
+                        this.loc[0] + forward[0] * 0.2,
+                        this.loc[1] + forward[1] * 0.2,
+                        this.loc[2] + forward[2]
+                    ];
+
+                    if (m.checkKey(" ") && this.bulletTimer >= 30) {
+                        m.createObject(1, Bullet, bulletLoc, this.rot, "Bullet")
+                        this.bulletTimer = 0;
+                    }
+
+                    this.bulletTimer++;
+                    this.Move();
+                }
+
+                render(program, verticeCount, primitiveType) {
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    
+                    //First we bind the buffer for triangle 1
+                    var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+                    var size = 3;          // 2 components per iteration
+                    var type = gl.FLOAT;   // the data is 32bit floats
+                    var normalize = false; // don't normalize the data
+                    var stride = 6*Float32Array.BYTES_PER_ELEMENT;	//Size in bytes of each element     // 0 = move forward size * sizeof(type) each iteration to get the next position
+                    var offset = 0;        // start at the beginning of the buffer
+                    gl.enableVertexAttribArray(positionAttributeLocation);
+                    gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+                    
+                    //Now we have to do this for color
+                    var colorAttributeLocation = gl.getAttribLocation(program,"vert_color");
+                    //We don't have to bind because we already have the correct buffer bound.
+                    size = 3;
+                    type = gl.FLOAT;
+                    normalize = false;
+                    stride = 6*Float32Array.BYTES_PER_ELEMENT;	//Size in bytes of each element
+                    offset = 3*Float32Array.BYTES_PER_ELEMENT;									//size of the offset
+                    gl.enableVertexAttribArray(colorAttributeLocation);
+                    gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
+                            
+                    var tranLoc  = gl.getUniformLocation(program,'transform');
+                    gl.uniform3fv(tranLoc,new Float32Array(this.loc));
+                    var thetaLoc = gl.getUniformLocation(program,'rotation');
+                    gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
+                    
+                    offset = 0;
+                    const circleVerticeCount = this.circleVertexEnd / 6;
+                    const triangleVerticeCount = this.triangleVertexEnd / 6;
+                    // Draw circle
+                    gl.drawArrays(gl.TRIANGLE_FAN, offset, circleVerticeCount);
+                    
+                    // Draw gun
+                    gl.drawArrays(gl.TRIANGLES, circleVerticeCount, triangleVerticeCount)
+                }
+            }
+        </script>
+
+		<script>
+            class Enemy extends GameObject {
+                constructor() {
+                    super();
+                    this.buffer = gl.createBuffer();
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    this.vertices = [	
+                        // Face 1
+                        0, 0.1, 0,   1.0, 0.341, 0.2,
+                        0, 0, 0.1,   1.0, 0.341, 0.2,
+                        0.1, 0, 0,   1.0, 0.341, 0.2,
+
+                        // Face 2
+                        0, 0.1, 0,   0.2, 1.0, 0.341,
+                        0.1, 0, 0,   0.2, 1.0, 0.341,
+                        0, 0, -0.1,  0.2, 1.0, 0.341,
+
+                        // Face 3
+                        0, 0.1, 0,   0.2, 0.341, 1.0,
+                        0, 0, -0.1,  0.2, 0.341, 1.0,
+                        -0.1, 0, 0,  0.2, 0.341, 1.0,
+
+                        // Face 4
+                        0, 0.1, 0,   1.0, 0.2, 0.659,
+                        -0.1, 0, 0,  1.0, 0.2, 0.659,
+                        0, 0, 0.1,   1.0, 0.2, 0.659,
+
+                        // Face 5
+                        0, -0.1, 0,   1.0, 0.843, 0.0,
+                        0, 0, 0.1,    1.0, 0.843, 0.0,
+                        0.1, 0, 0,    1.0, 0.843, 0.0,
+
+                        // Face 6
+                        0, -0.1, 0,   0.502, 0.0, 0.502,
+                        0.1, 0, 0,    0.502, 0.0, 0.502,
+                        0, 0, -0.1,   0.502, 0.0, 0.502,
+
+                        // Face 7
+                        0, -0.1, 0,   0.0, 1.0, 1.0,
+                        0, 0, -0.1,   0.0, 1.0, 1.0,
+                        -0.1, 0, 0,   0.0, 1.0, 1.0,
+
+                        // Face 8
+                        0, -0.1, 0,   0.647, 0.165, 0.165,
+                        -0.1, 0, 0,   0.647, 0.165, 0.165,
+                        0, 0, 0.1,    0.647, 0.165, 0.165,
+                    ];
+
+                    // 0 is for x, 1 is for y
+                    this.randomDirection = Math.round(Math.random());
+                    this.reverseDirection = false;
+                    this.needsReversed = false;
+                    this.collisionRadius = 0.07;
+                    
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+                    this.loc = [0.0, 0.0, 0.0];
+                    this.rot = [0.0, 0.0, 0.0];
+                }
+                
+                onCollisionEnter(other) {
+                    if (other.name == "Bullet") {
+                        m.destroyObject(other.id)
+                        m.destroyObject(this.id)
+                        m.enemyDead = true;
+                    }
+
+                    if (other.name == "Player") {
+                        m.destroyObject(other.id)
+                        alert("Game over! You Lose!")
+                    }
+                }
+
+                update() {
+                    if (this.needsReversed) {
+                        this.reverseDirection = !this.reverseDirection
+                        this.needsReversed = false;
+                    }
+
+                    let forward = [
+                        this.randomDirection ? 0 : 1,
+                        this.randomDirection ? 1 : 0,
+                        0
+                    ];
+
+                    this.velocity = [0, 0, 0];
+
+                    for (let i = 0; i < 3; i++) {
+                        this.velocity[i] += (forward[i] * (this.reverseDirection ? -1 : 1)) * 0.01;
+                    }
+
+                    this.rot[1] += 0.01;
+                    this.Move();
+                }
+
+            }
+        </script>
+
+		<script>
+            class Wall extends GameObject {
+                constructor() {
+                    super();
+                    this.buffer = gl.createBuffer();
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    this.vertices = [	
+                        // Top face
+                        -0.05, 0.05, 0.05,    0.2627, 0.2902, 0.2588,
+                        -0.05, 0.05, -0.05,   0.2627, 0.2902, 0.2588,
+                        0.05, 0.05, -0.05,    0.2627, 0.2902, 0.2588,
+
+                        0.05, 0.05, -0.05,    0.2627, 0.2902, 0.2588,
+                        0.05, 0.05, 0.05,     0.2627, 0.2902, 0.2588,
+                        -0.05, 0.05, 0.05,    0.2627, 0.2902, 0.2588,
+
+                        // Bottom Face
+                        -0.05, -0.05, 0.05,   0.2627, 0.2902, 0.2588,
+                        -0.05, -0.05, -0.05,  0.2627, 0.2902, 0.2588,
+                        0.05, -0.05, -0.05,   0.2627, 0.2902, 0.2588,
+
+                        0.05, -0.05, -0.05,   0.2627, 0.2902, 0.2588,
+                        0.05, -0.05, 0.05,    0.2627, 0.2902, 0.2588,
+                        -0.05, -0.05, 0.05,   0.2627, 0.2902, 0.2588,
+
+                        // Left Face
+                        -0.05, -0.05, 0.05,   0.2627, 0.2902, 0.2588,
+                        -0.05, 0.05, 0.05,    0.2627, 0.2902, 0.2588,
+                        -0.05, 0.05, -0.05,   0.2627, 0.2902, 0.2588,
+
+                        -0.05, 0.05, -0.05,   0.2627, 0.2902, 0.2588,
+                        -0.05, -0.05, -0.05,  0.2627, 0.2902, 0.2588,
+                        -0.05, -0.05, 0.05,   0.2627, 0.2902, 0.2588,
+
+                        // Right Face
+                        0.05, -0.05, 0.05,    0.2627, 0.2902, 0.2588,
+                        0.05, 0.05, 0.05,     0.2627, 0.2902, 0.2588,
+                        0.05, 0.05, -0.05,    0.2627, 0.2902, 0.2588,
+
+                        0.05, 0.05, -0.05,    0.2627, 0.2902, 0.2588,
+                        0.05, -0.05, -0.05,   0.2627, 0.2902, 0.2588,
+                        0.05, -0.05, 0.05,    0.2627, 0.2902, 0.2588,
+
+                        // Front Face
+                        -0.05, 0.05, 0.05,    0.2627, 0.2902, 0.2588,
+                        0.05, 0.05, 0.05,     0.2627, 0.2902, 0.2588,
+                        0.05, -0.05, 0.05,    0.2627, 0.2902, 0.2588,
+
+                        0.05, -0.05, 0.05,    0.2627, 0.2902, 0.2588,
+                        -0.05, -0.05, 0.05,   0.2627, 0.2902, 0.2588,
+                        -0.05, 0.05, 0.05,    0.2627, 0.2902, 0.2588,
+
+                        // Back Face
+                        -0.05, 0.05, -0.05,   0.2627, 0.2902, 0.2588,
+                        0.05, 0.05, -0.05,    0.2627, 0.2902, 0.2588,
+                        0.05, -0.05, -0.05,   0.2627, 0.2902, 0.2588,
+
+                        0.05, -0.05, -0.05,   0.2627, 0.2902, 0.2588,
+                        -0.05, -0.05, -0.05,  0.2627, 0.2902, 0.2588,
+                        -0.05, 0.05, -0.05,   0.2627, 0.2902, 0.2588,
+                    ];
+                    this.collisionRadius = 0.03
+
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+                    this.loc = [0.0, 0.0, 0.0];
+                    this.rot = [0.0, 0.0, 0.0];
+                }
+                
+                onCollisionEnter(other) {
+                    if (other.name == "Bullet") {
+                        m.destroyObject(other.id)
+                    }
+                    
+                    if (other.name == "Enemy") {
+                        other.needsReversed = true;
+                    }
+                }
+
+                update() {
+                    // dont perform any movement
+                }
+
+            }
+        </script>
+
+		<script>
+            class Coin extends GameObject {
+                constructor() {
+                    super();
+                    this.buffer = gl.createBuffer();
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    this.vertices = [];
+                    this.generateVertices(0.05, 30);
+                    this.primitiveType = gl.TRIANGLE_FAN;
+                    this.collisionRadius = 0.07
+
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+                    this.loc = [0.0, 0.0, 0.0];
+                    this.rot = [0.0, 0.0, 0.0];
+                }
+
+                generateVertices(radius, segments) {
+                    this.vertices.push(0.0, 0.0, 0.0, 1.0, 0.8431, 0.0);
+
+                    for (let i = 0; i <= segments; i++) {
+                        const angle = (i / segments) * Math.PI * 2;
+                        const x = radius * Math.cos(angle);
+                        const y = radius * Math.sin(angle);
+                        const z = 0;
+                        // Currently generates a flat coin, we can fix this later
+                        this.vertices.push(x, y, z, 1.0, 0.8431, 0.0);
+                    }
+                }
+                
+                update() {
+                    this.rot[1] += 0.01;
+                    this.Move();
+                }
+
+                // Deal with player hitting the coin
+                onTriggerEnter(other) {
+                    if (other.name == "Player") {
+                        m.destroyObject(this.id)
+                        m.increaseCoinCount();
+                    }
+                }
+            }
+        </script>
+        
+		<script>
+            class Bullet extends GameObject {
+                constructor() {
+                    super();
+                    this.buffer = gl.createBuffer();
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+
+                    const r_inner = 0.01;
+                    const r_outer = 0.025;
+                    
+                    this.vertices = [
+                        // Top blade
+                        -r_inner, r_inner, 0.0,  0, 0, 0,
+                        0,        r_outer, 0.0,  0, 0, 0,
+                        r_inner,  r_inner, 0.0,  0, 0, 0,
+                    
+                        // Right blade
+                        r_inner,   r_inner, 0.0,  0, 0, 0,
+                        r_outer,   0,       0.0,  0, 0, 0,
+                        r_inner,  -r_inner, 0.0,  0, 0, 0,
+                    
+                        // Bottom blade
+                        r_inner,  -r_inner, 0.0,  0, 0, 0,
+                        0,        -r_outer, 0.0,  0, 0, 0,
+                        -r_inner, -r_inner, 0.0,  0, 0, 0,
+                    
+                        // Left blade
+                        -r_inner, -r_inner, 0.0,  0, 0, 0,
+                        -r_outer,  0,       0.0,  0, 0, 0,
+                        -r_inner,  r_inner, 0.0,  0, 0, 0,
+                    ];
+                    
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+                    this.loc = [0.0, 0.0, 0.0];
+                    this.rot = [0.0, 0.0, 0.0];
+                }
+                
+                update() {
+                    let forward = [
+                        Math.sin(this.rot[2]),
+                        Math.cos(this.rot[2]),
+                        0
+                    ];
+
+                    this.velocity = [0, 0, 0];
+
+                    for (let i = 0; i < 3; i++) {
+                        this.velocity[i] += forward[i] * 0.02;
+                    }
+
+                    this.Move()
+                }
+            }
+        </script>
+
+        <script>
+            class WebGL_Interface {
+                constructor() {
+                    this.vertexShaderSource = document.getElementById("2dVertexShader").text;
+                    this.fragmentShaderSource = document.getElementById("2dFragmentShader").text;
+                    this.vertexShader = this.createShader(gl.VERTEX_SHADER, this.vertexShaderSource);
+                    this.fragmenShader = this.createShader(gl.FRAGMENT_SHADER, this.fragmentShaderSource);
+                    //Link to program
+                    this.program = this.createProgram(this.vertexShader, this.fragmenShader);
+                    //setup our viewport
+                    gl.viewport(0,0, gl.canvas.width, gl.canvas.height);
+                    //set clear colors
+                    gl.clearColor(1,1,1,1);
+                    gl.clear(gl.COLOR_BUFFER_BIT);		
+                    
+                    gl.enable(gl.DEPTH_TEST);        
+                    gl.useProgram(this.program);
+                }
+                
+                createShader(type, source) {
+                    var shader = gl.createShader(type);
+                    gl.shaderSource(shader, source);
+                    gl.compileShader(shader);
+                    var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+
+                    if(success) {
+                        return shader;
+                    }
+
+                    //Else it didn't work
+                    console.error(gl.getShaderInfoLog(shader));
+                    gl.deleteShader(shader);
+                }
+                
+                createProgram(vs, fs) {
+                    var program = gl.createProgram();
+                    gl.attachShader(program, vs);
+                    gl.attachShader(program, fs);
+                    gl.linkProgram(program);
+                    var succsess = gl.getProgramParameter(program, gl.LINK_STATUS);
+
+                    if(succsess) {
+                        return program;
+                    }
+                    
+                    console.error(gl.getProgramInfoLog(program));
+                    gl.deleteProgram(program);	
+                }
+
+            }
+        </script>
+
+		<script id="2dVertexShader" type="notjs">
+			attribute vec4 a_position;	
+			attribute vec3 vert_color;
+			varying vec3 fragColor;
+			uniform vec3 transform;
+			uniform vec3 rotation;		
+			
+			vec4 RotateObject(vec4 pos) {
+				vec3 c = cos(rotation);
+				vec3 s = sin(rotation);
+			
+				mat4 rotateX = mat4(1.0, 0.0,  0.0, 0.0,
+									0.0, c.x, -s.x, 0.0,
+									0.0, s.x,  c.x, 0.0,
+									0.0, 0.0,  0.0, 1.0);
+
+				mat4 rotateY = mat4(c.y, 0.0, -s.y, 0.0,
+									0.0, 1.0,  0.0, 0.0,
+									s.y, 0.0,  c.y, 0.0,
+									0.0, 0.0,  0.0, 1.0);
+
+				mat4 rotateZ = mat4(c.z, -s.z, 0.0, 0.0,
+									s.z,  c.z, 0.0, 0.0,
+									0.0,  0.0, 1.0, 0.0,
+									0.0,  0.0, 0.0, 1.0);
+
+				return rotateZ * rotateY * rotateX * pos;
+			}
+			
+			vec4 PositionObject(vec4 pos) {
+				mat4 translateM = mat4(1.0, 0.0, 0.0, 0.0,
+										0.0, 1.0, 0.0, 0.0,
+										0.0, 0.0, 1.0, 0.0,
+										transform.x, transform.y, transform.z, 1.0);
+				return translateM * pos;	
+			}
+
+			void main() {
+				fragColor = vert_color;
+				gl_Position = PositionObject(RotateObject(a_position));
+			}
+		</script>
+
+		<script id="2dFragmentShader" type="notjs">
+		//Fragment shaders do not have precision so we have to set it.
+		precision mediump float;
+		varying vec3 fragColor;
+		void main()
+		{
+			//gl_FragColor = vec4(0,0,1,1); //Between 0 and 1.
+			gl_FragColor = vec4(fragColor,1);
+		}
+		</script>
+
+		<script>
+		class main {	
+			constructor() {
+				this.Visual = [];
+				this.Solid = [];
+				this.Trigger = [];
+				this.ObjectCounter = 0;
+				this.coins = 0;
+				this.totalCoins = 10;
+				this.enemyDead = false;
+
+				this.myWEBGL = new WebGL_Interface();
+				this.program = this.myWEBGL.program;
+				this.keys = [];
+
+				// Create walls that surround the place
+				for (let y = -9; y < 10; y += 1) {
+					for (let x = -9; x < 10; x += 1) {
+						if (y == 9 || y == -9 || x == 9 || x == -9) {
+							this.createObject(1, Wall, [x / 10, y / 10, 0], [0, 0, 0], "Wall");
+						}
+					}
+				}
+
+				// Create a few random walls
+				for (let i = 0; i < 4; i++) {
+					const x = Math.random() * 1.4 - 0.7;
+					const y = Math.random() * 1.4 - 0.7;
+					this.createObject(1, Wall, [x, y, 0], [0, 0, 0], "Wall");
+				}
+
+				// Create test player, coin, and enemy objects
+				this.createObject(1, Player, [0, 0, 0], [0, 0, 0], "Player");
+
+				const x = Math.random() * 1.6 - 0.8;
+				const y = Math.random() * 1.6 - 0.8;
+
+				// Create the one enemy in the game
+				this.createObject(1, Enemy, [x, y, 0], [0, 0, 0], "Enemy")
+
+				// Randomly generate 10 coins to collect
+				for (let i = 0; i < this.totalCoins; i++) {
+					const x = Math.random() * 1.6 - 0.8;
+					const y = Math.random() * 1.6 - 0.8;
+					const yRot = Math.random();
+					this.createObject(2, Coin, [x, y, 0], [0, yRot, 0], "Coin")
+				}
+			}
+			
+			updateAll() {
+				for(var i in this.Visual) {
+					this.Visual[i].update();
+				}
+				
+				for(var i in this.Solid) {
+					this.Solid[i].update();
+				}
+				
+				for(var i in this.Trigger) {
+					this.Trigger[i].update();
+				}
+
+				if (this.coins == this.totalCoins && this.enemyDead) {
+					alert("Game over! You win!")
+				}
+			}
+
+			renderAll() {
+				for(var i in this.Visual) {
+					this.Visual[i].render(this.program, this.Visual[i].vertices.length, this.Visual[i].primitiveType);
+				}
+
+				for(var i in this.Solid) {
+					this.Solid[i].render(this.program, this.Solid[i].vertices.length, this.Solid[i].primitiveType);
+				}
+
+				for(var i in this.Trigger) {
+					this.Trigger[i].render(this.program, this.Trigger[i].vertices.length, this.Trigger[i].primitiveType);
+				}
+			}
+			
+			checkCollision(loc1, rad1, loc2, rad2) {
+				let distance = Math.sqrt(Math.pow(loc1[0] - loc2[0], 2) + Math.pow(loc1[1] - loc2[1], 2) + Math.pow(loc1[2] - loc2[2], 2));
+				return (rad1 + rad2) > distance;
+			}
+
+			
+			createObject(type, prefab, loc, rot, name) {
+				//type 0 = visual
+				//type 1 = solid
+				//type 2 = trigger
+				var temp = new prefab; //Yes this dark sorcery will work
+				var id = "ID"+this.ObjectCounter;
+				this.ObjectCounter++;
+				temp.id = id;
+				temp.prefab = prefab;
+				temp.name = name;
+				for(let i = 0; i < 3; i++) {
+					temp.loc[i] = loc[i];
+					temp.rot[i] = rot[i];
+				}
+				
+				switch(type) {
+					case 0:
+						this.Visual[id] = temp;
+						break;
+					case 1:
+						this.Solid[id] = temp;
+						break;
+					case 2:
+						this.Trigger[id] = temp;
+						this.Trigger[id].isTrigger = true;
+						break;
+					default:
+						break;
+				}
+				return temp;
+			}
+			
+			destroyObject(id) {
+				if(id in this.Visual) {
+					delete this.Visual[id];
+				}
+
+				if(id in this.Solid) {
+					delete this.Solid[id];
+				}
+
+				if(id in this.Trigger) {
+					delete this.Trigger[id];
+				}
+			}
+			
+			checkKey(k) {
+				if(k in this.keys) {
+					return this.keys[k];
+				}
+				return false;
+			}
+
+			
+			keyDown(event) {
+				this.keys[String.fromCharCode(event.keyCode)] = true;
+			}
+
+			keyUp(event) {
+				this.keys[String.fromCharCode(event.keyCode)] = false;
+			}
+			
+			increaseCoinCount() {
+				const coinCounter = document.getElementById("Coin-count");
+				this.coins++;
+				coinCounter.innerHTML = "Coins: " + this.coins;
+			}
+
+			
+			//Static call backs go down here
+			//   |
+			//  \ /
+			//   v
+			static keyD(event) {
+				m.keyDown(event);
+			}
+			
+			static keyU(event) {
+				m.keyUp(event);
+			}
+			
+
+			static mouseH(event) {
+				m.mouseClick(event);
+			}
+			
+			static mainLoop() {
+				m.updateAll();
+				m.renderAll();
+				requestAnimationFrame(main.mainLoop);
+			}
+
+		}
+		</script>
+		
+		
+
+	</Head>
+	<BODY style="padding: 15px;">
+		<HEADER>
+		
+		</HEADER>
+		
+		<CANVAS id="myCanvas" width="1024" height="600" style = "border: 1px solid #000;">
+			Your browser does not support canvas.
+		</CANVAS>
+		
+		<div id="Coin-count">Coins: 0</div>
+		
+		<SCRIPT>
+			var canvas = document.getElementById("myCanvas");
+			var gl = canvas.getContext("webgl");
+			var m = new main();
+			window.onkeydown = main.keyD;
+			window.onkeyup = main.keyU;
+			canvas.addEventListener("click",main.mouseH);
+			
+			requestAnimationFrame(main.mainLoop);	
+			
+		</SCRIPT>
+		
+		<FOOTER>
+		</FOOTER>
+	</BODY>
+</HTML>
