@@ -26,9 +26,9 @@
                 vec3 cw = cos(worldRotation);
                 vec3 sw = sin(worldRotation);
                 mat4 translateView = mat4(1.0, 0.0, 0.0, 0.0,
-                                            0.0, 1.0, 0.0, 0.0,
-                                            0.0, 0.0, 1.0, 0.0,
-                            -1.0 * worldLoc.x, -1.0 * worldLoc.y, worldLoc.z, 1.0
+                              0.0, 1.0, 0.0, 0.0,
+                              0.0, 0.0, 1.0, 0.0,
+                              -1.0 * worldLoc.x, -1.0 * worldLoc.y, worldLoc.z, 1.0
                 );
                 
                 mat4 rotateView = mat4(cw.y, 0.0, -1.0 * sw.y, 0.0,
@@ -41,12 +41,6 @@
             }
             
             vec4 ApplyProjection(vec4 pos) {
-                mat4 SimpleOrtho = mat4(1.0, 0.0, 0.0, 0.0,
-                                        0.0, 1.0, 0.0, 0.0,
-                                        0.0, 0.0, 1.0, 0.0,
-                                        0.0, 0.0, 0.0, 1.0
-                );
-                
                 mat4 ComplexPerspective = mat4(
                                                 n / r, 0.0, 0.0, 0.0,
                                                 0.0, n / t, 0.0, 0.0,
@@ -54,31 +48,16 @@
                                                 0.0, 0.0, -2.0 * f * n / (f - n), 0.0
                 );
                 
-                mat4 ComplexOrtho = mat4(
-                                        1.0 / r, 0.0, 0.0, 0.0,
-                                        0.0, 1.0 / t, 0.0, 0.0,
-                                        0.0, 0.0, 1.0, 0.0,
-                                        0.0, 0.0, 0.0, 1.0
-                );
-                
-                mat4 SimplePerspective = mat4(
-                                                1.0, 0.0, 0.0, 0.0,
-                                                0.0, 1.0, 0.0, 0.0,
-                                                0.0, 0.0, -1.0, -1.0,
-                                                0.0, 0.0, -2.0, 0.0
-                );
-                
                 // Doesnt have to be SimplePerspective, it can be one of the ones above as well
-                return SimplePerspective * pos;
+                return ComplexPerspective * pos;
             }
             
             vec4 PositionObject(vec4 pos)
             {
                 mat4 translateM = mat4(1.0,0.0,0.0,0.0,
-                                        0.0,1.0,0.0,0.0,
-                                        0.0,0.0,1.0,0.0,
-                                        transform.x,transform.y,transform.z,1.0
-                );
+                               0.0,1.0,0.0,0.0,
+                               0.0,0.0,1.0,0.0,
+                               transform.x,transform.y,transform.z,1.0);
                 return translateM*pos;	
             }
             
@@ -90,7 +69,7 @@
                 vec3 s = sin(rotation);
                 fragColor = vert_color;
                 //Surprise!  we have to go column firt when we enter the matrix.
-
+    
                 //mat4 rotateX = mat4();
                 mat4 rotateY = mat4(c.y,0.0,-1.0*s.y,0.0,
                                     0.0,1.0,0.0,0.0,
@@ -110,7 +89,7 @@
                 vec4 worldCord = PositionObject(RotateObject(a_position));
                 vec4 cameraSpace = MoveCamera(worldCord);
                 
-                gl_Position = ApplyProjection(cameraSpace);
+                gl_Position = PositionObject(cameraSpace);
             }		
         </script>
 
@@ -127,7 +106,7 @@
 		
         <script src="Transform.js"></script>
         <script src="GameObject.js"></script>
-        <script src="Bullet.js"></script>
+        <!-- <script src="Bullet.js"></script> -->
         <script src="Player.js"></script>
         <script src="Asteroid.js"></script>
 		<script src="webgl_interface.js"></script>		
@@ -144,17 +123,17 @@
                     this.Keys = [];
 
                     // This will create the player
-                    this.CreateObject(1, Player, [0, 0, 0], [0, 80, 0], "Player");
+                    this.CreateObject(1, Player, [0, 0, 0], [0, 0, 0], "Player");
 
                     // This will generate the 200 asteroids
-                    // let numAsteroids = 200;
-                    // for (let i = 0; i < numAsteroids; i++) {
-                    //     let randomX = Math.floor(Math.random() * 201) - 100;
-                    //     let randomY = Math.floor(Math.random() * 201) - 100;
-                    //     let randomZ = Math.floor(Math.random() * 21) - 10;
-                    //     this.CreateObject(1, Asteroid, [randomX, randomY, randomZ], [0, 0, 0], "Asteroid")
-                    //     console.log("Spawning Asteroid " + i + " at (" + randomX + ", " + randomY + ", " + randomZ + ")")
-                    // }
+                    let numAsteroids = 200;
+                    for (let i = 0; i < numAsteroids; i++) {
+                        let randomX = Math.floor(Math.random() * 201) - 100;
+                        let randomY = Math.floor(Math.random() * 201) - 100;
+                        let randomZ = Math.floor(Math.random() * 21) - 10;
+                        this.CreateObject(1, Asteroid, [randomX, randomY, randomZ], [0, 0, 0], "Asteroid")
+                        console.log("Spawning Asteroid " + i + " at (" + randomX + ", " + randomY + ", " + randomZ + ")")
+                    }
                     this.CreateObject(1, Asteroid, [0, 0, 0], [0, 80, 0], "Player");
 
                     console.log(this.Solid)

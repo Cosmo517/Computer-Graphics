@@ -28,7 +28,7 @@ class WebGL_Interface {
 		tempLoc = gl.getUniformLocation(this.program, 'r');
 		gl.uniform1f(tempLoc, 0.1);
 		tempLoc = gl.getUniformLocation(this.program, 't');
-		gl.uniform1f(tempLoc, 0.06);
+		gl.uniform1f(tempLoc, 0.1);
     }
     
     createShader(type, source) {

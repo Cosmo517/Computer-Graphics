@@ -4,11 +4,11 @@ body {
     align-items: center;
     height: 100dvh;
     margin: 0;
-    background-color: #222;
+    /* background-color: #222; */
     overflow: hidden;
 }
 
 canvas {
     border: 1px solid #000;
-    background-color: #000;
+    /* background-color: #000; */
 }
