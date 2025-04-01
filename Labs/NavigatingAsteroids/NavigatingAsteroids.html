@@ -6,90 +6,120 @@
         <link rel="stylesheet" href="styles.css">
 
 		<script id="2dVertexShader" type="notjs">
-            attribute vec4 a_position;	
-            //We now want to read in Colors
+            attribute vec4 a_position;
             attribute vec3 vert_color;
-            //However, we want to send the color to
-            //The fragment Shader
-            varying vec3 fragColor;		
+            varying vec3 fragColor;
+    
+            //This is added to place the object
             uniform vec3 transform;
-            uniform vec3 rotation;		
-            
+            uniform vec3 rotation;
+            uniform vec3 scale;
+    
             uniform vec3 worldLoc;
             uniform vec3 worldRotation;
             uniform float n;
             uniform float f;
             uniform float r;
             uniform float t;
-            
+
             vec4 MoveCamera(vec4 pos) {
                 vec3 cw = cos(worldRotation);
                 vec3 sw = sin(worldRotation);
+
                 mat4 translateView = mat4(1.0, 0.0, 0.0, 0.0,
-                              0.0, 1.0, 0.0, 0.0,
-                              0.0, 0.0, 1.0, 0.0,
-                              -1.0 * worldLoc.x, -1.0 * worldLoc.y, worldLoc.z, 1.0
-                );
-                
-                mat4 rotateView = mat4(cw.y, 0.0, -1.0 * sw.y, 0.0,
                                             0.0, 1.0, 0.0, 0.0,
-                                            sw.y, 0.0, cw.y, 0.0,
-                                            0.0, 0.0, 0.0, 1.0
+                                            0.0, 0.0, 1.0, 0.0,
+                                            -worldLoc.x, -worldLoc.y, worldLoc.z, 1.0
+                );
+
+                mat4 rotateX = mat4(1.0, 0.0, 0.0, 0.0,
+                                    0.0, cw.x, sw.x, 0.0,
+                                    0.0, -sw.x, cw.x, 0.0,
+                                    0.0, 0.0, 0.0, 1.0
+                );
+
+                mat4 rotateY = mat4(cw.y, 0.0, -sw.y, 0.0,
+                                    0.0, 1.0, 0.0, 0.0,
+                                    sw.y, 0.0, cw.y, 0.0,
+                                    0.0, 0.0, 0.0, 1.0
+                );
+
+                mat4 rotateZ = mat4(cw.z, sw.z, 0.0, 0.0,
+                                    -sw.z, cw.z, 0.0, 0.0,
+                                    0.0, 0.0, 1.0, 0.0,
+                                    0.0, 0.0, 0.0, 1.0
                 );
                 
-                return translateView * rotateView * pos;
+                return rotateX * rotateY * rotateZ * translateView * pos;
             }
-            
+
+            vec4 PositionObject(vec4 pos){
+                mat4 translateM = mat4(1.0, 0.0, 0.0, 0.0,
+                                        0.0, 1.0, 0.0, 0.0,
+                                        0.0, 0.0, 1.0, 0.0,
+                                        transform.x, transform.y, transform.z, 1.0
+                );
+
+                return translateM * pos;
+            }
+    
+            vec4 ScaleObject(vec4 pos) {
+                if (length(scale) == 0.0) {
+                    return pos;
+                }
+
+                mat4 scaleM = mat4(scale.x, 0.0, 0.0, 0.0,
+                                    0.0, scale.y, 0.0, 0.0,
+                                    0.0, 0.0, scale.z, 0.0,
+                                    0.0, 0.0, 0.0, 1.0
+                );
+
+                return scaleM * pos;
+            }
+
+            vec4 RotateObject(vec4 pos){
+                vec3 c = cos(rotation);
+                vec3 s = sin(rotation);
+    
+                mat4 rotateX = mat4(1.0, 0.0, 0.0, 0.0,
+                                    0.0, c.x, s.x, 0.0,
+                                    0.0, -s.x, c.x, 0.0,
+                                    0.0, 0.0, 0.0, 1.0
+                );
+    
+                mat4 rotateY = mat4(c.y, 0.0, -s.y, 0.0,
+                                    0.0, 1.0, 0.0, 0.0,
+                                    s.y, 0.0, c.y, 0.0,
+                                    0.0, 0.0, 0.0, 1.0
+                );
+    
+                mat4 rotateZ = mat4(c.z, s.z, 0.0, 0.0,
+                                    -s.z, c.z, 0.0, 0.0,
+                                    0.0, 0.0, 1.0, 0.0,
+                                    0.0, 0.0, 0.0, 1.0
+                );
+    
+                return rotateX * rotateY * rotateZ * pos;
+            }
+
             vec4 ApplyProjection(vec4 pos) {
-                mat4 ComplexPerspective = mat4(
-                                                n / r, 0.0, 0.0, 0.0,
+                mat4 ComplexPerspective = mat4(n / r, 0.0, 0.0, 0.0,
                                                 0.0, n / t, 0.0, 0.0,
                                                 0.0, 0.0, -1.0 * (f + n) / (f - n), -1.0,
                                                 0.0, 0.0, -2.0 * f * n / (f - n), 0.0
+
                 );
-                
-                // Doesnt have to be SimplePerspective, it can be one of the ones above as well
+
                 return ComplexPerspective * pos;
             }
-            
-            vec4 PositionObject(vec4 pos)
-            {
-                mat4 translateM = mat4(1.0,0.0,0.0,0.0,
-                               0.0,1.0,0.0,0.0,
-                               0.0,0.0,1.0,0.0,
-                               transform.x,transform.y,transform.z,1.0);
-                return translateM*pos;	
-            }
-            
-            //Use a function to Rotate the object
-            vec4 RotateObject(vec4 pos)
-            {
-                //This is a nice trick
-                vec3 c = cos(rotation);
-                vec3 s = sin(rotation);
-                fragColor = vert_color;
-                //Surprise!  we have to go column firt when we enter the matrix.
-    
-                //mat4 rotateX = mat4();
-                mat4 rotateY = mat4(c.y,0.0,-1.0*s.y,0.0,
-                                    0.0,1.0,0.0,0.0,
-                                    s.y,0.0,c.y,0.0,
-                                    0.0,0.0,0.0,1.0);
-                                    
-                mat4 rotateZ = mat4(c.z,s.z,0.0,0.0,
-                                    -1.0*s.z,c.z,0.0,0.0,
-                                    0.0,0.0,1.0,0.0,
-                                    0.0,0.0,0.0,1.0);
-                return rotateY*rotateZ*pos;
-            }
-            
+
             void main()
             {
                 fragColor = vert_color;
-                vec4 worldCord = PositionObject(RotateObject(a_position));
+                vec4 worldCord = PositionObject(RotateObject(ScaleObject(a_position)));
                 vec4 cameraSpace = MoveCamera(worldCord);
                 
-                gl_Position = PositionObject(cameraSpace);
+                gl_Position = ApplyProjection(cameraSpace);
             }		
         </script>
 
@@ -123,7 +153,7 @@
                     this.Keys = [];
 
                     // This will create the player
-                    this.CreateObject(1, Player, [0, 0, 0], [0, 0, 0], "Player");
+                    this.CreateObject(1, Player, [0, 0, 0], [0, 80, 0], "Player");
 
                     // This will generate the 200 asteroids
                     let numAsteroids = 200;
@@ -131,11 +161,11 @@
                         let randomX = Math.floor(Math.random() * 201) - 100;
                         let randomY = Math.floor(Math.random() * 201) - 100;
                         let randomZ = Math.floor(Math.random() * 21) - 10;
-                        this.CreateObject(1, Asteroid, [randomX, randomY, randomZ], [0, 0, 0], "Asteroid")
+                        let randomScale = Math.floor(Math.random() * 10 + 1) / 10;
+                        this.CreateObject(1, Asteroid, [randomX, randomZ, randomY], [0, 0, 0], [randomScale, randomScale, randomScale], "Asteroid")
                         console.log("Spawning Asteroid " + i + " at (" + randomX + ", " + randomY + ", " + randomZ + ")")
                     }
-                    this.CreateObject(1, Asteroid, [0, 0, 0], [0, 80, 0], "Player");
-
+                    
                     console.log(this.Solid)
                 }
                 
@@ -174,7 +204,7 @@
                     return (rad1 + rad2) > distance;
                 }
                 
-                CreateObject(type, prefab, loc, rot, name) {
+                CreateObject(type, prefab, loc, rot, scale = [1, 1, 1], name) {
                     //type 0 = visual
                     //type 1 = solid
                     //type 2 = trigger
@@ -186,6 +216,10 @@
                     temp.loc = loc;
                     temp.rot = rot;
                     temp.name = name;
+                    
+                    for (let i = 0; i < 3; i++) {
+                        temp.scale[i] *= scale[i]
+                    }
 
                     switch(type) {
                         case 0:

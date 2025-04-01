@@ -1,6 +1,8 @@
 class Player extends GameObject {
 	constructor() {
 		super();
+		this.moveSpeed = 0.1;
+		this.rotateSpeed = 0.02;
 	}
 
 	render(program) {
@@ -11,22 +13,22 @@ class Player extends GameObject {
 	}
 
 	update() {
-		// this.angVelocity = [0,0,0]
+		this.angVelocity = [0,0,0]
 
 		if("A" in m.Keys && m.Keys["A"]) {
-			this.rot[1] +=.01;		//euler angles x,y,z
+			this.angVelocity[1] -= this.rotateSpeed;
 		}
 
 		if("D" in m.Keys && m.Keys["D"]) {
-			this.rot[1] -=.01;
+			this.angVelocity[1] += this.rotateSpeed;
 		}
 
 		if ("Z" in m.Keys && m.Keys["Z"]) {
-			this.rot[0] -= 0.01;
+			this.angVelocity[0] -= this.rotateSpeed;
 		}
 
 		if ("X" in m.Keys && m.Keys["X"]) {
-			this.rot[0] += 0.01;
+			this.angVelocity[0] += this.rotateSpeed;
 		}
 
 		this.velocity = [0,0,0]
@@ -35,13 +37,13 @@ class Player extends GameObject {
 
 		if("W" in m.Keys && m.Keys["W"]) {
 			for(var i = 0; i < 3; i ++) {
-				this.velocity[i] = tempF[i] * .01; 
+				this.velocity[i] += tempF[i] * this.moveSpeed; 
 			}
 		}
 
 		if("S" in m.Keys && m.Keys["S"]) {
 			for(var i = 0; i < 3; i ++) {
-				this.velocity[i] = tempF[i] * -.01; 
+				this.velocity[i] -= tempF[i] * this.moveSpeed; 
 			}
 		}
 
