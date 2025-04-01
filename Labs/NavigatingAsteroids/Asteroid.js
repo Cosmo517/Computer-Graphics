@@ -48,12 +48,17 @@ class Asteroid extends GameObject {
         ];
 
         this.collisionRadius = 0.07;
-        this.verticeCount = this.vertices.length / 6;		
-        this.angVelocity[0] = 0.01
+        this.verticeCount = this.vertices.length / 6;
+
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 	}
 
 	update() {
+        this.angVelocity = [
+            this.doRotate[0] ? Math.random() * (0.5 - 0.01) + 0.01 : 0,
+            this.doRotate[1] ? Math.random() * (0.5 - 0.01) + 0.01 : 0,
+            this.doRotate[2] ? Math.random() * (0.5 - 0.01) + 0.01 : 0
+        ]
 		this.Move();
 	}
 }

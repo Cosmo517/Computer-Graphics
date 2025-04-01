@@ -162,10 +162,16 @@
                         let randomY = Math.floor(Math.random() * 201) - 100;
                         let randomZ = Math.floor(Math.random() * 21) - 10;
                         let randomScale = Math.floor(Math.random() * 10 + 1) / 10;
-                        this.CreateObject(1, Asteroid, [randomX, randomZ, randomY], [0, 0, 0], [randomScale, randomScale, randomScale], "Asteroid")
+
+                        this.CreateObject(1, Asteroid, 
+                        [randomX, randomZ, randomY], 
+                        [0, 0, 0],
+                        [randomScale, randomScale, randomScale],
+                        [true, true, true],
+                        "Asteroid")
                         console.log("Spawning Asteroid " + i + " at (" + randomX + ", " + randomY + ", " + randomZ + ")")
                     }
-                    
+
                     console.log(this.Solid)
                 }
                 
@@ -204,7 +210,7 @@
                     return (rad1 + rad2) > distance;
                 }
                 
-                CreateObject(type, prefab, loc, rot, scale = [1, 1, 1], name) {
+                CreateObject(type, prefab, loc, rot, scale = [1, 1, 1], doRotate = [false, false, false], name) {
                     //type 0 = visual
                     //type 1 = solid
                     //type 2 = trigger
@@ -216,7 +222,8 @@
                     temp.loc = loc;
                     temp.rot = rot;
                     temp.name = name;
-                    
+                    temp.doRotate = doRotate;
+
                     for (let i = 0; i < 3; i++) {
                         temp.scale[i] *= scale[i]
                     }

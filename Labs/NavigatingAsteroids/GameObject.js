@@ -3,6 +3,7 @@ class GameObject {
 		this.loc = [0,0,0];
 		this.rot = [0,0,0];
 		this.scale = [1, 1, 1];
+		this.doRotate = [false, false, false];
 		this.isTrigger = false;
 		this.collissionRadius = 1.0;
 		this.velocity = [0,0,0];
