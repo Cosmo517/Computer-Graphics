@@ -3,7 +3,8 @@ class Asteroid extends GameObject {
 		super();
 		this.buffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-        let asteroidSize = 1;
+        let asteroidSize = 0.5;
+        this.collisionRadius = asteroidSize * Math.max(this.scale[0], this.scale[1], this.scale[2]);
 
         this.vertices = [	
             // Face 1
@@ -47,11 +48,14 @@ class Asteroid extends GameObject {
             0, 0, asteroidSize,    0.647, 0.165, 0.165,
         ];
 
-        this.collisionRadius = 0.07;
         this.verticeCount = this.vertices.length / 6;
 
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 	}
+
+    onCollisionEnter(other) {
+        console.log("I am asteroid " + this.id + " and hitting " + other.name)
+    }
 
 	update() {
         this.angVelocity = [

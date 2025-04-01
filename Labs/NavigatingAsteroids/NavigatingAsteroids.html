@@ -156,23 +156,33 @@
                     this.CreateObject(1, Player, [0, 0, 0], [0, 80, 0], "Player");
 
                     // This will generate the 200 asteroids
-                    let numAsteroids = 200;
+                    let numAsteroids = 1;
                     for (let i = 0; i < numAsteroids; i++) {
                         let randomX = Math.floor(Math.random() * 201) - 100;
                         let randomY = Math.floor(Math.random() * 201) - 100;
                         let randomZ = Math.floor(Math.random() * 21) - 10;
                         let randomScale = Math.floor(Math.random() * 10 + 1) / 10;
 
-                        this.CreateObject(1, Asteroid, 
-                        [randomX, randomZ, randomY], 
-                        [0, 0, 0],
-                        [randomScale, randomScale, randomScale],
-                        [true, true, true],
-                        "Asteroid")
-                        console.log("Spawning Asteroid " + i + " at (" + randomX + ", " + randomY + ", " + randomZ + ")")
+                        let temp = this.CreateObject(1,
+                                        Asteroid, 
+                                        [randomX, randomZ, randomY], 
+                                        [0, 0, 0],
+                                        [randomScale, randomScale, randomScale],
+                                        [true, true, true],
+                                        "Asteroid"
+                        )
+                        console.log("Spawning Asteroid " + i + " at (" + randomX + ", " + randomY + ", " + randomZ + ") with collision radius of: " + temp.collisionRadius)
                     }
 
-                    console.log(this.Solid)
+                    // This is the test asteroid with collision working
+                    // this.CreateObject(1,
+                    //                     Asteroid, 
+                    //                     [-10, 0, 0], 
+                    //                     [0, 0, 0],
+                    //                     [1, 1, 1],
+                    //                     [true, true, true],
+                    //                     "Asteroid"
+                    //     )
                 }
                 
                 UpdateAll() {
@@ -207,10 +217,10 @@
 
                 checkCollision(loc1, rad1, loc2, rad2) {
                     let distance = Math.sqrt(Math.pow(loc1[0] - loc2[0], 2) + Math.pow(loc1[1] - loc2[1], 2) + Math.pow(loc1[2] - loc2[2], 2));
-                    return (rad1 + rad2) > distance;
+                    return [(rad1 + rad2) > distance, rad1, rad2, distance];
                 }
                 
-                CreateObject(type, prefab, loc, rot, scale = [1, 1, 1], doRotate = [false, false, false], name) {
+                CreateObject(type, prefab, loc, rot, scale, doRotate, name) {
                     //type 0 = visual
                     //type 1 = solid
                     //type 2 = trigger
@@ -227,7 +237,7 @@
                     for (let i = 0; i < 3; i++) {
                         temp.scale[i] *= scale[i]
                     }
-
+                    
                     switch(type) {
                         case 0:
                             this.Visual[id] = temp;

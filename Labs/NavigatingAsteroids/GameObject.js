@@ -5,7 +5,7 @@ class GameObject {
 		this.scale = [1, 1, 1];
 		this.doRotate = [false, false, false];
 		this.isTrigger = false;
-		this.collissionRadius = 1.0;
+		this.collisionRadius = 1.0;
 		this.velocity = [0,0,0];
 		this.angVelocity = [0,0,0];
 		this.name = "default";
@@ -25,25 +25,48 @@ class GameObject {
 			this.rot[i] += this.angVelocity[i];
 		}
 
-		if(!this.isTrigger) {
+		if (!this.isTrigger) {
 			var clear = true;
-
-			for(var so in m.Solid) {
-				if(m.Solid[so] != this) {
-					if(m.checkCollision(tempP,this.collissionRadius,m.Solid[so].loc,m.Solid[so].collissionRadius)) {
+			// Handle collisions with other solids
+			for (var so in m.Solid) {
+				if (m.Solid[so] != this) {
+					console.log(m.checkCollision(tempP, this.collisionRadius, m.Solid[so].loc, m.Solid[so].collisionRadius))
+					if (m.checkCollision(tempP, this.collisionRadius, m.Solid[so].loc, m.Solid[so].collisionRadius)[0]) {
+						try {
+							m.Solid[so].onCollisionEnter(this);
+						} catch {}
 						clear = false;
 					}
 				}
-			} 
-
-			if(clear) {
-                this.loc = tempP;
+			}
+			
+			// Handle collisions with triggers
+			for (var tr in m.Trigger) {
+				if (m.Trigger[tr] != this) {
+					if (m.checkCollision(tempP, this.collisionRadius, m.Trigger[tr].loc, m.Trigger[tr].collisionRadius)) {
+						try {
+							m.Trigger[tr].onTriggerEnter(this);
+						} catch {}
+					}
+				}
+			}
+		
+			if (clear) {
+				this.loc = tempP;
 			}
 		} else {
 			this.loc = tempP;
-			//see if there are any collisions
-			//handle them.
 		}
+	}
+
+	onCollisionEnter(other) {
+		// virtual function
+		// colliding with another object
+	}
+	
+	onTriggerEnter(other) {
+		// virtual function
+		// Colliding with some trigger and getting an event happen
 	}
 
 	update() {

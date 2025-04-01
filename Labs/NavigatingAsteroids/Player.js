@@ -3,6 +3,7 @@ class Player extends GameObject {
 		super();
 		this.moveSpeed = 0.1;
 		this.rotateSpeed = 0.02;
+		this.collisionRadius = 0.5;
 	}
 
 	render(program) {
@@ -11,6 +12,10 @@ class Player extends GameObject {
 		let worldLoc = gl.getUniformLocation(program, "worldRotation");
 		gl.uniform3fv(worldLoc, new Float32Array(this.rot));
 	}
+
+    onCollisionEnter(other) {
+        console.log("I am a player " + this.id + " and hitting " + other.name)
+    }
 
 	update() {
 		this.angVelocity = [0,0,0]
