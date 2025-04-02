@@ -3,7 +3,7 @@ class Asteroid extends GameObject {
 		super();
 		this.buffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-        let asteroidSize = 0.5;
+        let asteroidSize = 1;
         this.scale = scale
         this.collisionRadius = asteroidSize * Math.max(this.scale[0], this.scale[1], this.scale[2]);
 
@@ -55,7 +55,9 @@ class Asteroid extends GameObject {
 	}
 
     onCollisionEnter(other) {
-        console.log("I am asteroid " + this.id + " and hitting " + other.name)
+        if (other.name == "Bullet") {
+            m.DestroyObject(this.id);
+        }
     }
 
 	update() {

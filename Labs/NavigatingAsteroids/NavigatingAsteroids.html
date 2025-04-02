@@ -136,7 +136,7 @@
 		
         <script src="Transform.js"></script>
         <script src="GameObject.js"></script>
-        <!-- <script src="Bullet.js"></script> -->
+        <script src="Bullet.js"></script>
         <script src="Player.js"></script>
         <script src="Asteroid.js"></script>
 		<script src="webgl_interface.js"></script>		
@@ -205,8 +205,12 @@
                 
                 }
 
+                getDistance(loc1, loc2) {
+                    return  Math.sqrt(Math.pow(loc1[0] - loc2[0], 2) + Math.pow(loc1[1] - loc2[1], 2) + Math.pow(loc1[2] - loc2[2], 2));
+                }
+
                 checkCollision(loc1, rad1, loc2, rad2) {
-                    let distance = Math.sqrt(Math.pow(loc1[0] - loc2[0], 2) + Math.pow(loc1[1] - loc2[1], 2) + Math.pow(loc1[2] - loc2[2], 2));
+                    let distance = this.getDistance(loc1, loc2);
                     return [(rad1 + rad2) > distance, rad1, rad2, distance];
                 }
                 

@@ -4,6 +4,9 @@ class Player extends GameObject {
 		this.moveSpeed = 0.1;
 		this.rotateSpeed = 0.02;
 		this.collisionRadius = 0.25;
+		this.reloadSpeed = 30 // In frames
+		// Initialize it after the reloadSpeed so the player can immediately shoot
+		this.timeSinceLastShot = this.reloadSpeed + 1 
 	}
 
 	render(program) {
@@ -20,6 +23,7 @@ class Player extends GameObject {
 	update() {
 		this.angVelocity = [0,0,0]
 
+		// This will handle turning left and right
 		if("A" in m.Keys && m.Keys["A"]) {
 			this.angVelocity[1] -= this.rotateSpeed;
 		}
@@ -27,7 +31,8 @@ class Player extends GameObject {
 		if("D" in m.Keys && m.Keys["D"]) {
 			this.angVelocity[1] += this.rotateSpeed;
 		}
-
+		
+		// This will handle looking up and down
 		if ("Z" in m.Keys && m.Keys["Z"]) {
 			this.angVelocity[0] -= this.rotateSpeed;
 		}
@@ -36,6 +41,7 @@ class Player extends GameObject {
 			this.angVelocity[0] += this.rotateSpeed;
 		}
 
+		// This handles going forwards and backwards
 		this.velocity = [0,0,0]
 		this.transform.doRotations(this.rot);
 		let tempF = this.transform.forward;
@@ -52,6 +58,22 @@ class Player extends GameObject {
 			}
 		}
 
+		// This will handle shooting
+		if (this.timeSinceLastShot > this.reloadSpeed && " " in m.Keys && m.Keys[" "]) {
+			console.log("SPAWNING BULLET")
+			let temp = m.CreateObject(1,
+				Bullet, 
+				[this.loc[0], this.loc[1] - 10, this.loc[2]], 
+				[0, 0, 0],
+				[1, 1, 1],
+				[false, false, false],
+				"Bullet"
+			)
+			console.log(temp);
+			this.timeSinceLastShot = 0;
+		}
+
+		this.timeSinceLastShot++;
 		this.Move();
 	}
 }
