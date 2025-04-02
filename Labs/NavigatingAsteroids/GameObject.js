@@ -30,7 +30,10 @@ class GameObject {
 			// Handle collisions with other solids
 			for (var so in m.Solid) {
 				if (m.Solid[so] != this) {
-					console.log(m.checkCollision(tempP, this.collisionRadius, m.Solid[so].loc, m.Solid[so].collisionRadius))
+					// console.log("Loc1: " + tempP
+					// 	+ " Loc2: " + m.Solid[so].loc 
+					// 	+ " calculations: " +
+					// 	m.checkCollision(tempP, this.collisionRadius, m.Solid[so].loc, m.Solid[so].collisionRadius))
 					if (m.checkCollision(tempP, this.collisionRadius, m.Solid[so].loc, m.Solid[so].collisionRadius)[0]) {
 						try {
 							m.Solid[so].onCollisionEnter(this);

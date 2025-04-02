@@ -1,9 +1,10 @@
 class Asteroid extends GameObject {
-	constructor() {
+	constructor(scale) {
 		super();
 		this.buffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
         let asteroidSize = 0.5;
+        this.scale = scale
         this.collisionRadius = asteroidSize * Math.max(this.scale[0], this.scale[1], this.scale[2]);
 
         this.vertices = [	

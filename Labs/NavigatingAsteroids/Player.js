@@ -3,7 +3,7 @@ class Player extends GameObject {
 		super();
 		this.moveSpeed = 0.1;
 		this.rotateSpeed = 0.02;
-		this.collisionRadius = 0.5;
+		this.collisionRadius = 0.25;
 	}
 
 	render(program) {
@@ -42,13 +42,13 @@ class Player extends GameObject {
 
 		if("W" in m.Keys && m.Keys["W"]) {
 			for(var i = 0; i < 3; i ++) {
-				this.velocity[i] += tempF[i] * this.moveSpeed; 
+				this.velocity[i] = tempF[i] * this.moveSpeed; 
 			}
 		}
 
 		if("S" in m.Keys && m.Keys["S"]) {
 			for(var i = 0; i < 3; i ++) {
-				this.velocity[i] -= tempF[i] * this.moveSpeed; 
+				this.velocity[i] = tempF[i] * -this.moveSpeed; 
 			}
 		}
 

@@ -57,7 +57,7 @@
                 mat4 translateM = mat4(1.0, 0.0, 0.0, 0.0,
                                         0.0, 1.0, 0.0, 0.0,
                                         0.0, 0.0, 1.0, 0.0,
-                                        transform.x, transform.y, transform.z, 1.0
+                                        transform.x, transform.y, -transform.z, 1.0
                 );
 
                 return translateM * pos;
@@ -153,10 +153,10 @@
                     this.Keys = [];
 
                     // This will create the player
-                    this.CreateObject(1, Player, [0, 0, 0], [0, 80, 0], "Player");
+                    this.CreateObject(1, Player, [5, 5, 0], [0, 0, 0], "Player");
 
                     // This will generate the 200 asteroids
-                    let numAsteroids = 1;
+                    let numAsteroids = 200;
                     for (let i = 0; i < numAsteroids; i++) {
                         let randomX = Math.floor(Math.random() * 201) - 100;
                         let randomY = Math.floor(Math.random() * 201) - 100;
@@ -173,16 +173,6 @@
                         )
                         console.log("Spawning Asteroid " + i + " at (" + randomX + ", " + randomY + ", " + randomZ + ") with collision radius of: " + temp.collisionRadius)
                     }
-
-                    // This is the test asteroid with collision working
-                    // this.CreateObject(1,
-                    //                     Asteroid, 
-                    //                     [-10, 0, 0], 
-                    //                     [0, 0, 0],
-                    //                     [1, 1, 1],
-                    //                     [true, true, true],
-                    //                     "Asteroid"
-                    //     )
                 }
                 
                 UpdateAll() {
@@ -224,7 +214,7 @@
                     //type 0 = visual
                     //type 1 = solid
                     //type 2 = trigger
-                    var temp = new prefab; //Yes this dark sorcery will work.
+                    var temp = new prefab(scale)
                     var id = "ID"+this.ObjectCounter;
                     this.ObjectCounter ++;
                     temp.id = id;
@@ -233,10 +223,6 @@
                     temp.rot = rot;
                     temp.name = name;
                     temp.doRotate = doRotate;
-
-                    for (let i = 0; i < 3; i++) {
-                        temp.scale[i] *= scale[i]
-                    }
                     
                     switch(type) {
                         case 0:
