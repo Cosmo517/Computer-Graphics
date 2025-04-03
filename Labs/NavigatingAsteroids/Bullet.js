@@ -66,7 +66,6 @@ class Bullet extends GameObject {
         ]
 
         this.verticeCount = this.vertices.length / 6;
-        this.flip = false
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
     }
 
