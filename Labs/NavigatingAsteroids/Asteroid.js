@@ -1,5 +1,5 @@
 class Asteroid extends GameObject {
-	constructor(scale) {
+	constructor(loc, rot, scale) {
 		super();
 		this.buffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);

@@ -171,7 +171,7 @@
                                         [true, true, true],
                                         "Asteroid"
                         )
-                        console.log("Spawning Asteroid " + i + " at (" + randomX + ", " + randomY + ", " + randomZ + ") with collision radius of: " + temp.collisionRadius)
+                        // console.log("Spawning Asteroid " + i + " at (" + randomX + ", " + randomY + ", " + randomZ + ") with collision radius of: " + temp.collisionRadius)
                     }
                 }
                 
@@ -218,7 +218,7 @@
                     //type 0 = visual
                     //type 1 = solid
                     //type 2 = trigger
-                    var temp = new prefab(scale)
+                    var temp = new prefab(loc, rot, scale)
                     var id = "ID"+this.ObjectCounter;
                     this.ObjectCounter ++;
                     temp.id = id;

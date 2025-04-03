@@ -104,6 +104,10 @@ class GameObject {
 		var tranLoc  = gl.getUniformLocation(program,'transform');
 		gl.uniform3fv(tranLoc,new Float32Array(this.loc));
 		var thetaLoc = gl.getUniformLocation(program,'rotation');
+		if (this.name == "Bullet") {
+			console.log("Setting rotation uniform: ", this.rot)
+		}
+		
 		gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
 		const scaleLoc = gl.getUniformLocation(program, "scale");
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));

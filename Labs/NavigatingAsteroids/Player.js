@@ -63,7 +63,7 @@ class Player extends GameObject {
 			let temp = m.CreateObject(1,
 				Bullet, 
 				[this.loc[0], this.loc[1] - 1, this.loc[2]], 
-				[this.rot[0], this.rot[1], this.rot[2]],
+				[0, -Math.PI / 4, 0],
 				[1, 1, 1],
 				[false, false, false],
 				"Bullet"
