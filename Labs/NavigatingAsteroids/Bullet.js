@@ -3,65 +3,66 @@ class Bullet extends GameObject {
         super();
         this.buffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-        this.collisionRadius = 0.5;
+        this.collisionRadius = 0.4;
         this.spawnLoc = loc
-        this.moveSpeed = 0.04
+        this.moveSpeed = 0.3;
+        this.despawnDistance = 100;
 
-        let bulletSize = 0.2;
+        let bulletSize = 0.1;
         this.vertices = [
             // Top
-            -bulletSize, bulletSize, bulletSize,   1, 1, 1,
-            bulletSize, bulletSize, bulletSize,    1, 1, 1,
-            bulletSize, bulletSize, -bulletSize,       1, 1, 1,
+            -bulletSize, bulletSize, bulletSize,   1, 0, 0,
+            bulletSize, bulletSize, bulletSize,    1, 0, 0,
+            bulletSize, bulletSize, -bulletSize,   1, 0, 0,
             
-            bulletSize, bulletSize, -bulletSize,       1, 1, 1,
-            -bulletSize, bulletSize, -bulletSize,      1, 1, 1,
-            -bulletSize, bulletSize, bulletSize,   1, 1, 1,
+            bulletSize, bulletSize, -bulletSize,   1, 0, 0,
+            -bulletSize, bulletSize, -bulletSize,  1, 0, 0,
+            -bulletSize, bulletSize, bulletSize,   1, 0, 0,
 
             // Bottom
-            -bulletSize, -bulletSize, bulletSize,  1, 1, 1,
-            bulletSize, -bulletSize, bulletSize,   1, 1, 1,
-            bulletSize, -bulletSize, -bulletSize,      1, 1, 1,
+            -bulletSize, -bulletSize, bulletSize,  1, 0, 0,
+            bulletSize, -bulletSize, bulletSize,   1, 0, 0,
+            bulletSize, -bulletSize, -bulletSize,  1, 0, 0,
 
-            bulletSize, -bulletSize, -bulletSize,      1, 1, 1,
-            -bulletSize, -bulletSize, -bulletSize,     1, 1, 1,
-            -bulletSize, -bulletSize, bulletSize,  1, 1, 1,
+            bulletSize, -bulletSize, -bulletSize,  1, 0, 0,
+            -bulletSize, -bulletSize, -bulletSize, 1, 0, 0,
+            -bulletSize, -bulletSize, bulletSize,  1, 0, 0,
 
             // Left
-            -bulletSize, -bulletSize, bulletSize,  1, 1, 1,
-            -bulletSize, bulletSize, bulletSize,   1, 1, 1,
-            -bulletSize, bulletSize, -bulletSize,      1, 1, 1,
+            -bulletSize, -bulletSize, bulletSize,  1, 0, 0,
+            -bulletSize, bulletSize, bulletSize,   1, 0, 0,
+            -bulletSize, bulletSize, -bulletSize,  1, 0, 0,
 
-            -bulletSize, bulletSize, -bulletSize,      1, 1, 1,
-            -bulletSize, -bulletSize, -bulletSize,     1, 1, 1,
-            -bulletSize, -bulletSize, bulletSize,  1, 1, 1,
+            -bulletSize, bulletSize, -bulletSize,  1, 0, 0,
+            -bulletSize, -bulletSize, -bulletSize, 1, 0, 0,
+            -bulletSize, -bulletSize, bulletSize,  1, 0, 0,
 
             // Right
-            bulletSize, -bulletSize, bulletSize,   1, 1, 1,
-            bulletSize, bulletSize, bulletSize,    1, 1, 1,
-            bulletSize, bulletSize, -bulletSize,       1, 1, 1,
+            bulletSize, -bulletSize, bulletSize,   1, 0, 0,
+            bulletSize, bulletSize, bulletSize,    1, 0, 0,
+            bulletSize, bulletSize, -bulletSize,   1, 0, 0,
 
-            bulletSize, bulletSize, -bulletSize,       1, 1, 1,
-            bulletSize, -bulletSize, -bulletSize,      1, 1, 1,
-            bulletSize, -bulletSize, bulletSize,   1, 1, 1,
+            bulletSize, bulletSize, -bulletSize,   1, 0, 0,
+            bulletSize, -bulletSize, -bulletSize,  1, 0, 0,
+            bulletSize, -bulletSize, bulletSize,   1, 0, 0,
 
             // Front
-            -bulletSize, -bulletSize, -bulletSize,     1, 1, 1,
-            -bulletSize, bulletSize, -bulletSize,      1, 1, 1,
-            bulletSize, bulletSize, -bulletSize,       1, 1, 1,
+            -bulletSize, -bulletSize, -bulletSize,  1, 0, 0,
+            -bulletSize, bulletSize, -bulletSize,   1, 0, 0,
+            bulletSize, bulletSize, -bulletSize,    1, 0, 0,
 
-            bulletSize, bulletSize, -bulletSize,       1, 1, 1,
-            bulletSize, -bulletSize, -bulletSize,      1, 1, 1,
-            -bulletSize, -bulletSize, -bulletSize,     1, 1, 1,
+            bulletSize, bulletSize, -bulletSize,    1, 0, 0,
+            bulletSize, -bulletSize, -bulletSize,   1, 0, 0,
+            -bulletSize, -bulletSize, -bulletSize,  1, 0, 0,
 
             // Back
-            -bulletSize, bulletSize, bulletSize,   1, 1, 1,
-            bulletSize, bulletSize, bulletSize,    1, 1, 1,
-            bulletSize, -bulletSize, bulletSize,   1, 1, 1,
+            -bulletSize, bulletSize, bulletSize,   1, 0, 0,
+            bulletSize, bulletSize, bulletSize,    1, 0, 0,
+            bulletSize, -bulletSize, bulletSize,   1, 0, 0,
 
-            bulletSize, -bulletSize, bulletSize,   1, 1, 1,
-            -bulletSize, -bulletSize, bulletSize,  1, 1, 1,
-            -bulletSize, bulletSize, bulletSize,   1, 1, 1,
+            bulletSize, -bulletSize, bulletSize,   1, 0, 0,
+            -bulletSize, -bulletSize, bulletSize,  1, 0, 0,
+            -bulletSize, bulletSize, bulletSize,   1, 0, 0,
         ]
 
         this.verticeCount = this.vertices.length / 6;
@@ -73,15 +74,14 @@ class Bullet extends GameObject {
         // Check to see if the bullet exceeded x distance from
         // the original location
 
-        if (m.getDistance(this.loc, this.spawnLoc) > 20) {
+        if (m.getDistance(this.loc, this.spawnLoc) > this.despawnDistance) {
             m.DestroyObject(this.id);
         }
+
         // The bullet should just move forward
 		this.velocity = [0,0,0]
 		this.transform.doRotations(this.rot);
         let tempF = this.transform.forward;
-        console.log("Bullet rot:", this.rot);
-        console.log("Bullet forward:", tempF);
         for (let i = 0; i < 3; i++) {
             this.velocity[i] = tempF[i] * this.moveSpeed; 
         }

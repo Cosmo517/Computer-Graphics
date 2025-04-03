@@ -30,11 +30,13 @@ class GameObject {
 			// Handle collisions with other solids
 			for (var so in m.Solid) {
 				if (m.Solid[so] != this) {
-					// console.log("Loc1: " + tempP
-					// 	+ " Loc2: " + m.Solid[so].loc 
-					// 	+ " calculations: " +
-					// 	m.checkCollision(tempP, this.collisionRadius, m.Solid[so].loc, m.Solid[so].collisionRadius))
-					if (m.checkCollision(tempP, this.collisionRadius, m.Solid[so].loc, m.Solid[so].collisionRadius)[0]) {
+					if (m.checkCollision(tempP, this.collisionRadius, m.Solid[so].loc, m.Solid[so].collisionRadius)) {
+						if (this.name == "Bullet" && m.Solid[so].name == "Player") {
+							// This means the user is facing upwards, and shooting
+							// For now just let the bullet hit the user
+
+							continue;
+						}
 						try {
 							m.Solid[so].onCollisionEnter(this);
 						} catch {}
@@ -104,10 +106,6 @@ class GameObject {
 		var tranLoc  = gl.getUniformLocation(program,'transform');
 		gl.uniform3fv(tranLoc,new Float32Array(this.loc));
 		var thetaLoc = gl.getUniformLocation(program,'rotation');
-		if (this.name == "Bullet") {
-			console.log("Setting rotation uniform: ", this.rot)
-		}
-		
 		gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
 		const scaleLoc = gl.getUniformLocation(program, "scale");
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));

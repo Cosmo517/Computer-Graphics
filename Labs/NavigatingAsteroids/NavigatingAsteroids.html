@@ -153,7 +153,7 @@
                     this.Keys = [];
 
                     // This will create the player
-                    this.CreateObject(1, Player, [5, 5, 0], [0, 0, 0], "Player");
+                    this.CreateObject(1, Player, [5, 5, 0], [0, 0, 0], [1, 1, 1], [false, false, false], "Player");
 
                     // This will generate the 200 asteroids
                     let numAsteroids = 200;
@@ -171,7 +171,6 @@
                                         [true, true, true],
                                         "Asteroid"
                         )
-                        // console.log("Spawning Asteroid " + i + " at (" + randomX + ", " + randomY + ", " + randomZ + ") with collision radius of: " + temp.collisionRadius)
                     }
                 }
                 
@@ -211,7 +210,7 @@
 
                 checkCollision(loc1, rad1, loc2, rad2) {
                     let distance = this.getDistance(loc1, loc2);
-                    return [(rad1 + rad2) > distance, rad1, rad2, distance];
+                    return (rad1 + rad2) > distance;
                 }
                 
                 CreateObject(type, prefab, loc, rot, scale, doRotate, name) {
@@ -264,14 +263,10 @@
                 
                 KeyDown(event) {
                     this.Keys[String.fromCharCode(event.keyCode)] = true;
-                    //console.log(String.fromCharCode(event.keyCode) +" should be true - "+
-                    //this.Keys[String.fromCharCode(event.keyCode)]);
                 }
                 
                 KeyUp(event) {
                     this.Keys[String.fromCharCode(event.keyCode)] = false;
-                    //console.log(String.fromCharCode(event.keyCode) +" should be false - "+
-                    //this.Keys[String.fromCharCode(event.keyCode)]);
                 }
                 
                 //Static call backs go down here

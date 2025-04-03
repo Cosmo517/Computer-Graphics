@@ -6,6 +6,7 @@ class Asteroid extends GameObject {
         let asteroidSize = 1;
         this.scale = scale
         this.collisionRadius = asteroidSize * Math.max(this.scale[0], this.scale[1], this.scale[2]);
+        this.health = 3
 
         this.vertices = [	
             // Face 1
@@ -54,10 +55,18 @@ class Asteroid extends GameObject {
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 	}
 
-    onCollisionEnter(other) {
-        if (other.name == "Bullet") {
+    hit() {
+        this.health--;
+        if (this.health == 0) {
             m.DestroyObject(this.id);
         }
+    }
+
+    onCollisionEnter(other) {
+        if (other.name == "Bullet") {
+            this.hit();
+            m.DestroyObject(other.id);
+        } 
     }
 
 	update() {

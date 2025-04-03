@@ -16,10 +16,6 @@ class Player extends GameObject {
 		gl.uniform3fv(worldLoc, new Float32Array(this.rot));
 	}
 
-    onCollisionEnter(other) {
-        console.log("I am a player " + this.id + " and hitting " + other.name)
-    }
-
 	update() {
 		this.angVelocity = [0,0,0]
 
@@ -60,21 +56,15 @@ class Player extends GameObject {
 
 		// This will handle shooting
 		if (this.timeSinceLastShot > this.reloadSpeed && " " in m.Keys && m.Keys[" "]) {
-			let temp = m.CreateObject(1,
+			m.CreateObject(0,
 				Bullet, 
 				[this.loc[0], this.loc[1] - 1, this.loc[2]], 
-				[0, -Math.PI / 4, 0],
+				[...this.rot],
 				[1, 1, 1],
 				[false, false, false],
 				"Bullet"
 			)
-			console.log("Bullet info:")
-			console.log(temp);
-			console.log("Player Info:")
-			console.log(this)
 
-			console.log("Player (x, z, y) - (" + this.loc[0] + ", " + this.loc[1] + ", " + this.loc[2] + ")")
-			console.log("Bullet (x, z, y) - (" + temp.loc[0] + ", " + temp.loc[1] + ", " + temp.loc[2] + ")")
 			this.timeSinceLastShot = 0;
 		}
 
