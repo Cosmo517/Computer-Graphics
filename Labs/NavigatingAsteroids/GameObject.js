@@ -109,7 +109,6 @@ class GameObject {
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
 		
 		offset = 0;
-		var count = 24;
 		gl.drawArrays(this.primitiveType, offset, this.verticeCount);
 	}
 }
