@@ -64,6 +64,8 @@ class Hex extends GameObject {
 		gl.uniform3fv(tranLoc,new Float32Array(this.loc));
 		var thetaLoc = gl.getUniformLocation(program,'rotation');
 		gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
+		const scaleLoc = gl.getUniformLocation(program, "scale");
+		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
 	
         //var ibuffer = gl.createBuffer();
         //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.ibuffer);

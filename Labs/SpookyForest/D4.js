@@ -1,8 +1,6 @@
 class D4 extends GameObject {
 	constructor() {
 		super();
-		this.loc = [0.0, 0.0, 0.0];
-		this.rot = [0.0, 0.0, 0.0];
 
 		this.isTrigger = true;
 		this.buffer = gl.createBuffer();
@@ -57,6 +55,8 @@ class D4 extends GameObject {
 		gl.uniform3fv(tranLoc,new Float32Array(this.loc));
 		var thetaLoc = gl.getUniformLocation(program, 'rotation');
 		gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
+		const scaleLoc = gl.getUniformLocation(program, "scale");
+		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
 		
 		
 		var primitiveType = gl.TRIANGLES;
@@ -64,6 +64,7 @@ class D4 extends GameObject {
 		var count = 12;
 		gl.drawArrays(primitiveType, offset, count);
 	}
+	
 	Update() {
 		this.Move();
 	}

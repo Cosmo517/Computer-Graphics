@@ -4,9 +4,9 @@ class Camera extends GameObject {
 	}
 
 	Update() {
-		var deltaX = 0;
-		var deltaZ = 0;
-		var deltaR = 0;
+		let deltaX = 0;
+		let deltaZ = 0;
+		let deltaR = 0;
 
 		if( "A" in m.Keys && m.Keys["A"]) {
 			this.rot[1] -= 0.01;
@@ -33,10 +33,12 @@ class Camera extends GameObject {
 	}
 
 	Render(program) {
-        var camLoc  = gl.getUniformLocation(program,'worldLoc');
-        gl.uniform3fv(camLoc,new Float32Array(this.loc));
-        var worldLoc = gl.getUniformLocation(program,'worldRotation');
-        gl.uniform3fv(worldLoc,new Float32Array(this.rot));
+        const camLoc  = gl.getUniformLocation(program, 'worldLoc');
+        gl.uniform3fv(camLoc, new Float32Array(this.loc));
+        const worldLoc = gl.getUniformLocation(program, 'worldRotation');
+        gl.uniform3fv(worldLoc, new Float32Array(this.rot));
+		const scaleLoc = gl.getUniformLocation(program, "scale");
+		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
 	}
 	
 	
