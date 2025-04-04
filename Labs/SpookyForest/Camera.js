@@ -3,7 +3,7 @@ class Camera extends GameObject {
 			super();
 	}
 
-	Update() {
+	update() {
 		let deltaX = 0;
 		let deltaZ = 0;
 		let deltaR = 0;
@@ -32,7 +32,7 @@ class Camera extends GameObject {
 		this.loc[2] += deltaZ;
 	}
 
-	Render(program) {
+	render(program) {
         const camLoc  = gl.getUniformLocation(program, 'worldLoc');
         gl.uniform3fv(camLoc, new Float32Array(this.loc));
         const worldLoc = gl.getUniformLocation(program, 'worldRotation');

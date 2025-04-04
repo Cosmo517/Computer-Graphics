@@ -29,7 +29,7 @@ class D4 extends GameObject {
 		this.angVelocity = [0, 0.01, 0];
 	}
 
-	Render(program) {
+	render(program) {
 		var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 		var size = 3;
@@ -65,7 +65,7 @@ class D4 extends GameObject {
 		gl.drawArrays(primitiveType, offset, count);
 	}
 	
-	Update() {
+	update() {
 		this.Move();
 	}
 	

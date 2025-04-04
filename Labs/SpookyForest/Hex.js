@@ -34,11 +34,11 @@ class Hex extends GameObject {
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 	}
 
-	Update() {
+	update() {
 		this.Move();
 	}
 
-	Render(program) {
+	render(program) {
         var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 		var size = 3;

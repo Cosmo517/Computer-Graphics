@@ -200,34 +200,34 @@
 					this.Keys = [];
 				}
 				
-				UpdateAll() {
+				updateAll() {
 					for (let i in this.Visual) {
-						this.Visual[i].Update();
+						this.Visual[i].update();
 					}
 
 					for (let i in this.Solid) {
-						this.Solid[i].Update();
+						this.Solid[i].update();
 					}
 
 					for (let i in this.Trigger) {
-						this.Trigger[i].Update();
+						this.Trigger[i].update();
 					}
 				
 				}
 				
-				RenderAll() {
+				renderAll() {
 					gl.clear(gl.COLOR_BUFFER_BIT);
 
 					for(let i in this.Visual) {
-						this.Visual[i].Render(this.myWEBGL.program);
+						this.Visual[i].render(this.myWEBGL.program);
 					}
 					
 					for(let i in this.Solid) {
-						this.Solid[i].Render(this.myWEBGL.program);
+						this.Solid[i].render(this.myWEBGL.program);
 					}
 
 					for(let i in this.Trigger) {
-						this.Trigger[i].Render(this.myWEBGL.program);
+						this.Trigger[i].render(this.myWEBGL.program);
 					}
 				}
 
@@ -321,8 +321,8 @@
 				}
 				
 				static MainLoop() {
-					m.UpdateAll();
-					m.RenderAll();
+					m.updateAll();
+					m.renderAll();
 					requestAnimationFrame(main.MainLoop);
 				}
 			}

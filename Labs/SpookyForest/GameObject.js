@@ -22,7 +22,7 @@ class GameObject {
 	Move() {
 		let tempP = [0, 0, 0]
 
-		for(let i = 0; i < 3;i ++) {
+		for(let i = 0; i < 3; i++) {
 			tempP[i] = this.loc[i];
 			tempP[i] += this.velocity[i];
 			this.rot[i] += this.angVelocity[i];
@@ -47,11 +47,11 @@ class GameObject {
 		}
 	}
 
-	Update() {
+	update() {
 		console.error(this.name + " update() is NOT IMPLEMENTED!");
 	}
 
-	Render(program) {
+	render(program) {
 		console.error(this.name + " render() is NOT IMPLEMENTED!");
 	}	
 }
