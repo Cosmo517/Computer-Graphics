@@ -1,6 +1,8 @@
 class Camera extends GameObject {
 	constructor() {
-			super();
+		super();
+		this.moveSpeed = 0.25;
+		this.rotateSpeed = 0.02;
 	}
 
 	update() {
@@ -9,23 +11,35 @@ class Camera extends GameObject {
 		let deltaR = 0;
 
 		if( "A" in m.Keys && m.Keys["A"]) {
-			this.rot[1] -= 0.01;
+			this.rot[1] -= this.rotateSpeed;
 		}
 
 		if("D" in m.Keys && m.Keys["D"]) {
-			this.rot[1] += 0.01;
+			this.rot[1] += this.rotateSpeed;
 		}
 
 		if("W" in m.Keys && m.Keys["W"]) {
 			this.transform.doRotations(this.rot);
-			deltaX += this.transform.forward[0] * 0.25;
-			deltaZ += this.transform.forward[2] * 0.25;
+			deltaX += this.transform.forward[0] * this.moveSpeed;
+			deltaZ += this.transform.forward[2] * this.moveSpeed;
 		}
 
 		if("S" in m.Keys && m.Keys["S"]) {
 			this.transform.doRotations(this.rot);
-			deltaX -= this.transform.forward[0] * 0.25;
-			deltaZ -= this.transform.forward[2] * 0.25;
+			deltaX -= this.transform.forward[0] * this.moveSpeed;
+			deltaZ -= this.transform.forward[2] * this.moveSpeed;
+		}
+
+		if ("Q" in m.Keys && m.Keys["Q"]) {
+			this.transform.doRotations(this.rot);
+			deltaX += -(this.transform.right[0]) * this.moveSpeed;
+			deltaZ += -(this.transform.right[2]) * this.moveSpeed;
+		}
+
+		if ("E" in m.Keys && m.Keys["E"]) {
+			this.transform.doRotations(this.rot);
+			deltaX += (this.transform.right[0]) * this.moveSpeed;
+			deltaZ += (this.transform.right[2]) * this.moveSpeed;
 		}
 
 		this.loc[0] += deltaX;

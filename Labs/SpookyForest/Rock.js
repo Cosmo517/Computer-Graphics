@@ -1,11 +1,9 @@
-class Hex extends GameObject {
+class Rock extends GameObject {
 	constructor() {
 		super();
-		this.loc=[0,0,0];
-		this.rot=[0,0,0];
 
-		this.angVelocity = [0,.025,0];
-		this.isTrigger = false;
+		this.angVelocity = [0, 0, 0];
+		
 		this.buffer = gl.createBuffer();
 		this.colorBuffer = gl.createBuffer();
 		

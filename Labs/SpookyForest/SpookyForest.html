@@ -1,16 +1,21 @@
 <!DOCTYPE HTML>
 <HTML lang="en">
 	<Head>
-	<Title>Spooky Forest</TITLE>
+		<Title>Spooky Forest</TITLE>
+
+		<link rel="stylesheet" href="styles.css">
+
 		<script id="2dVertexShader" type="notjs">
 			attribute vec4 a_position;	
 			attribute vec3 vert_color;
 			varying vec3 fragColor;
-					
+			
+			// Used for object transformation
 			uniform vec3 transform;
 			uniform vec3 rotation;
 			uniform vec3 scale;		
 			
+			// Used for the camera
 			uniform vec3 worldLoc;
 			uniform vec3 worldRotation;
 			uniform float n;
@@ -18,7 +23,10 @@
 			uniform float r;
 			uniform float t;
 			
-			//Lighting
+			// Lighting
+			uniform vec3 pointLightPos;
+			uniform vec3 spotLightPos;
+			
 			varying vec3 fakenormal;
 			varying vec3 v_surfaceToLight;
 			varying vec3 v_surfaceToView;
@@ -113,9 +121,9 @@
 				vec4 worldSpace = PositionObject(RotateObject(ScaleObject(a_position)));
 				
 				// Lighting Stuff
-				v_surfaceToLight = vec3(0.0, 0.0, -5.0) - worldSpace.xyz;
+				v_surfaceToLight = pointLightPos - worldSpace.xyz;
 				v_surfaceToView = worldLoc - worldSpace.xyz;
-				v_spot_surfaceToLight = vec3(5.0, 0.0, -2.0) - worldSpace.xyz;
+				v_spot_surfaceToLight = spotLightPos - worldSpace.xyz;
 				
 				fragColor = vert_color;
 				vec4 cameraSpace = MoveCamera(worldSpace);
@@ -132,20 +140,23 @@
 			varying vec3 v_surfaceToLight;
 			varying vec3 v_surfaceToView;
 			varying vec3 v_spot_surfaceToLight;
+
+			// Handles the dynamic positions of the lights
+			uniform vec3 directionalLightDir;
+			uniform vec3 spotLightDir;
 			
 			void main() {				
 				// This handles ambient lighting
-				float ambient = 0.15;
-				gl_FragColor = vec4(ambient * fragColor, 1);
+				float ambient = 0.1;
 				
-				// This handles directional light. the vec3(0.0, 0.0, -5.0) comes from the "back"
-				// vec3(0.0, 0.0, 5.0) comes from the front
-				float d_light = dot(normalize(fakenormal), normalize(vec3(0.0, 0.0, 5.0)));
+				// This handles directional light
+				float d_light = dot(normalize(fakenormal), normalize(directionalLightDir)) * 0.25; // Multiplied by 0.25 to act as moonlight
 				
 				if (d_light < 0.0) {
 					d_light = 0.0;
 				}
 				
+				// This will render ambient + directional
 				gl_FragColor = vec4(fragColor * (ambient + d_light), 1);
 				
 				// This handles point Lighting
@@ -155,10 +166,8 @@
 					p_light = 0.0;
 				}
 				
-				gl_FragColor = vec4(fragColor * (p_light + d_light + ambient), 1);
-				
 				// This is spot Lighting
-				float spot_light = dot(normalize(v_spot_surfaceToLight), vec3(1, 0, 0));
+				float spot_light = dot(normalize(v_spot_surfaceToLight), spotLightDir);
 				float spot_light_power = 0.0;
 				
 				if (spot_light >= 0.98) {
@@ -168,23 +177,21 @@
 					}
 				}
 				
-				// This only renders the spot light
-				//gl_FragColor = vec4(fragColor * (spot_light_power), 1); 
-				
 				// This renders all the light
 				gl_FragColor = vec4(fragColor * (p_light + d_light + ambient + spot_light_power), 1); 
-				
-				// This sets a solid light wihtin the whole level
-				//gl_FragColor = vec4(fragColor,1);
 			}
 		</script>
 		
         <script src="Transform.js"></script>
         <script src="GameObject.js"></script>
+		<script src="DirectionalLight.js"></script>
+		<script src="PointLight.js"></script>
         <script src="Camera.js"></script>
         <script src="Ground.js"></script>
-        <script src="Hex.js"></script>
-        <script src="D4.js"></script>
+        <script src="Rock.js"></script>
+        <script src="Tree.js"></script>
+		<script src="Moon.js"></script>
+		<script src="Candle.js"></script>
         <script src="webgl_interface.js"></script>
 
 		<script>
@@ -198,6 +205,28 @@
 					this.myWEBGL = new WebGL_Interface();
 					this.myTriangle = [];
 					this.Keys = [];
+
+					this.createLightObject(2, Candle, [20.0, 0.0, -5.0], [0, 0, 0], [1, 1, 1], [20.0, 0.0, -5.0]);
+					
+					const spotLightPosLoc = gl.getUniformLocation(this.myWEBGL.program, 'spotLightPos');
+					gl.uniform3fv(spotLightPosLoc, new Float32Array([3.0, 3.0, -2.0]));
+					const spotLightDir = gl.getUniformLocation(this.myWEBGL.program, "spotLightDir");
+					gl.uniform3fv(spotLightDir, new Float32Array([0, 1, 0]))
+
+					for (let i = -10; i <= 20; i++) {
+						for (let j = -10; j < 20; j++) {
+							this.createObject(2, Tree, [j, i, -25], [0, 0, 0]);
+						}
+					}
+
+					this.createObject(2, Camera, [0, 0, 0], [0, 0, 0]);
+					
+					this.createObject(2, Rock, [0, 0, -2], [0, 0, 0]);
+					this.createObject(2, Rock, [3, 0, -2], [0, 0, 0]);
+					this.createObject(2, Rock, [-3, 0, -2], [0, 0, 0]);
+					this.createObject(2, Ground, [0, -.5, 0], [0, 0, 0]);
+
+					this.createLightObject(2, Moon, [200, 15, -40], [0, 0, 0], [5, 5, 5], [20, 5, 20])
 				}
 				
 				updateAll() {
@@ -231,13 +260,13 @@
 					}
 				}
 
-				CheckCollision(loc1, rad1, loc2, rad2) {
+				checkCollision(loc1, rad1, loc2, rad2) {
 					//Return true if they collide, false if they don't.
 					//You could also pass two objects in as well.
 					return false;
 				}
 				
-				CreateObject(type, prefab, loc, rot, scale = [1, 1, 1]) {
+				createObject(type, prefab, loc, rot, scale = [1, 1, 1]) {
 					// type 0 = visual, type 1 = solid, type 2 = trigger
 
 					let temp = new prefab;
@@ -266,9 +295,17 @@
 
 					return temp;
 				}
+
+				createLightObject(type, prefab, loc, rot, scale = [1, 1, 1], lightData) {
+					let temp = this.createObject(type, prefab, loc, rot, scale);
+					temp.setLightData(lightData);
+					console.log(temp)
+
+					return temp;
+				}
 				
 				
-				DestroyObject(id) {
+				destroyObject(id) {
 					if(id in this.Visual) {
 						delete this.Visual[id];
 					}
@@ -293,17 +330,6 @@
 					// console.log(String.fromCharCode(event.keyCode) +" should be false - "+this.Keys[String.fromCharCode(event.keyCode)]);
 				}
 				
-				MouseClick(event) {
-					const rect = canvas.getBoundingClientRect();
-					const realX = event.clientX - rect.left;
-					const realY = event.clientY - rect.top;
-					console.log(realX + ", " + realY);
-					const x = -1 + 2 * realX / myCanvas.width;
-					const y = -1 + 2 * (myCanvas.height - realY) / myCanvas.height;
-					console.log("The click occurred on " + x + ", " + y);
-				}
-
-				
 				//Static call backs go down here
 				//   |
 				//  \ /
@@ -314,10 +340,6 @@
 
 				static keyU(event) {
 					m.KeyUp(event);
-				}
-
-				static mouseH(event) {
-					m.MouseClick(event);
 				}
 				
 				static MainLoop() {
@@ -332,7 +354,7 @@
 	<BODY style="padding: 15px;">
 		<HEADER></HEADER>
 		
-		<CANVAS id="myCanvas" width="640" height="400" style = "border: 1px solid #000;">
+		<CANVAS id="myCanvas" width="1280" height="720" style = "border: 1px solid #000;">
 			Your browser does not support canvas.
 		</CANVAS>
 		
@@ -342,20 +364,6 @@
 			const m = new main();
 			window.onkeydown = main.keyD;
 			window.onkeyup = main.keyU;
-			canvas.addEventListener("click", main.mouseH);
-
-			for (let i = -10; i <= 20; i++) {
-				for (let j = -10; j < 20; j++) {
-					m.CreateObject(2, D4, [j, i, -25], [0, 0, 0]);
-				}
-			}
-
-			m.CreateObject(2, Camera, [0, 0, 0], [0, 0, 0]);
-			
-			m.CreateObject(2, Hex, [0, 0, -2], [0, 0, 0]);
-			m.CreateObject(2, Hex, [3, 0, -2], [0, 0, 0]);
-			m.CreateObject(2, Hex, [-3, 0, -2], [0, 0, 0]);
-			m.CreateObject(2, Ground, [0, -.5, 0], [0, 0, 0]);
 			
 			requestAnimationFrame(main.MainLoop);	
 		</SCRIPT>

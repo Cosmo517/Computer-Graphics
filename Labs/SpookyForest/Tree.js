@@ -1,4 +1,4 @@
-class D4 extends GameObject {
+class Tree extends GameObject {
 	constructor() {
 		super();
 
