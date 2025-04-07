@@ -2,8 +2,7 @@
     1. Needs a texture. At least 8 sides
     2. Needs collision
 2. Tree
-    1. Needs a texture
-        1. Want to do a sphere for the leaves, figure that out
+    1. Need to make the tree verts. Can generate a sphere now.
     2. Tree needs collision
 3. Need to randomly generate the level
     1. Outer edges will have thick  wall of trees
@@ -14,9 +13,7 @@
     1. Still needs a texture, might go with torch texture
     2. Create lighting so that it itself is lit up, not just the surrounding area as well
 5. Moon
-    1. Need to finish moon shape. It's going to be a sphere, so figure out how to do spheres
-6. SpotLight
-    1. Need to finish the class implementation so its dynamic/can be spawned in
+    1. Need to create a "sun" to reflect light onto the moon
 7. Enemy
     1. Need to make the spotlight enemy thing.
     2. Movement? Maybe random variability but almost always close to the player? not sure
