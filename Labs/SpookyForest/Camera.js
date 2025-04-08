@@ -1,8 +1,8 @@
 class Camera extends GameObject {
 	constructor() {
 		super();
-		this.moveSpeed = 0.25;
-		this.rotateSpeed = 0.02;
+		this.moveSpeed = 0.1;
+		this.rotateSpeed = 0.03;
 	}
 
 	update() {

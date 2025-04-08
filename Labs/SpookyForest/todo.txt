@@ -11,9 +11,6 @@
     2. Randomly place rocks throughout along with torches?
 4. Candle
     1. Still needs a texture, might go with torch texture
-    2. Create lighting so that it itself is lit up, not just the surrounding area as well
-5. Moon
-    1. Need to create a "sun" to reflect light onto the moon
 7. Enemy
     1. Need to make the spotlight enemy thing.
     2. Movement? Maybe random variability but almost always close to the player? not sure
