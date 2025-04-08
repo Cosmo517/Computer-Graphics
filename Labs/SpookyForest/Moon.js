@@ -1,10 +1,8 @@
 class Moon extends DirectionalLight {
 	constructor() {
 		super();
-
-        // Temporary Moon
-        let moonSize = 1;
         this.vertices = [];
+        this.isMoon = 1;
         this.sphere(20)
 	
         this.buffer = gl.createBuffer();

@@ -9,7 +9,7 @@ class Candle extends PointLight {
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
         // Temporary Moon
-        let candleSize = 0.5;
+        let candleSize = 0.2;
         this.vertices = [
             // Top
             -candleSize, candleSize, candleSize,   1, 1, 0,

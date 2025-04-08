@@ -4,6 +4,8 @@ class SpotLight extends GameObject {
         this.lightLoc = [0, 0, 0];
         this.lightDir = [0, 0, 0];
         this.isTrigger = true;
+		this.isMoon = 0;
+		this.isTorch = 0;
     }
 
     setLightData(lightLoc, lightDir) {
@@ -43,6 +45,10 @@ class SpotLight extends GameObject {
         gl.uniform3fv(spotLightPosLoc, new Float32Array(this.lightLoc));
         const spotLightDir = gl.getUniformLocation(program, "spotLightDir");
         gl.uniform3fv(spotLightDir, new Float32Array(this.lightDir))
+		const isMoon = gl.getUniformLocation(program, 'isMoon');
+		gl.uniform1i(isMoon, this.isMoon);
+		const isTorch = gl.getUniformLocation(program, 'isTorch');
+		gl.uniform1i(isTorch, this.isTorch);
 
 
         //var ibuffer = gl.createBuffer();

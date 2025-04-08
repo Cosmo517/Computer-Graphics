@@ -144,41 +144,51 @@
 			// Handles the dynamic positions of the lights
 			uniform vec3 directionalLightDir;
 			uniform vec3 spotLightDir;
+			uniform int isMoon;
+			uniform int isTorch;
 			
-			void main() {				
-				// This handles ambient lighting
-				float ambient = 0.1;
-				
-				// This handles directional light
-				float d_light = dot(normalize(fakenormal), normalize(directionalLightDir)) * 0.25; // Multiplied by 0.25 to act as moonlight
-				
-				if (d_light < 0.0) {
-					d_light = 0.0;
-				}
-				
-				// This will render ambient + directional
-				gl_FragColor = vec4(fragColor * (ambient + d_light), 1);
-				
-				// This handles point Lighting
-				float p_light = dot(normalize(fakenormal), normalize(v_surfaceToLight)) * 2.0 / length(v_surfaceToLight);
-				
-				if (p_light < 0.0) {
-					p_light = 0.0;
-				}
-				
-				// This is spot Lighting
-				float spot_light = dot(normalize(v_spot_surfaceToLight), spotLightDir);
-				float spot_light_power = 0.0;
-				
-				if (spot_light >= 0.98) {
-					spot_light_power = dot(normalize(fakenormal), normalize(v_spot_surfaceToLight));
-					if (spot_light_power < 0.0) {
-						spot_light_power = 0.0;
+			void main() {		
+				if (isMoon == 1) {
+					// Make it look like the moon itself is giving off light
+					gl_FragColor = vec4(fragColor * 0.75, 1);
+				} else if (isTorch == 1) {
+					// Make it so the torch itself isnt dark
+					gl_FragColor = vec4(fragColor * 0.8, 1);
+				} else {
+					// This handles ambient lighting
+					float ambient = 0.1;
+					
+					// This handles directional light
+					float d_light = dot(normalize(fakenormal), normalize(directionalLightDir)) * 0.25; // Multiplied by 0.25 to act as moonlight
+					
+					if (d_light < 0.0) {
+						d_light = 0.0;
 					}
+					
+					// This will render ambient + directional
+					gl_FragColor = vec4(fragColor * (ambient + d_light), 1);
+					
+					// This handles point Lighting
+					float p_light = dot(normalize(fakenormal), normalize(v_surfaceToLight)) * 2.0 / length(v_surfaceToLight);
+					
+					if (p_light < 0.0) {
+						p_light = 0.0;
+					}
+					
+					// This is spot Lighting
+					float spot_light = dot(normalize(v_spot_surfaceToLight), spotLightDir);
+					float spot_light_power = 0.0;
+					
+					if (spot_light >= 0.98) {
+						spot_light_power = dot(normalize(fakenormal), normalize(v_spot_surfaceToLight));
+						if (spot_light_power < 0.0) {
+							spot_light_power = 0.0;
+						}
+					}
+					
+					// This renders all the light
+					gl_FragColor = vec4(fragColor * (p_light + d_light + ambient + spot_light_power), 1); 
 				}
-				
-				// This renders all the light
-				gl_FragColor = vec4(fragColor * (p_light + d_light + ambient + spot_light_power), 1); 
 			}
 		</script>
 		

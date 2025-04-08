@@ -3,6 +3,8 @@ class PointLight extends GameObject {
         super();
         this.lightLoc = [0, 0, 0];
         this.isTrigger = true;
+		this.isMoon = 0;
+		this.isTorch = 1;
     }
 
     setLightData(lightData) {
@@ -39,6 +41,11 @@ class PointLight extends GameObject {
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
         const pointLightPosLoc = gl.getUniformLocation(program, 'pointLightPos');
         gl.uniform3fv(pointLightPosLoc, new Float32Array(this.lightLoc));
+		const isMoon = gl.getUniformLocation(program, 'isMoon');
+		gl.uniform1i(isMoon, this.isMoon);
+		const isTorch = gl.getUniformLocation(program, 'isTorch');
+		gl.uniform1i(isTorch, this.isTorch);
+
 
         //var ibuffer = gl.createBuffer();
         //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.ibuffer);

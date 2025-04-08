@@ -3,6 +3,8 @@ class DirectionalLight extends GameObject {
         super();
         this.lightDirection = [0, 0, 0];
         this.isTrigger = true;
+		this.isMoon = 0;
+		this.isTorch = 0;
     }
 
     setLightData(lightData) {
@@ -39,6 +41,11 @@ class DirectionalLight extends GameObject {
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
         const directionalLightLoc = gl.getUniformLocation(program, 'directionalLightDir');
         gl.uniform3fv(directionalLightLoc, new Float32Array(this.lightDirection));
+		const isMoon = gl.getUniformLocation(program, 'isMoon');
+		gl.uniform1i(isMoon, this.isMoon);
+		const isTorch = gl.getUniformLocation(program, 'isTorch');
+		gl.uniform1i(isTorch, this.isTorch);
+
 
         //var ibuffer = gl.createBuffer();
         //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.ibuffer);
