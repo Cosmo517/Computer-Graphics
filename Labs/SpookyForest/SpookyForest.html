@@ -156,7 +156,7 @@
 					gl_FragColor = vec4(fragColor * 0.9, 1);
 				} else {
 					// This handles ambient lighting
-					float ambient = 0.9;
+					float ambient = 0.1;
 					
 					// This handles directional light
 					float d_light = dot(normalize(fakenormal), normalize(directionalLightDir)) * 0.25; // Multiplied by 0.25 to act as moonlight
@@ -218,9 +218,33 @@
 					this.myTriangle = [];
 					this.Keys = [];
 
-					this.createLightObject(2, Candle, [20.0, -0.25, -5.0], [0, 0, 0], [0.25, 0.5, 0.25], [20.0, 0.0, -5.0], "candle");
+					this.createLightObject(2, Candle, [20.0, -0.25, -5.0], [0, 0, 0], [0.25, 0.5, 0.25], [20.0, 0.0, -5.0], "Candle");
+					// this.createLightObject({
+					// 	type: 2,
+					// 	prefab: Candle,
+					// 	loc: [20.0, -0.25, -5.0],
+					// 	scale: [0.25, 0.5, 0.25],
+					// 	lightData: [20.0, 0.0, -5.0],
+					// 	name: "Candle"
+					// });
 					this.createLightObject(2, Enemy, [5.0, 0.0, -2.0], [0, 0, 0], [1, 1, 1], [5.0, 3.0, -2.0],  "Enemy", [0, 1, 0]);
+					// this.createLightObject({
+					// 	type: 2,
+					// 	prefab: Enemy,
+					// 	loc: [5.0, 0.0, -2.0],
+					// 	lightData: [5.0, 3.0, -2.0],
+					// 	lightLoc: [0, 1, 0],
+					// 	name: "Enemy"
+					// });
 					this.createLightObject(2, Moon, [200, 15, 20], [0, 0, 0], [5, 5, 5], [20, 5, 20], "Moon")
+					// this.createLightObject({
+					// 	type: 2,
+					// 	prefab: Moon,
+					// 	loc: [200, 15, 20],
+					// 	scale: [5, 5, 5],
+					// 	lightData: [5.0, 3.0, -2.0],
+					// 	name: "Moon"
+					// });
 
 					this.createObject(1, Tree, [0, -1, -25], [0, 0, 0], [1, 1, 1], "Tree");
 					this.createObject(1, Camera, [0, 0, 0], [0, 0, 0], [1, 1, 1], "Player");
@@ -301,7 +325,7 @@
 					return temp;
 				}
 
-				createLightObject(type, prefab, loc, rot, scale = [1, 1, 1], lightData, name = "", lightLoc) {
+				createLightObject({type, prefab, loc = [0, 0, 0], rot = [0, 0, 0], scale = [1, 1, 1], lightData = [0, 0, 0], lightLoc = [0, 0, 0], name = ""}) {
 					let temp = this.createObject(type, prefab, loc, rot, scale);
 
 					if (lightLoc) {

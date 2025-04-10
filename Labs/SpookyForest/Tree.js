@@ -64,6 +64,8 @@ class Tree extends GameObject {
         this.buffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+
+        console.log(this.loc)
     }
 
     onCollisionEnter(other) {
