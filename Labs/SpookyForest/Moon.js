@@ -97,10 +97,6 @@ class Moon extends DirectionalLight {
         this.vertices = triangles;
     }
 
-
-
-
-
 	update() {
 		// Do nothing
 	}

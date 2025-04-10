@@ -34,9 +34,9 @@ class DirectionalLight extends GameObject {
 		gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
 				
 		var tranLoc  = gl.getUniformLocation(program,'transform');
-		gl.uniform3fv(tranLoc,new Float32Array(this.loc));
+		gl.uniform3fv(tranLoc, new Float32Array(this.loc));
 		var thetaLoc = gl.getUniformLocation(program,'rotation');
-		gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
+		gl.uniform3fv(thetaLoc, new Float32Array(this.rot));
 		const scaleLoc = gl.getUniformLocation(program, "scale");
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
         const directionalLightLoc = gl.getUniformLocation(program, 'directionalLightDir');

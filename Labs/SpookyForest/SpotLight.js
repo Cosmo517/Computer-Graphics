@@ -36,9 +36,9 @@ class SpotLight extends GameObject {
 		gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
 				
 		const tranLoc  = gl.getUniformLocation(program,'transform');
-		gl.uniform3fv(tranLoc,new Float32Array(this.loc));
+		gl.uniform3fv(tranLoc, new Float32Array(this.loc));
 		const thetaLoc = gl.getUniformLocation(program,'rotation');
-		gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
+		gl.uniform3fv(thetaLoc, new Float32Array(this.rot));
 		const scaleLoc = gl.getUniformLocation(program, "scale");
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
         const spotLightPosLoc = gl.getUniformLocation(program, 'spotLightPos');

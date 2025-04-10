@@ -66,7 +66,7 @@
 				mat4 translateM = mat4(1.0, 0.0, 0.0, 0.0,
 										0.0, 1.0, 0.0, 0.0,
 										0.0, 0.0, 1.0, 0.0,
-										transform.x, transform.y, transform.z, 1.0
+										transform.x, transform.y, -transform.z, 1.0
 				);
 
 				return translateM * pos;	
@@ -156,7 +156,7 @@
 					gl_FragColor = vec4(fragColor * 0.9, 1);
 				} else {
 					// This handles ambient lighting
-					float ambient = 0.1;
+					float ambient = 0.9;
 					
 					// This handles directional light
 					float d_light = dot(normalize(fakenormal), normalize(directionalLightDir)) * 0.25; // Multiplied by 0.25 to act as moonlight
@@ -218,19 +218,14 @@
 					this.myTriangle = [];
 					this.Keys = [];
 
-					this.createLightObject(2, Candle, [20.0, 0.0, -5.0], [0, 0, 0], [1, 1, 1], [20.0, 0.0, -5.0]);
-					this.createLightObject(2, Enemy, [5.0, 0.0, -2.0], [0, 0, 0], [1, 1, 1], [5.0, 3.0, -2.0], [0, 1, 0]);
+					this.createLightObject(2, Candle, [20.0, -0.25, -5.0], [0, 0, 0], [0.25, 0.5, 0.25], [20.0, 0.0, -5.0], "candle");
+					this.createLightObject(2, Enemy, [5.0, 0.0, -2.0], [0, 0, 0], [1, 1, 1], [5.0, 3.0, -2.0],  "Enemy", [0, 1, 0]);
+					this.createLightObject(2, Moon, [200, 15, 20], [0, 0, 0], [5, 5, 5], [20, 5, 20], "Moon")
 
-					this.createObject(2, Tree, [0, 0, -25], [0, 0, 0]);
-
-					this.createObject(2, Camera, [0, 0, 0], [0, 0, 0]);
-					
-					this.createObject(2, Rock, [0, 0, -2], [0, 0, 0]);
-					this.createObject(2, Rock, [3, 0, -2], [0, 0, 0]);
-					this.createObject(2, Rock, [-3, 0, -2], [0, 0, 0]);
-					this.createObject(2, Ground, [0, -.5, 0], [0, 0, 0]);
-
-					this.createLightObject(2, Moon, [200, 15, 20], [0, 0, 0], [5, 5, 5], [20, 5, 20])
+					this.createObject(1, Tree, [0, -1, -25], [0, 0, 0], [1, 1, 1], "Tree");
+					this.createObject(1, Camera, [0, 0, 0], [0, 0, 0], [1, 1, 1], "Player");
+					this.createObject(1, Rock, [0, 0, -2], [0, 0, 0], [1, 1, 1], "Rock");
+					this.createObject(2, Ground, [0, -.5, 0], [0, 0, 0], [1, 1, 1], "Ground");
 				}
 				
 				updateAll() {
@@ -264,13 +259,18 @@
 					}
 				}
 
-				checkCollision(loc1, rad1, loc2, rad2) {
-					//Return true if they collide, false if they don't.
-					//You could also pass two objects in as well.
-					return false;
-				}
+
+				// For now just use simple sphere collider
+                getDistance(loc1, loc2) {
+                    return Math.sqrt(Math.pow(loc1[0] - loc2[0], 2) + Math.pow(loc1[1] - loc2[1], 2) + Math.pow(loc1[2] - loc2[2], 2));
+                }
+
+                checkCollision(loc1, rad1, loc2, rad2) {
+                    let distance = this.getDistance(loc1, loc2);
+                    return (rad1 + rad2) > distance;
+                }
 				
-				createObject(type, prefab, loc, rot, scale = [1, 1, 1]) {
+				createObject(type, prefab, loc, rot, scale = [1, 1, 1], name = "") {
 					// type 0 = visual, type 1 = solid, type 2 = trigger
 
 					let temp = new prefab;
@@ -282,6 +282,7 @@
 					temp.loc = loc;
 					temp.rot = rot;
 					temp.scale = scale;
+					temp.name = name
 
 					switch(type) {
 						case 0:
@@ -300,7 +301,7 @@
 					return temp;
 				}
 
-				createLightObject(type, prefab, loc, rot, scale = [1, 1, 1], lightData, lightLoc) {
+				createLightObject(type, prefab, loc, rot, scale = [1, 1, 1], lightData, name = "", lightLoc) {
 					let temp = this.createObject(type, prefab, loc, rot, scale);
 
 					if (lightLoc) {

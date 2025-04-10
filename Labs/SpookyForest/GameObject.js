@@ -10,7 +10,7 @@ class GameObject {
 		this.angVelocity = [0,0,0];
 
 		this.isTrigger = false;
-		this.collissionRadius = 1.0;
+		this.collisionRadius = 1.0;
 		this.name = "default";
 
 		// Automatically handled
@@ -33,7 +33,8 @@ class GameObject {
 			
 			for (let so in m.Solid) {
 				if (m.Solid[so] != this) {
-					if (m.CheckCollision(tempP, this.collissionRadius, m.Solid[so].loc, m.Solid[so].collissionRadius)) {
+					if (m.checkCollision(tempP, this.collisionRadius, m.Solid[so].loc, m.Solid[so].collisionRadius)) {
+						console.log(m.Solid[so].name + " is colliding with " + this.name)
 						clear = false;
 					}
 				}

@@ -9,8 +9,8 @@ class Candle extends PointLight {
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
         // Temporary Moon
-        let candleSize = 0.2;
-        let baseHeight = candleSize * 3;
+        const candleSize = 0.1;
+        const baseHeight = candleSize * 5;
         this.vertices = [
             // Create the yellow of the torch
             // Top
@@ -69,49 +69,49 @@ class Candle extends PointLight {
 
             // Create the wooden part of the torch
             // Bottom
-            -candleSize, -baseHeight, candleSize,  1, 1, 1,
-            -candleSize, -baseHeight, -candleSize, 1, 1, 1,
-            candleSize, -baseHeight, -candleSize,  1, 1, 1,
+            -candleSize, -baseHeight, candleSize,  0.588, 0.294, 0.0,
+            -candleSize, -baseHeight, -candleSize, 0.588, 0.294, 0.0,
+            candleSize, -baseHeight, -candleSize,  0.588, 0.294, 0.0,
 
-            candleSize, -baseHeight, -candleSize,  1, 1, 1,
-            candleSize, -baseHeight, candleSize,   1, 1, 1,
-            -candleSize, -baseHeight, candleSize,  1, 1, 1,
+            candleSize, -baseHeight, -candleSize,  0.588, 0.294, 0.0,
+            candleSize, -baseHeight, candleSize,   0.588, 0.294, 0.0,
+            -candleSize, -baseHeight, candleSize,  0.588, 0.294, 0.0,
 
             // Left
-            -candleSize, -baseHeight, candleSize,  1, 1, 1,
-            -candleSize, -baseHeight, -candleSize, 1, 1, 1,
-            -candleSize, -candleSize, -candleSize, 1, 1, 1,
+            -candleSize, -baseHeight, candleSize,  0.588, 0.294, 0.0,
+            -candleSize, -baseHeight, -candleSize, 0.588, 0.294, 0.0,
+            -candleSize, -candleSize, -candleSize, 0.588, 0.294, 0.0,
 
-            -candleSize, -candleSize, -candleSize, 1, 1, 1,
-            -candleSize, -candleSize, candleSize,  1, 1, 1,
-            -candleSize, -baseHeight, candleSize, 1, 1, 1,
+            -candleSize, -candleSize, -candleSize, 0.588, 0.294, 0.0,
+            -candleSize, -candleSize, candleSize,  0.588, 0.294, 0.0,
+            -candleSize, -baseHeight, candleSize,  0.588, 0.294, 0.0,
             
             // Right
-            candleSize, -baseHeight, candleSize,   1, 1, 1,
-            candleSize, -baseHeight, -candleSize,  1, 1, 1,
-            candleSize, -candleSize, -candleSize,  1, 1, 1,
+            candleSize, -baseHeight, candleSize,   0.588, 0.294, 0.0,
+            candleSize, -baseHeight, -candleSize,  0.588, 0.294, 0.0,
+            candleSize, -candleSize, -candleSize,  0.588, 0.294, 0.0,
 
-            candleSize, -candleSize, -candleSize,  1, 1, 1,
-            candleSize, -candleSize, candleSize,   1, 1, 1,
-            candleSize, -baseHeight, candleSize,   1, 1, 1,
+            candleSize, -candleSize, -candleSize,  0.588, 0.294, 0.0,
+            candleSize, -candleSize, candleSize,   0.588, 0.294, 0.0,
+            candleSize, -baseHeight, candleSize,   0.588, 0.294, 0.0,
 
             // Front
-            // -candleSize, -baseHeight, -candleSize, 1, 1, 1,
-            // -candleSize, -candleSize, candleSize,  1, 1, 1,
-            // candleSize, -candleSize, candleSize,   1, 1, 1,
+            -candleSize, -baseHeight, candleSize, 0.588, 0.294, 0.0,
+            -candleSize, -candleSize, candleSize, 0.588, 0.294, 0.0,
+            candleSize, -candleSize, candleSize,  0.588, 0.294, 0.0,
 
-            // -candleSize, -baseHeight, -candleSize, 1, 1, 1,
-            // candleSize, -candleSize, candleSize,   1, 1, 1,
-            // candleSize, -baseHeight, candleSize,   1, 1, 1,
+            candleSize, -candleSize, candleSize,  0.588, 0.294, 0.0,
+            candleSize, -baseHeight, candleSize,  0.588, 0.294, 0.0,
+            -candleSize, -baseHeight, candleSize, 0.588, 0.294, 0.0,
 
             // Back
-            // -candleSize, -baseHeight, -candleSize, 1, 1, 1,
-            // -candleSize, -candleSize, -candleSize, 1, 1, 1,
-            // candleSize, -candleSize, -candleSize,  1, 1, 1,
+            -candleSize, -baseHeight, -candleSize, 0.588, 0.294, 0.0,
+            -candleSize, -candleSize, -candleSize, 0.588, 0.294, 0.0,
+            candleSize, -candleSize, -candleSize,  0.588, 0.294, 0.0,
 
-            // candleSize, -candleSize, -candleSize,  1, 1, 1,
-            // candleSize, -baseHeight, candleSize,   1, 1, 1,
-            // -candleSize, -baseHeight, -candleSize, 1, 1, 1,
+            candleSize, -candleSize, -candleSize,  0.588, 0.294, 0.0,
+            candleSize, -baseHeight, -candleSize,  0.588, 0.294, 0.0,
+            -candleSize, -baseHeight, -candleSize, 0.588, 0.294, 0.0,
         ]
 	
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
