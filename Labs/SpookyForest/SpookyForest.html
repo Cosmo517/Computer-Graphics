@@ -66,7 +66,7 @@
 				mat4 translateM = mat4(1.0, 0.0, 0.0, 0.0,
 										0.0, 1.0, 0.0, 0.0,
 										0.0, 0.0, 1.0, 0.0,
-										transform.x, transform.y, -transform.z, 1.0
+										transform.x, transform.y, transform.z, 1.0
 				);
 
 				return translateM * pos;	
@@ -217,39 +217,83 @@
 					this.myWEBGL = new WebGL_Interface();
 					this.myTriangle = [];
 					this.Keys = [];
+					
+					// this.createLightObject(2, Candle, [20.0, 0.0, -5.0], [0, 0, 0], [1, 1, 1], [20.0, 0.0, -5.0], "Candle");
 
-					this.createLightObject(2, Candle, [20.0, -0.25, -5.0], [0, 0, 0], [0.25, 0.5, 0.25], [20.0, 0.0, -5.0], "Candle");
-					// this.createLightObject({
-					// 	type: 2,
-					// 	prefab: Candle,
-					// 	loc: [20.0, -0.25, -5.0],
-					// 	scale: [0.25, 0.5, 0.25],
-					// 	lightData: [20.0, 0.0, -5.0],
-					// 	name: "Candle"
-					// });
-					this.createLightObject(2, Enemy, [5.0, 0.0, -2.0], [0, 0, 0], [1, 1, 1], [5.0, 3.0, -2.0],  "Enemy", [0, 1, 0]);
-					// this.createLightObject({
-					// 	type: 2,
-					// 	prefab: Enemy,
-					// 	loc: [5.0, 0.0, -2.0],
-					// 	lightData: [5.0, 3.0, -2.0],
-					// 	lightLoc: [0, 1, 0],
-					// 	name: "Enemy"
-					// });
-					this.createLightObject(2, Moon, [200, 15, 20], [0, 0, 0], [5, 5, 5], [20, 5, 20], "Moon")
-					// this.createLightObject({
-					// 	type: 2,
-					// 	prefab: Moon,
-					// 	loc: [200, 15, 20],
-					// 	scale: [5, 5, 5],
-					// 	lightData: [5.0, 3.0, -2.0],
-					// 	name: "Moon"
-					// });
+					this.createLightObject({
+						type: 2,
+						prefab: Candle,
+						loc: [20.0, -0.25, -5.0],
+						rot: [0, 0, 0],
+						scale: [0.25, 0.5, 0.25],
+						lightData: [20.0, 0.0, -5.0],
+						name: "Candle"
+					});
 
-					this.createObject(1, Tree, [0, -1, -25], [0, 0, 0], [1, 1, 1], "Tree");
-					this.createObject(1, Camera, [0, 0, 0], [0, 0, 0], [1, 1, 1], "Player");
-					this.createObject(1, Rock, [0, 0, -2], [0, 0, 0], [1, 1, 1], "Rock");
-					this.createObject(2, Ground, [0, -.5, 0], [0, 0, 0], [1, 1, 1], "Ground");
+					// this.createLightObject(2, Moon, [200, 15, 20], [0, 0, 0], [5, 5, 5], [20, 5, 20], "Moon")
+
+					this.createLightObject({
+						type: 2,
+						prefab: Moon,
+						loc: [200, 15, 20],
+						rot: [0, 0, 0],
+						scale: [5, 5, 5],
+						lightData: [20, 5, 20],
+						name: "Moon"
+					});
+
+					this.createLightObject({
+						type: 2,
+						prefab: Enemy,
+						loc: [5.0, 0.0, -2.0],
+						rot: [0, 0, 0],
+						scale: [1, 1, 1],
+						lightData: [5.0, 3.0, -2.0],
+						name: "Moon",
+						lightLoc: [0, 1, 0]
+					});
+
+
+					this.createObject({
+						type: 1,
+						prefab: Tree,
+						loc: [0, -1, -25],
+						rot: [0, 0, 0], 
+						scale: [1, 1, 1],
+						name: "Tree"
+					});
+
+					this.createObject({
+						type: 1,
+						prefab: Camera,
+						loc: [0, 0, 0],
+						rot: [0, 0, 0], 
+						scale: [1, 1, 1],
+						name: "Player"
+					});
+
+					this.createObject({
+						type: 1,
+						prefab: Rock,
+						loc: [0, 0, -2],
+						rot: [0, 0, 0], 
+						scale: [1, 1, 1],
+						name: "Rock"
+					});
+
+					this.createObject({
+						type: 2,
+						prefab: Ground,
+						loc: [0, -0.5, 0],
+						rot: [0, 0, 0], 
+						scale: [1, 1, 1],
+						name: "Ground"
+					});
+
+					// this.createObject(1, Tree, [0, -1, -25], [0, 0, 0], [1, 1, 1], "Tree");
+					// this.createObject(1, Camera, [0, 0, 0], [0, 0, 0], [1, 1, 1], "Player");
+					// this.createObject(1, Rock, [0, 0, -2], [0, 0, 0], [1, 1, 1], "Rock");
+					// this.createObject(2, Ground, [0, -0.5, 0], [0, 0, 0], [1, 1, 1], "Ground");
 				}
 				
 				updateAll() {
@@ -283,10 +327,9 @@
 					}
 				}
 
-
 				// For now just use simple sphere collider
                 getDistance(loc1, loc2) {
-                    return Math.sqrt(Math.pow(loc1[0] - loc2[0], 2) + Math.pow(loc1[1] - loc2[1], 2) + Math.pow(loc1[2] - loc2[2], 2));
+                    return Math.sqrt(Math.pow(loc1[0] - loc2[0], 2) + Math.pow(loc1[1] - loc2[1], 2) + Math.pow(loc1[2] + loc2[2], 2));
                 }
 
                 checkCollision(loc1, rad1, loc2, rad2) {
@@ -294,7 +337,7 @@
                     return (rad1 + rad2) > distance;
                 }
 				
-				createObject(type, prefab, loc, rot, scale = [1, 1, 1], name = "") {
+				createObject({type, prefab, loc, rot, scale, name}) {
 					// type 0 = visual, type 1 = solid, type 2 = trigger
 
 					let temp = new prefab;
@@ -302,11 +345,11 @@
 					this.ObjectCounter ++;
 					temp.id = id;
 					temp.prefab = prefab;
+					temp.name = name
 					
 					temp.loc = loc;
 					temp.rot = rot;
 					temp.scale = scale;
-					temp.name = name
 
 					switch(type) {
 						case 0:
@@ -325,8 +368,15 @@
 					return temp;
 				}
 
-				createLightObject({type, prefab, loc = [0, 0, 0], rot = [0, 0, 0], scale = [1, 1, 1], lightData = [0, 0, 0], lightLoc = [0, 0, 0], name = ""}) {
-					let temp = this.createObject(type, prefab, loc, rot, scale);
+				createLightObject({type, prefab, loc, rot, scale, lightData, name, lightLoc}) {
+					let temp = this.createObject({
+						type: type,
+						prefab: prefab,
+						loc: loc,
+						rot: rot, 
+						scale: scale,
+						name: name
+					});
 
 					if (lightLoc) {
 						temp.setLightData(lightData, lightLoc);

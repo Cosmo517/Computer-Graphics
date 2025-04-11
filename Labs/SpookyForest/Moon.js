@@ -7,7 +7,7 @@ class Moon extends DirectionalLight {
 	
         this.buffer = gl.createBuffer();
 		this.colorBuffer = gl.createBuffer();
-		
+
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 	}

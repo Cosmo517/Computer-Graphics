@@ -33,7 +33,7 @@ class Rock extends GameObject {
 	}
 
 	update() {
-		this.Move();
+		// do nothing
 	}
 
 	render(program) {

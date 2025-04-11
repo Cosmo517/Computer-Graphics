@@ -5,6 +5,7 @@ class Candle extends PointLight {
 		this.angVelocity = [0, 0 ,0];
 		this.buffer = gl.createBuffer();
 		this.colorBuffer = gl.createBuffer();
+        this.collisionRadius = 0.01;
 		
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
@@ -118,6 +119,6 @@ class Candle extends PointLight {
 	}
 
 	update() {
-		this.Move();
-	}
+        // Do nothing
+    }
 }
