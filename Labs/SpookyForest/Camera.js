@@ -46,6 +46,9 @@ class Camera extends GameObject {
 		}
 
 		this.Move()
+
+		// Update the collision location to match the player location
+		this.collisionLocation = this.loc;
 	}
 
 	render(program) {
@@ -56,6 +59,4 @@ class Camera extends GameObject {
 		const scaleLoc = gl.getUniformLocation(program, "scale");
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
 	}
-	
-	
 }

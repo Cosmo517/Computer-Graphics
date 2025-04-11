@@ -227,10 +227,9 @@
 						rot: [0, 0, 0],
 						scale: [0.25, 0.5, 0.25],
 						lightData: [20.0, 0.0, -5.0],
-						name: "Candle"
+						name: "Candle",
+						collisionLocation: [20.0, -0.25, -5.0]
 					});
-
-					// this.createLightObject(2, Moon, [200, 15, 20], [0, 0, 0], [5, 5, 5], [20, 5, 20], "Moon")
 
 					this.createLightObject({
 						type: 2,
@@ -239,18 +238,20 @@
 						rot: [0, 0, 0],
 						scale: [5, 5, 5],
 						lightData: [20, 5, 20],
-						name: "Moon"
+						name: "Moon",
+						collisionLocation: [200, 15, 20]
 					});
 
 					this.createLightObject({
 						type: 2,
 						prefab: Enemy,
-						loc: [5.0, 0.0, -2.0],
+						loc: [5.0, 10.0, -2.0],
 						rot: [0, 0, 0],
-						scale: [1, 1, 1],
-						lightData: [5.0, 3.0, -2.0],
-						name: "Moon",
-						lightLoc: [0, 1, 0]
+						scale: [2, 0.5, 2],
+						lightData: [5.0, 10.0, -2.0],
+						name: "Enemy",
+						lightLoc: [0, 1, 0],
+						collisionLocation: [5.0, 1, -2.0]
 					});
 
 
@@ -260,7 +261,8 @@
 						loc: [0, -1, -25],
 						rot: [0, 0, 0], 
 						scale: [1, 1, 1],
-						name: "Tree"
+						name: "Tree",
+						collisionLocation: [0, -1, -25]
 					});
 
 					this.createObject({
@@ -269,7 +271,8 @@
 						loc: [0, 0, 0],
 						rot: [0, 0, 0], 
 						scale: [1, 1, 1],
-						name: "Player"
+						name: "Player",
+						collisionLocation: [0, 0, 0]
 					});
 
 					this.createObject({
@@ -278,7 +281,8 @@
 						loc: [0, 0, -2],
 						rot: [0, 0, 0], 
 						scale: [1, 1, 1],
-						name: "Rock"
+						name: "Rock",
+						collisionLocation: [0, 0, -2]
 					});
 
 					this.createObject({
@@ -287,13 +291,9 @@
 						loc: [0, -0.5, 0],
 						rot: [0, 0, 0], 
 						scale: [1, 1, 1],
-						name: "Ground"
+						name: "Ground",
+						collisionLocation: [0, 0, 0]
 					});
-
-					// this.createObject(1, Tree, [0, -1, -25], [0, 0, 0], [1, 1, 1], "Tree");
-					// this.createObject(1, Camera, [0, 0, 0], [0, 0, 0], [1, 1, 1], "Player");
-					// this.createObject(1, Rock, [0, 0, -2], [0, 0, 0], [1, 1, 1], "Rock");
-					// this.createObject(2, Ground, [0, -0.5, 0], [0, 0, 0], [1, 1, 1], "Ground");
 				}
 				
 				updateAll() {
@@ -337,7 +337,7 @@
                     return (rad1 + rad2) > distance;
                 }
 				
-				createObject({type, prefab, loc, rot, scale, name}) {
+				createObject({type, prefab, loc, rot, scale, name, collisionLocation}) {
 					// type 0 = visual, type 1 = solid, type 2 = trigger
 
 					let temp = new prefab;
@@ -345,11 +345,13 @@
 					this.ObjectCounter ++;
 					temp.id = id;
 					temp.prefab = prefab;
-					temp.name = name
+					temp.name = name;
 					
 					temp.loc = loc;
 					temp.rot = rot;
 					temp.scale = scale;
+
+					temp.collisionLocation = collisionLocation;
 
 					switch(type) {
 						case 0:
@@ -368,14 +370,15 @@
 					return temp;
 				}
 
-				createLightObject({type, prefab, loc, rot, scale, lightData, name, lightLoc}) {
+				createLightObject({type, prefab, loc, rot, scale, lightData, name, lightLoc, collisionLocation}) {
 					let temp = this.createObject({
 						type: type,
 						prefab: prefab,
 						loc: loc,
 						rot: rot, 
 						scale: scale,
-						name: name
+						name: name,
+						collisionLocation: collisionLocation
 					});
 
 					if (lightLoc) {

@@ -1,18 +1,11 @@
 1. Rock
     1. Needs a texture. At least 8 sides
-    2. Needs collision
-2. Tree
-    1. Need to make the tree verts. Can generate a sphere now.
-    2. Tree needs collision
-3. Need to randomly generate the level
+2. Need to randomly generate the level
     1. Outer edges will have thick  wall of trees
         1. Need to cancel collision detection if trees are touching, that doesn't matter.
             dont want to waste resources on that.
     2. Randomly place rocks throughout along with torches?
-4. Candle
-    1. Still needs a texture, might go with torch texture
-7. Enemy
-    1. Need to make the spotlight enemy thing.
-    2. Movement? Maybe random variability but almost always close to the player? not sure
-    3. Figure out how to do the calculations for the spotlight on the ground
-    4. Send player back to spawn if they touch the spotlight
+3. Enemy
+    1. Movement? Maybe random variability but almost always close to the player? not sure
+4. Need to randomly generate spawn location and goal location
+

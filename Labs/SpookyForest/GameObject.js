@@ -11,6 +11,7 @@ class GameObject {
 
 		this.isTrigger = false;
 		this.collisionRadius = 0.5;
+		this.collisionLocation = [0, 0, 0];
 		this.name = "default";
 
 		// Automatically handled
@@ -33,7 +34,8 @@ class GameObject {
 			// Handle collisions with other solids
 			for (var so in m.Solid) {
 				if (m.Solid[so] != this) {
-					if (m.checkCollision(tempP, this.collisionRadius, m.Solid[so].loc, m.Solid[so].collisionRadius)) {
+					if (m.checkCollision(tempP, this.collisionRadius, m.Solid[so].collisionLocation, m.Solid[so].collisionRadius)) {
+						console.log("I am: " + this.name + " colliding with: " + m.Solid[so].name)
 						try {
 							m.Solid[so].onCollisionEnter(this);
 						} catch {}
@@ -45,9 +47,14 @@ class GameObject {
 			// Handle collisions with triggers
 			for (var tr in m.Trigger) {
 				if (m.Trigger[tr] != this) {
-					if (m.checkCollision(tempP, this.collisionRadius, m.Trigger[tr].loc, m.Trigger[tr].collisionRadius)) {
+					if (m.checkCollision(tempP, this.collisionRadius, m.Trigger[tr].collisionLocation, m.Trigger[tr].collisionRadius)) {
 						if (m.Trigger[tr].name == "Candle") {
-							clear = false
+							clear = false;
+						}
+
+						if (m.Trigger[tr].name == "Enemy" && this.name == "Player") {
+							this.loc = [0, 0, 0];
+							clear = false;
 						}
 						try {
 							m.Trigger[tr].onTriggerEnter(this);

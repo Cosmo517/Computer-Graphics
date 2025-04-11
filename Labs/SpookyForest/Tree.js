@@ -5,6 +5,7 @@ class Tree extends GameObject {
         const treeWidth = 0.25;
         const logHeight = 5.0; 
         this.logHeight = logHeight;
+        this.collisionRadius = 1;
 
         this.logVertices = [
             // Bottom
@@ -64,13 +65,10 @@ class Tree extends GameObject {
         this.buffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
-
-        console.log(this.loc)
     }
 
     onCollisionEnter(other) {
         // Do nothing
-        console.log("hello")
     }
 
     update() {

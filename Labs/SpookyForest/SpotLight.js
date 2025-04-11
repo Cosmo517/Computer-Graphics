@@ -6,11 +6,20 @@ class SpotLight extends GameObject {
         this.isTrigger = true;
 		this.isMoon = 0;
 		this.isTorch = 0;
+		this.collisionRadius = 0;
+    }
+
+    spotLightRadius() {
+        const height = this.lightLoc[1];
+        const halfAngle = Math.acos(0.98); // 0.98 is from the vertex shader
+        const radius = height * Math.tan(halfAngle);
+        return radius;
     }
 
     setLightData(lightLoc, lightDir) {
         this.lightLoc = lightLoc;
         this.lightDir = lightDir;
+		this.collisionRadius = this.spotLightRadius();
     }
 
     render(program) {
