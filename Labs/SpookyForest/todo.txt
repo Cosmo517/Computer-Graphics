@@ -1,11 +1,5 @@
-1. Rock
-    1. Needs a texture. At least 8 sides
-2. Need to randomly generate the level
+1. Need to randomly generate the level
     1. Outer edges will have thick  wall of trees
         1. Need to cancel collision detection if trees are touching, that doesn't matter.
             dont want to waste resources on that.
     2. Randomly place rocks throughout along with torches?
-3. Enemy
-    1. Movement? Maybe random variability but almost always close to the player? not sure
-4. Need to randomly generate spawn location and goal location
-

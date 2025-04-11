@@ -1,16 +1,10 @@
-class Enemy extends SpotLight {
+class Goal extends GameObject {
     constructor() {
         super();
-        this.lightLoc = [0, 0, 0];
-        this.lightDir = [0, 0, 0];
-        this.isTrigger = true;
-        this.moveSpeed = 0.1;
-
         this.vertices = [];
         this.sphere(20);
-
-        this.moveTimer = 0;
-        this.moveInterval = 120;
+        this.collisionRadius = 1;
+        this.isTrigger = true;
 
         this.buffer = gl.createBuffer();
 		this.colorBuffer = gl.createBuffer();
@@ -19,57 +13,12 @@ class Enemy extends SpotLight {
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
     }
 
-    enemyMovement() {
-        // Random direction: 0 = N, 1 = NE, 2 = E, 3 = SE, 4 = S, 5 = SW, 6 = W, 7 = NW
-        const randomEnemyMovement = Math.floor(Math.random() * 8);
-        console.log("Direction chosen: " + randomEnemyMovement);
-
-        // Reset velocity
-        this.velocity = [0, 0, 0];
-
-        // Use hardcoded directions
-        switch (randomEnemyMovement) {
-            case 0:
-                this.velocity[2] = this.moveSpeed;
-                break;
-            case 1:
-                this.velocity[0] = this.moveSpeed * Math.cos(Math.PI / 4);
-                this.velocity[2] = this.moveSpeed * Math.sin(Math.PI / 4);
-                break;
-            case 2:
-                this.velocity[0] = this.moveSpeed;
-                break;
-            case 3:
-                this.velocity[0] = this.moveSpeed * Math.cos(Math.PI / 4);
-                this.velocity[2] = -this.moveSpeed * Math.sin(Math.PI / 4);
-                break;
-            case 4:
-                this.velocity[2] = -this.moveSpeed;
-                break;
-            case 5:
-                this.velocity[0] = -this.moveSpeed * Math.cos(Math.PI / 4);
-                this.velocity[2] = -this.moveSpeed * Math.sin(Math.PI / 4);
-                break;
-            case 6: 
-                this.velocity[0] = -this.moveSpeed;
-                break;
-            case 7:
-                this.velocity[0] = -this.moveSpeed * Math.cos(Math.PI / 4);
-                this.velocity[2] = this.moveSpeed * Math.sin(Math.PI / 4);
-                break;
-        }
+    onTriggerEnter(other) {
+        alert("You win!")
     }
 
     update() {
-        //this.moveTimer++;
-        if (this.moveTimer > this.moveInterval) {
-            this.enemyMovement()
-            this.moveTimer = 0;
-        }
-
-        this.Move();
-        this.lightLoc = [...this.loc];
-        this.collisionLocation = [this.loc[0], this.collisionLocation[1], this.loc[2]];
+        // Do nothing
     }
 
     latLngToCartesian([radius, lat, lng]) {
@@ -85,8 +34,8 @@ class Enemy extends SpotLight {
     sphere(density) {
         const radsPerUnit = Math.PI / density;
         const sliceVertCount = density * 2;
-        const radius = 1.5;
-        const leafColor = [1.0, 0.0, 0.0];
+        const radius = 1;
+        const leafColor = [0.0, 0.0, 1.0];
 
         const positions = [];
         let latitude = -Math.PI / 2;
@@ -133,5 +82,32 @@ class Enemy extends SpotLight {
                 }
             }
         }
+    }
+
+    render(program) {
+        const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+        const size = 3;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 6 * Float32Array.BYTES_PER_ELEMENT;
+        let offset = 0;
+        gl.enableVertexAttribArray(positionAttributeLocation);
+        gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+
+        const colorAttributeLocation = gl.getAttribLocation(program, "vert_color");
+        offset = 3 * Float32Array.BYTES_PER_ELEMENT;
+        gl.enableVertexAttribArray(colorAttributeLocation);
+        gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
+
+        const tranLoc = gl.getUniformLocation(program, 'transform');
+        gl.uniform3fv(tranLoc, new Float32Array(this.loc));
+        const thetaLoc = gl.getUniformLocation(program, 'rotation');
+        gl.uniform3fv(thetaLoc, new Float32Array(this.rot));
+        const scaleLoc = gl.getUniformLocation(program, "scale");
+        gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
+
+        // Draw sphere
+        gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 6);
     }
 }

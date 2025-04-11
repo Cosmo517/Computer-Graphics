@@ -198,6 +198,7 @@
 		<script src="PointLight.js"></script>
 		<script src="SpotLight.js"></script>
         <script src="Camera.js"></script>
+		<script src="Goal.js"></script>
 		<script src="Enemy.js"></script>
         <script src="Ground.js"></script>
         <script src="Rock.js"></script>
@@ -218,8 +219,6 @@
 					this.myTriangle = [];
 					this.Keys = [];
 					
-					// this.createLightObject(2, Candle, [20.0, 0.0, -5.0], [0, 0, 0], [1, 1, 1], [20.0, 0.0, -5.0], "Candle");
-
 					this.createLightObject({
 						type: 2,
 						prefab: Candle,
@@ -278,9 +277,9 @@
 					this.createObject({
 						type: 1,
 						prefab: Rock,
-						loc: [0, 0, -2],
+						loc: [0, -0.5, -2],
 						rot: [0, 0, 0], 
-						scale: [1, 1, 1],
+						scale: [1, 0.75, 1],
 						name: "Rock",
 						collisionLocation: [0, 0, -2]
 					});
@@ -294,6 +293,16 @@
 						name: "Ground",
 						collisionLocation: [0, 0, 0]
 					});
+
+					this.createObject({
+						type: 2,
+						prefab: Goal,
+						loc: [10, -0.5, -10],
+						rot: [0, 0, 0],
+						scale: [2, 0.1, 2],
+						name: "Goal",
+						collisionLocation: [10, -0.5, -10]
+					})
 				}
 				
 				updateAll() {

@@ -3,31 +3,15 @@ class Rock extends GameObject {
 		super();
 
 		this.angVelocity = [0, 0, 0];
+		this.collisionRadius = 0.1;
 		
 		this.buffer = gl.createBuffer();
 		this.colorBuffer = gl.createBuffer();
 		
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-		this.vertices = [
-			-.5,-.5,-.25,.54,.27,.07,
-			-.5, .5,-.25,.54,.27,.07,
-			-.25,-.5,-.5,.54,.27,.07,
-			-.25, .5,-.5,.54,.27,.07,
-			.25,-.5,-.5,.54,.27,.07,
-			.25,.5,-.5,.54,.27,.07,
-			.5,-.5,-.25,.54,.27,.07,
-			.5, .5,-.25,.54,.27,.07,
-			.5,-.5,.25,.54,.27,.07,
-			.5, .5,.25,.54,.27,.07,
-			.25,-.5,.5,.54,.27,.07,
-			.25, .5,.5,.54,.27,.07,
-			-.25,-.5,.5,.54,.27,.07,
-			-.25, .5,.5,.54,.27,.07,
-			-.5,-.5,.25,.54,.27,.07,
-			-.5, .5,.25,.54,.27,.07,
-			-.5, -.5,-.25,.54,.27,.07,
-			-.5, .5,-.25,.54,.27,.07
-		];
+
+		this.vertices = [];
+		this.sphere(4)
 	
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 	}
@@ -35,6 +19,69 @@ class Rock extends GameObject {
 	update() {
 		// do nothing
 	}
+
+	latLngToCartesian([radius, lat, lng]) {
+        lng = -lng + Math.PI / 2;
+        const yOffset = 0;
+        return [
+            radius * Math.cos(lat) * Math.cos(lng),
+            radius * Math.sin(lat) + yOffset,
+            radius * -Math.cos(lat) * Math.sin(lng),
+        ];
+    }
+
+    sphere(density) {
+        const radsPerUnit = Math.PI / density;
+        const sliceVertCount = density * 2;
+        const radius = 0.75;
+        const leafColor = [0.8, 0.8, 0.8];
+
+        const positions = [];
+        let latitude = -Math.PI / 2;
+        for (let i = 0; i <= density; i++) {
+            if (i === 0 || i === density) { // Polar caps
+                positions.push(this.latLngToCartesian([radius, latitude, 0]));
+            } else {
+                let longitude = 0;
+                for (let j = 0; j < sliceVertCount; j++) {
+                    positions.push(this.latLngToCartesian([radius, latitude, longitude]));
+                    longitude += radsPerUnit;
+                }
+            }
+            latitude += radsPerUnit;
+        }
+
+        // Generate triangles
+        for (let ring = 0; ring < density - 1; ring++) {
+            const initialP = (ring * sliceVertCount) + 1;
+            for (let sliceVert = 0; sliceVert < sliceVertCount; sliceVert++) {
+                const thisP = initialP + sliceVert;
+                const nextP = initialP + ((sliceVert + 1) % sliceVertCount);
+
+                if (ring === 0) {
+                    this.vertices.push(...positions[0], ...leafColor);
+                    this.vertices.push(...positions[nextP], ...leafColor);
+                    this.vertices.push(...positions[thisP], ...leafColor);
+                }
+
+                if (ring === density - 2) {
+                    this.vertices.push(...positions[thisP], ...leafColor);
+                    this.vertices.push(...positions[nextP], ...leafColor);
+                    this.vertices.push(...positions[positions.length - 1], ...leafColor);
+                }
+
+                if (ring < density - 2 && density > 2) {
+                    this.vertices.push(...positions[thisP], ...leafColor);
+                    this.vertices.push(...positions[nextP + sliceVertCount], ...leafColor);
+                    this.vertices.push(...positions[thisP + sliceVertCount], ...leafColor);
+
+                    this.vertices.push(...positions[thisP], ...leafColor);
+                    this.vertices.push(...positions[nextP], ...leafColor);
+                    this.vertices.push(...positions[nextP + sliceVertCount], ...leafColor);
+                }
+            }
+        }
+    }
 
 	render(program) {
         var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
@@ -65,10 +112,6 @@ class Rock extends GameObject {
 		const scaleLoc = gl.getUniformLocation(program, "scale");
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
 	
-        //var ibuffer = gl.createBuffer();
-        //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.ibuffer);
-        //gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint8Array(this.indexOrder),gl.STATIC_DRAW);
-        //gl.drawElements(gl.TRIANGLES,this.indexOrder.length,gl.UNSIGNED_BYTE,0);
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 18);
+        gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 6);
 	}
 }
