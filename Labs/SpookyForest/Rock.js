@@ -3,7 +3,7 @@ class Rock extends GameObject {
 		super();
 
 		this.angVelocity = [0, 0, 0];
-		this.collisionRadius = 0.1;
+		this.collisionRadius = 0.4;
 		
 		this.buffer = gl.createBuffer();
 		this.colorBuffer = gl.createBuffer();

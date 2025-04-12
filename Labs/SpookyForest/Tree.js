@@ -5,7 +5,7 @@ class Tree extends GameObject {
         const treeWidth = 0.25;
         const logHeight = 5.0; 
         this.logHeight = logHeight;
-        this.collisionRadius = 1;
+        this.collisionRadius = 0.3;
 
         this.logVertices = [
             // Bottom
@@ -72,7 +72,7 @@ class Tree extends GameObject {
     }
 
     update() {
-        this.Move();
+        // Do nothing
     }
 
     render(program) {

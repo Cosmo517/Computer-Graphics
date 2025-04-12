@@ -24,11 +24,12 @@
 			uniform float t;
 			
 			// Lighting
-			uniform vec3 pointLightPos;
+			const int NUMBER_OF_LIGHTS = 5;
+			uniform vec3 pointLightPos[NUMBER_OF_LIGHTS];
 			uniform vec3 spotLightPos;
 			
 			varying vec3 fakenormal;
-			varying vec3 v_surfaceToLight;
+			varying vec3 v_surfaceToLight[NUMBER_OF_LIGHTS];
 			varying vec3 v_surfaceToView;
 			varying vec3 v_spot_surfaceToLight;
 			
@@ -121,7 +122,10 @@
 				vec4 worldSpace = PositionObject(RotateObject(ScaleObject(a_position)));
 				
 				// Lighting Stuff
-				v_surfaceToLight = pointLightPos - worldSpace.xyz;
+				for (int i = 0; i < NUMBER_OF_LIGHTS; i++) {
+					v_surfaceToLight[i] = pointLightPos[i] - worldSpace.xyz;
+				}
+
 				v_surfaceToView = worldLoc - worldSpace.xyz;
 				v_spot_surfaceToLight = spotLightPos - worldSpace.xyz;
 				
@@ -132,12 +136,13 @@
 			}		
 		</SCRIPT>
 		<script id="2dFragmentShader" type="notjs">
+			const int NUMBER_OF_LIGHTS = 5;
 			precision mediump float;
 			varying vec3 fragColor;
 			
 			// Lighting again
 			varying vec3 fakenormal;
-			varying vec3 v_surfaceToLight;
+			varying vec3 v_surfaceToLight[NUMBER_OF_LIGHTS];
 			varying vec3 v_surfaceToView;
 			varying vec3 v_spot_surfaceToLight;
 
@@ -169,8 +174,12 @@
 					gl_FragColor = vec4(fragColor * (ambient + d_light), 1);
 					
 					// This handles point Lighting
-					float p_light = dot(normalize(fakenormal), normalize(v_surfaceToLight)) * 2.0 / length(v_surfaceToLight);
-					
+					float p_light = dot(normalize(fakenormal), normalize(v_surfaceToLight[0])) * 2.0 / length(v_surfaceToLight[0]);;
+
+					for (int i = 1; i < NUMBER_OF_LIGHTS; i++) {
+						p_light += dot(normalize(fakenormal), normalize(v_surfaceToLight[i])) * 2.0 / length(v_surfaceToLight[i]);
+					}
+
 					if (p_light < 0.0) {
 						p_light = 0.0;
 					}
@@ -218,18 +227,40 @@
 					this.myWEBGL = new WebGL_Interface();
 					this.myTriangle = [];
 					this.Keys = [];
-					
-					this.createLightObject({
-						type: 2,
-						prefab: Candle,
-						loc: [20.0, -0.25, -5.0],
-						rot: [0, 0, 0],
-						scale: [0.25, 0.5, 0.25],
-						lightData: [20.0, 0.0, -5.0],
-						name: "Candle",
-						collisionLocation: [20.0, -0.25, -5.0]
-					});
 
+					const worldCords = [-40, -40, 40, 40]
+
+					// Start by placing the lights in the world
+
+					// We start with torches
+					const numTorches = 5;
+					for (let i = 0; i < numTorches; i++) {
+						let spawnLoc = this.generateSpawnLocation(...worldCords, -0.25, 0)
+
+						this.createLightObject({
+							type: 2,
+							prefab: Candle,
+							loc: spawnLoc,
+							rot: [0, 0, 0],
+							scale: [0.25, 0.5, 0.25],
+							lightData: [spawnLoc[0], 0.0, spawnLoc[2]],
+							name: "Candle",
+							collisionLocation: spawnLoc
+						});
+					}
+
+					// Make sure to add all the torch light to the scene
+					let pointLightPositions = [];
+					for (let i in this.Trigger) {
+						if (this.Trigger[i].name == "Candle") {
+							pointLightPositions.push(...this.Trigger[i].lightLoc);
+						}
+					}
+
+					const pointLightPos = gl.getUniformLocation(this.myWEBGL.program, 'pointLightPos')
+					gl.uniform3fv(pointLightPos, new Float32Array(pointLightPositions));
+
+					// Next create the moon
 					this.createLightObject({
 						type: 2,
 						prefab: Moon,
@@ -241,29 +272,43 @@
 						collisionLocation: [200, 15, 20]
 					});
 
+					// Next place the enemy
+					let spawnLoc = this.generateSpawnLocation(...worldCords, 15, 0)
+
 					this.createLightObject({
 						type: 2,
 						prefab: Enemy,
-						loc: [5.0, 10.0, -2.0],
+						loc: spawnLoc,
 						rot: [0, 0, 0],
 						scale: [2, 0.5, 2],
-						lightData: [5.0, 10.0, -2.0],
+						lightData: spawnLoc,
 						name: "Enemy",
 						lightLoc: [0, 1, 0],
-						collisionLocation: [5.0, 1, -2.0]
+						collisionLocation: [spawnLoc[0], 1, spawnLoc[2]]
 					});
 
+					// Now lets place trees. We need to do random trees and we need
+					// to line the world with trees
 
-					this.createObject({
-						type: 1,
-						prefab: Tree,
-						loc: [0, -1, -25],
-						rot: [0, 0, 0], 
-						scale: [1, 1, 1],
-						name: "Tree",
-						collisionLocation: [0, -1, -25]
-					});
+					// First line the map with trees
+					const treesAlongBorder = 150;
+					this.spawnTrees(treesAlongBorder, worldCords);
 
+					// Next spawn random trees
+					for (let i = 0; i < treesAlongBorder; i++) {
+						spawnLoc = this.generateSpawnLocation(worldCords[0], worldCords[1], worldCords[2], worldCords[3], -0.5, 0)
+						this.createObject({
+							type: 1,
+							prefab: Tree,
+							loc: spawnLoc,
+							rot: [0, 0, 0], 
+							scale: [1, 1, 1],
+							name: "Tree",
+							collisionLocation: spawnLoc
+						});
+					}
+
+					// Place the camera randomly
 					this.createObject({
 						type: 1,
 						prefab: Camera,
@@ -274,16 +319,22 @@
 						collisionLocation: [0, 0, 0]
 					});
 
-					this.createObject({
-						type: 1,
-						prefab: Rock,
-						loc: [0, -0.5, -2],
-						rot: [0, 0, 0], 
-						scale: [1, 0.75, 1],
-						name: "Rock",
-						collisionLocation: [0, 0, -2]
-					});
-
+					// Now we create the rocks
+					const numRocks = 20;
+					for (let i = 0; i < numRocks; i++) {
+						spawnLoc = this.generateSpawnLocation(worldCords[0], worldCords[1], worldCords[2], worldCords[3], -0.5, 0)
+						this.createObject({
+							type: 1,
+							prefab: Rock,
+							loc: spawnLoc,
+							rot: [0, 0, 0], 
+							scale: [1, 0.75, 1],
+							name: "Rock",
+							collisionLocation: [spawnLoc[0], 0, spawnLoc[2]]
+						});
+					}
+					
+					// Spawn the ground
 					this.createObject({
 						type: 2,
 						prefab: Ground,
@@ -294,14 +345,16 @@
 						collisionLocation: [0, 0, 0]
 					});
 
+					// Lastly, randomly spawn the goal
+					spawnLoc = this.generateSpawnLocation(worldCords[0], worldCords[1], worldCords[2], worldCords[3], -0.5, 0)
 					this.createObject({
 						type: 2,
 						prefab: Goal,
-						loc: [10, -0.5, -10],
+						loc: spawnLoc,
 						rot: [0, 0, 0],
 						scale: [2, 0.1, 2],
 						name: "Goal",
-						collisionLocation: [10, -0.5, -10]
+						collisionLocation: spawnLoc
 					})
 				}
 				
@@ -334,6 +387,73 @@
 					for(let i in this.Trigger) {
 						this.Trigger[i].render(this.myWEBGL.program);
 					}
+				}
+
+				generateSpawnLocation(x1, z1, x2, z2, y, clearRadius) {
+					// When spawning an object, if the distance between two objects is 
+					// less than the clearRadius, try spawning again, with 5 attempts
+					const maxAttempts = 5;
+					let attempt = 0;
+					let spawnLocation = [0, y, 0];
+
+					let xSpawn = this.getRandomNumber(x1, x2);
+					let zSpawn = this.getRandomNumber(z1, z2)
+
+					spawnLocation = [xSpawn, y, zSpawn]
+
+					return spawnLocation;
+				}
+
+				spawnTrees(treesAlongBorder, worldCords) {
+					for (let i = 0; i < treesAlongBorder; i++) {
+						let spawnLoc = this.generateSpawnLocation(worldCords[0], worldCords[1], worldCords[2], worldCords[1] + 2, -0.5, 0)
+						this.createObject({
+							type: 1,
+							prefab: Tree,
+							loc: spawnLoc,
+							rot: [0, 0, 0], 
+							scale: [1, 1, 1],
+							name: "Tree",
+							collisionLocation: spawnLoc
+						});
+
+						spawnLoc = this.generateSpawnLocation(worldCords[0], worldCords[1], worldCords[0] + 2, worldCords[3], -0.5, 0)
+						this.createObject({
+							type: 1,
+							prefab: Tree,
+							loc: spawnLoc,
+							rot: [0, 0, 0], 
+							scale: [1, 1, 1],
+							name: "Tree",
+							collisionLocation: spawnLoc
+						});
+
+						spawnLoc = this.generateSpawnLocation(worldCords[2], worldCords[1], worldCords[2] - 2, worldCords[3], -0.5, 0)
+						this.createObject({
+							type: 1,
+							prefab: Tree,
+							loc: spawnLoc,
+							rot: [0, 0, 0], 
+							scale: [1, 1, 1],
+							name: "Tree",
+							collisionLocation: spawnLoc
+						});
+
+						spawnLoc = this.generateSpawnLocation(worldCords[0], worldCords[3], worldCords[2], worldCords[3] - 2, -0.5, 0)
+						this.createObject({
+							type: 1,
+							prefab: Tree,
+							loc: spawnLoc,
+							rot: [0, 0, 0], 
+							scale: [1, 1, 1],
+							name: "Tree",
+							collisionLocation: spawnLoc
+						});
+					}
+				}
+
+				getRandomNumber(min, max) {
+					return Math.random() * (max - min + 1) + min;
 				}
 
 				// For now just use simple sphere collider
@@ -416,13 +536,11 @@
 				
 				KeyDown(event) {
 					this.Keys[String.fromCharCode(event.keyCode)] = true;
-					// console.log(String.fromCharCode(event.keyCode) +" should be true - "+this.Keys[String.fromCharCode(event.keyCode)]);
 				}
 				
 				KeyUp(event)
 				{
 					this.Keys[String.fromCharCode(event.keyCode)] = false;
-					// console.log(String.fromCharCode(event.keyCode) +" should be false - "+this.Keys[String.fromCharCode(event.keyCode)]);
 				}
 				
 				//Static call backs go down here

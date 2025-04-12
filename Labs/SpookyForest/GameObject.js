@@ -33,6 +33,7 @@ class GameObject {
 			var clear = true;
 			// Handle collisions with other solids
 			for (var so in m.Solid) {
+				if (this.name == "Tree" && (m.Solid[so].name == "Tree" || m.Solid[so].name == "Rock")) { continue; }
 				if (m.Solid[so] != this) {
 					if (m.checkCollision(tempP, this.collisionRadius, m.Solid[so].collisionLocation, m.Solid[so].collisionRadius)) {
 						console.log("I am: " + this.name + " colliding with: " + m.Solid[so].name)
@@ -46,6 +47,7 @@ class GameObject {
 			
 			// Handle collisions with triggers
 			for (var tr in m.Trigger) {
+				if (this.name == "Tree" && m.Trigger[tr].name != "Player") { continue; }
 				if (m.Trigger[tr] != this) {
 					if (m.checkCollision(tempP, this.collisionRadius, m.Trigger[tr].collisionLocation, m.Trigger[tr].collisionRadius)) {
 						if (m.Trigger[tr].name == "Candle") {
@@ -53,21 +55,32 @@ class GameObject {
 						}
 
 						if (m.Trigger[tr].name == "Enemy" && this.name == "Player") {
-							this.loc = [0, 0, 0];
+							this.loc = this.spawnLoc;
 							clear = false;
 						}
+
 						try {
 							m.Trigger[tr].onTriggerEnter(this);
 						} catch {}
 					}
 				}
 			}
-		
+
+			
 			if (clear) {
 				this.loc = tempP;
 			}
 		} else {
-			this.loc = tempP;
+			let clear = true;
+			// Simply hard code the bounding box
+			if (this.name == "Enemy") {
+				if (!(tempP[0] > -40 && tempP[0] < 40  && tempP[2] > -40 && tempP[2] < 40)) {
+					clear = false
+				}
+			}
+			if (clear) {
+				this.loc = tempP;
+			}
 		}
 	}
 

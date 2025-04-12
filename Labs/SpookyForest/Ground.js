@@ -9,10 +9,10 @@ class Ground extends GameObject {
 		
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 		this.vertices = [
-			-1000, 0, -1000, 0,1,0,
-			1000,  0, -1000, 0,1,0,
-			-1000, 0, 1000,  0,1,0,
-			1000,  0, 1000,  0,1,0 
+			-50, 0, -50, 0, 1, 0,
+			50,  0, -50, 0, 1, 0,
+			-50, 0, 50,  0, 1, 0,
+			50,  0, 50,  0, 1, 0 
 		];
 	
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
@@ -50,10 +50,6 @@ class Ground extends GameObject {
 		const scaleLoc = gl.getUniformLocation(program, "scale");
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
         
-        //var ibuffer = gl.createBuffer();
-        //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.ibuffer);
-        //gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint8Array(this.indexOrder),gl.STATIC_DRAW);
-        //gl.drawElements(gl.TRIANGLES,this.indexOrder.length,gl.UNSIGNED_BYTE,0);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 	}
 }

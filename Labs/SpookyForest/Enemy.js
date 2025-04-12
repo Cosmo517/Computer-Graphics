@@ -4,7 +4,7 @@ class Enemy extends SpotLight {
         this.lightLoc = [0, 0, 0];
         this.lightDir = [0, 0, 0];
         this.isTrigger = true;
-        this.moveSpeed = 0.1;
+        this.moveSpeed = 0.2;
 
         this.vertices = [];
         this.sphere(20);
@@ -22,9 +22,7 @@ class Enemy extends SpotLight {
     enemyMovement() {
         // Random direction: 0 = N, 1 = NE, 2 = E, 3 = SE, 4 = S, 5 = SW, 6 = W, 7 = NW
         const randomEnemyMovement = Math.floor(Math.random() * 8);
-        console.log("Direction chosen: " + randomEnemyMovement);
 
-        // Reset velocity
         this.velocity = [0, 0, 0];
 
         // Use hardcoded directions
@@ -61,7 +59,7 @@ class Enemy extends SpotLight {
     }
 
     update() {
-        //this.moveTimer++;
+        this.moveTimer++;
         if (this.moveTimer > this.moveInterval) {
             this.enemyMovement()
             this.moveTimer = 0;

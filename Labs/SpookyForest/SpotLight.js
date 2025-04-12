@@ -11,7 +11,7 @@ class SpotLight extends GameObject {
 
     spotLightRadius() {
         const height = this.lightLoc[1];
-        const halfAngle = Math.acos(0.98); // 0.98 is from the vertex shader
+        const halfAngle = Math.acos(0.98); // 0.98 is from the fragment shader
         const radius = height * Math.tan(halfAngle);
         return radius;
     }
@@ -59,11 +59,6 @@ class SpotLight extends GameObject {
 		const isTorch = gl.getUniformLocation(program, 'isTorch');
 		gl.uniform1i(isTorch, this.isTorch);
 
-
-        //var ibuffer = gl.createBuffer();
-        //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.ibuffer);
-        //gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint8Array(this.indexOrder),gl.STATIC_DRAW);
-        //gl.drawElements(gl.TRIANGLES,this.indexOrder.length,gl.UNSIGNED_BYTE,0);
         gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 6);
     }
 }
