@@ -1,0 +1,1859 @@
+<!DOCTYPE HTML>
+<HTML lang="en">
+	<Head>
+		<Title>Spooky Forest</TITLE>
+
+		<link rel="stylesheet" href="styles.css">
+
+		<script id="2dVertexShader" type="notjs">
+			attribute vec4 a_position;	
+			attribute vec3 vert_color;
+			varying vec3 fragColor;
+			
+			// Used for object transformation
+			uniform vec3 transform;
+			uniform vec3 rotation;
+			uniform vec3 scale;		
+			
+			// Used for the camera
+			uniform vec3 worldLoc;
+			uniform vec3 worldRotation;
+			uniform float n;
+			uniform float f;
+			uniform float r;
+			uniform float t;
+			
+			// Lighting
+			const int NUMBER_OF_LIGHTS = 5;
+			uniform vec3 pointLightPos[NUMBER_OF_LIGHTS];
+			uniform vec3 spotLightPos;
+			
+			varying vec3 fakenormal;
+			varying vec3 v_surfaceToLight[NUMBER_OF_LIGHTS];
+			varying vec3 v_surfaceToView;
+			varying vec3 v_spot_surfaceToLight;
+			
+			
+			vec4 MoveCamera(vec4 pos) {
+				vec3 cw = cos(worldRotation);
+				vec3 sw = sin(worldRotation);
+				mat4 translateView = mat4(1.0, 0.0, 0.0, 0.0,
+										0.0, 1.0, 0.0, 0.0,
+										0.0, 0.0, 1.0, 0.0,
+										-1.0 * worldLoc.x, -1.0 * worldLoc.y, worldLoc.z, 1.0
+				);
+							
+				mat4 rotateY = mat4(cw.y, 0.0, -sw.y, 0.0,
+										0.0, 1.0, 0.0, 0.0,
+										sw.y, 0.0, cw.y, 0.0,
+										0.0, 0.0, 0.0, 1.0
+				);
+
+				return rotateY * translateView * pos;
+			}
+			
+			vec4 ApplyProjection(vec4 pos) {
+				mat4 ComplexPerspective = mat4(
+					n / r, 0.0, 0.0, 0.0,
+					0.0, n / t, 0.0, 0.0,
+					0.0, 0.0, -1.0 * (f + n) / (f - n), -1.0,
+					0.0, 0.0, -2.0 * f * n / (f - n), 0.0
+				);
+
+				return ComplexPerspective * pos;
+			}
+			
+			vec4 PositionObject(vec4 pos) {
+				mat4 translateM = mat4(1.0, 0.0, 0.0, 0.0,
+										0.0, 1.0, 0.0, 0.0,
+										0.0, 0.0, 1.0, 0.0,
+										transform.x, transform.y, transform.z, 1.0
+				);
+
+				return translateM * pos;	
+			}
+
+            vec4 RotateObject(vec4 pos) {
+                vec3 c = cos(rotation);
+                vec3 s = sin(rotation);
+    
+                mat4 rotateX = mat4(1.0, 0.0, 0.0, 0.0,
+                                    0.0, c.x, s.x, 0.0,
+                                    0.0, -s.x, c.x, 0.0,
+                                    0.0, 0.0, 0.0, 1.0
+                );
+    
+                mat4 rotateY = mat4(c.y, 0.0, -s.y, 0.0,
+                                    0.0, 1.0, 0.0, 0.0,
+                                    s.y, 0.0, c.y, 0.0,
+                                    0.0, 0.0, 0.0, 1.0
+                );
+    
+                mat4 rotateZ = mat4(c.z, s.z, 0.0, 0.0,
+                                    -s.z, c.z, 0.0, 0.0,
+                                    0.0, 0.0, 1.0, 0.0,
+                                    0.0, 0.0, 0.0, 1.0
+                );
+    
+                return rotateX * rotateY * rotateZ * pos;
+			}
+
+			vec4 ScaleObject(vec4 pos) {
+				if (length(scale) == 0.0) {
+					return pos;
+				}
+
+				mat4 scaleM = mat4(scale.x, 0.0, 0.0, 0.0,
+									0.0, scale.y, 0.0, 0.0,
+									0.0, 0.0, scale.z, 0.0,
+									0.0, 0.0, 0.0, 1.0
+				);
+
+				return scaleM * pos;
+			}
+
+			void main() {
+				if (length(a_position) < 5.0) {
+					fakenormal = RotateObject(ScaleObject(a_position)).xyz;
+				} else {
+					fakenormal = vec3(0.0, 1.0, 0.0);
+				}
+
+				vec4 worldSpace = PositionObject(RotateObject(ScaleObject(a_position)));
+				
+				// Lighting Stuff
+				for (int i = 0; i < NUMBER_OF_LIGHTS; i++) {
+					v_surfaceToLight[i] = pointLightPos[i] - worldSpace.xyz;
+				}
+
+				v_surfaceToView = worldLoc - worldSpace.xyz;
+				v_spot_surfaceToLight = spotLightPos - worldSpace.xyz;
+				
+				fragColor = vert_color;
+				vec4 cameraSpace = MoveCamera(worldSpace);
+				
+				gl_Position = ApplyProjection(cameraSpace);
+			}		
+		</SCRIPT>
+		<script id="2dFragmentShader" type="notjs">
+			const int NUMBER_OF_LIGHTS = 5;
+			precision mediump float;
+			varying vec3 fragColor;
+			
+			// Lighting again
+			varying vec3 fakenormal;
+			varying vec3 v_surfaceToLight[NUMBER_OF_LIGHTS];
+			varying vec3 v_surfaceToView;
+			varying vec3 v_spot_surfaceToLight;
+
+			// Handles the dynamic positions of the lights
+			uniform vec3 directionalLightDir;
+			uniform vec3 spotLightDir;
+			uniform int isMoon;
+			uniform int isTorch;
+			
+			void main() {		
+				if (isMoon == 1) {
+					// Make it look like the moon itself is giving off light
+					gl_FragColor = vec4(fragColor * 0.75, 1);
+				} else if (isTorch == 1) {
+					// Make it so the torch itself isnt dark
+					gl_FragColor = vec4(fragColor * 0.9, 1);
+				} else {
+					// This handles ambient lighting
+					float ambient = 0.1;
+					
+					// This handles directional light
+					float d_light = dot(normalize(fakenormal), normalize(directionalLightDir)) * 0.25; // Multiplied by 0.25 to act as moonlight
+					
+					if (d_light < 0.0) {
+						d_light = 0.0;
+					}
+					
+					// This will render ambient + directional
+					gl_FragColor = vec4(fragColor * (ambient + d_light), 1);
+					
+					// This handles point Lighting
+					float p_light = dot(normalize(fakenormal), normalize(v_surfaceToLight[0])) * 2.0 / length(v_surfaceToLight[0]);;
+
+					for (int i = 1; i < NUMBER_OF_LIGHTS; i++) {
+						p_light += dot(normalize(fakenormal), normalize(v_surfaceToLight[i])) * 2.0 / length(v_surfaceToLight[i]);
+					}
+
+					if (p_light < 0.0) {
+						p_light = 0.0;
+					}
+					
+					// This is spot Lighting
+					float spot_light = dot(normalize(v_spot_surfaceToLight), spotLightDir);
+					float spot_light_power = 0.0;
+					
+					if (spot_light >= 0.98) {
+						spot_light_power = dot(normalize(fakenormal), normalize(v_spot_surfaceToLight));
+						if (spot_light_power < 0.0) {
+							spot_light_power = 0.0;
+						}
+					}
+					
+					// This renders all the light
+					gl_FragColor = vec4(fragColor * (p_light + d_light + ambient + spot_light_power), 1); 
+				}
+			}
+		</script>
+		
+        <script>
+            class Transform {
+                constructor() {
+                    this.forward = [0, 0, 1];
+                    this.right = [1, 0, 0];
+                    this.up = [0, 1, 0];
+                }
+
+                doRotations(RotAngles) {
+                    this.xRot = [
+                                [1, 0, 0, 0],
+                                [0, Math.cos(RotAngles[0]), -1 * Math.sin(RotAngles[0]), 0],
+                                [0, Math.sin(RotAngles[0]), Math.cos(RotAngles[0]), 0],
+                                [0, 0, 0, 1]
+                    ];
+
+                    this.yRot = [
+                            [Math.cos(RotAngles[1]), 0, Math.sin(RotAngles[1]), 0],
+                            [0, 1, 0, 0],
+                            [-1 * Math.sin(RotAngles[1]), 0, Math.cos(RotAngles[1]), 0],
+                            [0, 0, 0, 1]	
+                    ];
+
+                    this.zRot = [
+                                [Math.cos(RotAngles[2]), -1 * Math.sin(RotAngles[2]), 0, 0],
+                                [Math.sin(RotAngles[2]), Math.cos(RotAngles[2]), 0, 0],
+                                [0, 0, 1, 0],
+                                [0, 0, 0, 1]
+                    ];
+                    
+                    this.forward = this.crossMultiply(this.zRot, this.crossMultiply(this.yRot, this.crossMultiply(this.xRot,[0, 0, 1, 0])))
+                    this.right = this.crossMultiply(this.zRot, this.crossMultiply(this.yRot, this.crossMultiply(this.xRot,[1, 0, 0, 0])))
+                    this.up = this.crossMultiply(this.zRot, this.crossMultiply(this.yRot, this.crossMultiply(this.xRot,[0, 1, 0, 0])))
+                }		
+                
+                crossMultiply(M,V) {
+                    var temp = [
+                            M[0][0] * V[0] + M[0][1] * V[1] + M[0][2] * V[2] + M[0][3] * V[3],
+                            M[1][0] * V[0] + M[1][1] * V[1] + M[1][2] * V[2] + M[1][3] * V[3],
+                            M[2][0] * V[0] + M[2][1] * V[1] + M[2][2] * V[2] + M[2][3] * V[3],
+                            M[3][0] * V[0] + M[3][1] * V[1] + M[3][2] * V[2] + M[3][3] * V[3]
+                    ];
+                    
+                    return temp;
+                }
+                
+            }
+		</script>
+
+        <script>
+            class GameObject {
+                constructor() {
+                    // Handles object transformations
+                    this.loc = [0, 0, 0];
+                    this.rot = [0, 0, 0];
+                    this.scale = [1, 1, 1];
+
+                    // Movement
+                    this.velocity = [0, 0, 0];
+                    this.angVelocity = [0, 0, 0];
+
+                    this.isTrigger = false;
+                    this.collisionRadius = 0.5;
+                    this.collisionLocation = [0, 0, 0];
+                    this.name = "default";
+
+                    // Automatically handled
+                    this.id = 0;
+                    this.prefab;
+                    this.transform = new Transform();
+                }
+                
+                Move() {
+                    var tempP = [0,0,0]
+                    
+                    for(var i =0; i< 3;i ++) {
+                        tempP[i] = this.loc[i];
+                        tempP[i] += this.velocity[i];
+                        this.rot[i] += this.angVelocity[i];
+                    }
+
+                    if (!this.isTrigger) {
+                        var clear = true;
+                        // Handle collisions with other solids
+                        for (var so in m.Solid) {
+                            if (this.name == "Tree" && (m.Solid[so].name == "Tree" || m.Solid[so].name == "Rock")) { continue; }
+                            if (m.Solid[so] != this) {
+                                if (m.checkCollision(tempP, this.collisionRadius, m.Solid[so].collisionLocation, m.Solid[so].collisionRadius)) {
+                                    console.log("I am: " + this.name + " colliding with: " + m.Solid[so].name)
+                                    try {
+                                        m.Solid[so].onCollisionEnter(this);
+                                    } catch {}
+                                    clear = false;
+                                }
+                            }
+                        }
+                        
+                        // Handle collisions with triggers
+                        for (var tr in m.Trigger) {
+                            if (this.name == "Tree" && m.Trigger[tr].name != "Player") { continue; }
+                            if (m.Trigger[tr] != this) {
+                                if (m.checkCollision(tempP, this.collisionRadius, m.Trigger[tr].collisionLocation, m.Trigger[tr].collisionRadius)) {
+                                    if (m.Trigger[tr].name == "Candle") {
+                                        clear = false;
+                                    }
+
+                                    if (m.Trigger[tr].name == "Enemy" && this.name == "Player") {
+                                        this.loc = this.spawnLoc;
+                                        clear = false;
+                                    }
+
+                                    try {
+                                        m.Trigger[tr].onTriggerEnter(this);
+                                    } catch {}
+                                }
+                            }
+                        }
+
+                        
+                        if (clear) {
+                            this.loc = tempP;
+                        }
+                    } else {
+                        let clear = true;
+                        // Simply hard code the bounding box
+                        if (this.name == "Enemy") {
+                            if (!(tempP[0] > -40 && tempP[0] < 40  && tempP[2] > -40 && tempP[2] < 40)) {
+                                clear = false
+                            }
+                        }
+                        if (clear) {
+                            this.loc = tempP;
+                        }
+                    }
+                }
+
+                update() {
+                    console.error(this.name + " update() is NOT IMPLEMENTED!");
+                }
+
+                render(program) {
+                    console.error(this.name + " render() is NOT IMPLEMENTED!");
+                }	
+            }
+		</script>
+		
+		<script>
+            class DirectionalLight extends GameObject {
+                constructor() {
+                    super();
+                    this.lightDirection = [0, 0, 0];
+                    this.isTrigger = true;
+                    this.isMoon = 0;
+                    this.isTorch = 0;
+                }
+
+                setLightData(lightData) {
+                    this.lightDirection = lightData;
+                }
+
+                render(program) {
+                    var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    var size = 3;
+                    var type = gl.FLOAT;
+                    var normalize = false;
+                    var stride = 6*Float32Array.BYTES_PER_ELEMENT;
+                    var offset = 0;
+                    gl.enableVertexAttribArray(positionAttributeLocation);
+                    gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+                    
+                    //Now we have to do this for color
+                    var colorAttributeLocation = gl.getAttribLocation(program,"vert_color");
+
+                    size = 3;
+                    type = gl.FLOAT;
+                    normalize = false;
+                    stride = 6*Float32Array.BYTES_PER_ELEMENT;
+                    offset = 3*Float32Array.BYTES_PER_ELEMENT;
+                    gl.enableVertexAttribArray(colorAttributeLocation);
+                    gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
+                            
+                    var tranLoc  = gl.getUniformLocation(program,'transform');
+                    gl.uniform3fv(tranLoc, new Float32Array(this.loc));
+                    var thetaLoc = gl.getUniformLocation(program,'rotation');
+                    gl.uniform3fv(thetaLoc, new Float32Array(this.rot));
+                    const scaleLoc = gl.getUniformLocation(program, "scale");
+                    gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
+                    const directionalLightLoc = gl.getUniformLocation(program, 'directionalLightDir');
+                    gl.uniform3fv(directionalLightLoc, new Float32Array(this.lightDirection));
+                    const isMoon = gl.getUniformLocation(program, 'isMoon');
+                    gl.uniform1i(isMoon, this.isMoon);
+                    const isTorch = gl.getUniformLocation(program, 'isTorch');
+                    gl.uniform1i(isTorch, this.isTorch);
+                    
+                    gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 6);
+                }
+            }
+		</script>
+		
+		<script>
+            class PointLight extends GameObject {
+                constructor() {
+                    super();
+                    this.lightLoc = [0, 0, 0];
+                    this.isTrigger = true;
+                    this.isMoon = 0;
+                    this.isTorch = 1;
+                }
+
+                setLightData(lightData) {
+                    this.lightLoc = lightData;
+                }
+
+                render(program) {
+                    var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    var size = 3;
+                    var type = gl.FLOAT;
+                    var normalize = false;
+                    var stride = 6*Float32Array.BYTES_PER_ELEMENT;
+                    var offset = 0;
+                    gl.enableVertexAttribArray(positionAttributeLocation);
+                    gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+                    
+                    //Now we have to do this for color
+                    var colorAttributeLocation = gl.getAttribLocation(program,"vert_color");
+
+                    size = 3;
+                    type = gl.FLOAT;
+                    normalize = false;
+                    stride = 6*Float32Array.BYTES_PER_ELEMENT;
+                    offset = 3*Float32Array.BYTES_PER_ELEMENT;
+                    gl.enableVertexAttribArray(colorAttributeLocation);
+                    gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
+                            
+                    var tranLoc  = gl.getUniformLocation(program,'transform');
+                    gl.uniform3fv(tranLoc, new Float32Array(this.loc));
+                    var thetaLoc = gl.getUniformLocation(program,'rotation');
+                    gl.uniform3fv(thetaLoc, new Float32Array(this.rot));
+                    const scaleLoc = gl.getUniformLocation(program, "scale");
+                    gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
+                    const isMoon = gl.getUniformLocation(program, 'isMoon');
+                    gl.uniform1i(isMoon, this.isMoon);
+                    const isTorch = gl.getUniformLocation(program, 'isTorch');
+                    gl.uniform1i(isTorch, this.isTorch);
+
+                    gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 6);
+                }
+            }
+		</script>
+		
+		<script>
+            class SpotLight extends GameObject {
+                constructor() {
+                    super();
+                    this.lightLoc = [0, 0, 0];
+                    this.lightDir = [0, 0, 0];
+                    this.isTrigger = true;
+                    this.isMoon = 0;
+                    this.isTorch = 0;
+                    this.collisionRadius = 0;
+                }
+
+                spotLightRadius() {
+                    const height = this.lightLoc[1];
+                    const halfAngle = Math.acos(0.98); // 0.98 is from the fragment shader
+                    const radius = height * Math.tan(halfAngle);
+                    return radius;
+                }
+
+                setLightData(lightLoc, lightDir) {
+                    this.lightLoc = lightLoc;
+                    this.lightDir = lightDir;
+                    this.collisionRadius = this.spotLightRadius();
+                }
+
+                render(program) {
+                    var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    var size = 3;
+                    var type = gl.FLOAT;
+                    var normalize = false;
+                    var stride = 6*Float32Array.BYTES_PER_ELEMENT;
+                    var offset = 0;
+                    gl.enableVertexAttribArray(positionAttributeLocation);
+                    gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+                    
+                    //Now we have to do this for color
+                    var colorAttributeLocation = gl.getAttribLocation(program,"vert_color");
+
+                    size = 3;
+                    type = gl.FLOAT;
+                    normalize = false;
+                    stride = 6*Float32Array.BYTES_PER_ELEMENT;
+                    offset = 3*Float32Array.BYTES_PER_ELEMENT;
+                    gl.enableVertexAttribArray(colorAttributeLocation);
+                    gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
+                            
+                    const tranLoc  = gl.getUniformLocation(program,'transform');
+                    gl.uniform3fv(tranLoc, new Float32Array(this.loc));
+                    const thetaLoc = gl.getUniformLocation(program,'rotation');
+                    gl.uniform3fv(thetaLoc, new Float32Array(this.rot));
+                    const scaleLoc = gl.getUniformLocation(program, "scale");
+                    gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
+                    const spotLightPosLoc = gl.getUniformLocation(program, 'spotLightPos');
+                    gl.uniform3fv(spotLightPosLoc, new Float32Array(this.lightLoc));
+                    const spotLightDir = gl.getUniformLocation(program, "spotLightDir");
+                    gl.uniform3fv(spotLightDir, new Float32Array(this.lightDir))
+                    const isMoon = gl.getUniformLocation(program, 'isMoon');
+                    gl.uniform1i(isMoon, this.isMoon);
+                    const isTorch = gl.getUniformLocation(program, 'isTorch');
+                    gl.uniform1i(isTorch, this.isTorch);
+
+                    gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 6);
+                }
+            }
+		</script>
+		
+        <script>
+            class Camera extends GameObject {
+                constructor() {
+                    super();
+                    this.moveSpeed = 0.1;
+                    this.rotateSpeed = 0.03;
+                    this.spawnLoc = this.loc;
+                }
+
+                onCollisionEnter(other) {
+                    // Do nothing
+                }
+
+                update() {
+                    this.angVelocity = [0, 0, 0];
+                    this.velocity = [0, 0, 0]
+
+                    if( "A" in m.Keys && m.Keys["A"]) {
+                        this.angVelocity[1] -= this.rotateSpeed;
+                    }
+
+                    if("D" in m.Keys && m.Keys["D"]) {
+                        this.angVelocity[1] += this.rotateSpeed;
+                    }
+
+                    if("W" in m.Keys && m.Keys["W"]) {
+                        this.transform.doRotations(this.rot);
+                        this.velocity[0] = this.transform.forward[0] * this.moveSpeed;
+                        this.velocity[2] = this.transform.forward[2] * this.moveSpeed;
+                    }
+
+                    if("S" in m.Keys && m.Keys["S"]) {
+                        this.transform.doRotations(this.rot);
+                        this.velocity[0] = this.transform.forward[0] * -this.moveSpeed;
+                        this.velocity[2] = this.transform.forward[2] * -this.moveSpeed;
+                    }
+
+                    if ("Q" in m.Keys && m.Keys["Q"]) {
+                        this.transform.doRotations(this.rot);
+                        this.velocity[0] = -(this.transform.right[0]) * this.moveSpeed;
+                        this.velocity[2] = -(this.transform.right[2]) * this.moveSpeed;
+                    }
+
+                    if ("E" in m.Keys && m.Keys["E"]) {
+                        this.transform.doRotations(this.rot);
+                        this.velocity[0] = (this.transform.right[0]) * this.moveSpeed;
+                        this.velocity[2] = (this.transform.right[2]) * this.moveSpeed;
+                    }
+
+                    this.Move()
+
+                    // Update the collision location to match the player location
+                    this.collisionLocation = this.loc;
+                }
+
+                render(program) {
+                    const camLoc  = gl.getUniformLocation(program, 'worldLoc');
+                    gl.uniform3fv(camLoc, new Float32Array(this.loc));
+                    const worldLoc = gl.getUniformLocation(program, 'worldRotation');
+                    gl.uniform3fv(worldLoc, new Float32Array(this.rot));
+                    const scaleLoc = gl.getUniformLocation(program, "scale");
+                    gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
+                }
+            }
+		</script>
+		
+		<script>
+            class Goal extends GameObject {
+                constructor() {
+                    super();
+                    this.vertices = [];
+                    this.sphere(20);
+                    this.collisionRadius = 1;
+                    this.isTrigger = true;
+
+                    this.buffer = gl.createBuffer();
+                    this.colorBuffer = gl.createBuffer();
+                    
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+                }
+
+                onTriggerEnter(other) {
+                    alert("You win!")
+                }
+
+                update() {
+                    // Do nothing
+                }
+
+                latLngToCartesian([radius, lat, lng]) {
+                    lng = -lng + Math.PI / 2;
+                    const yOffset = 0;
+                    return [
+                        radius * Math.cos(lat) * Math.cos(lng),
+                        radius * Math.sin(lat) + yOffset,
+                        radius * -Math.cos(lat) * Math.sin(lng),
+                    ];
+                }
+
+                sphere(density) {
+                    const radsPerUnit = Math.PI / density;
+                    const sliceVertCount = density * 2;
+                    const radius = 1;
+                    const leafColor = [0.0, 0.0, 1.0];
+
+                    const positions = [];
+                    let latitude = -Math.PI / 2;
+                    for (let i = 0; i <= density; i++) {
+                        if (i === 0 || i === density) { // Polar caps
+                            positions.push(this.latLngToCartesian([radius, latitude, 0]));
+                        } else {
+                            let longitude = 0;
+                            for (let j = 0; j < sliceVertCount; j++) {
+                                positions.push(this.latLngToCartesian([radius, latitude, longitude]));
+                                longitude += radsPerUnit;
+                            }
+                        }
+                        latitude += radsPerUnit;
+                    }
+
+                    // Generate triangles
+                    for (let ring = 0; ring < density - 1; ring++) {
+                        const initialP = (ring * sliceVertCount) + 1;
+                        for (let sliceVert = 0; sliceVert < sliceVertCount; sliceVert++) {
+                            const thisP = initialP + sliceVert;
+                            const nextP = initialP + ((sliceVert + 1) % sliceVertCount);
+
+                            if (ring === 0) {
+                                this.vertices.push(...positions[0], ...leafColor);
+                                this.vertices.push(...positions[nextP], ...leafColor);
+                                this.vertices.push(...positions[thisP], ...leafColor);
+                            }
+
+                            if (ring === density - 2) {
+                                this.vertices.push(...positions[thisP], ...leafColor);
+                                this.vertices.push(...positions[nextP], ...leafColor);
+                                this.vertices.push(...positions[positions.length - 1], ...leafColor);
+                            }
+
+                            if (ring < density - 2 && density > 2) {
+                                this.vertices.push(...positions[thisP], ...leafColor);
+                                this.vertices.push(...positions[nextP + sliceVertCount], ...leafColor);
+                                this.vertices.push(...positions[thisP + sliceVertCount], ...leafColor);
+
+                                this.vertices.push(...positions[thisP], ...leafColor);
+                                this.vertices.push(...positions[nextP], ...leafColor);
+                                this.vertices.push(...positions[nextP + sliceVertCount], ...leafColor);
+                            }
+                        }
+                    }
+                }
+
+                render(program) {
+                    const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    const size = 3;
+                    const type = gl.FLOAT;
+                    const normalize = false;
+                    const stride = 6 * Float32Array.BYTES_PER_ELEMENT;
+                    let offset = 0;
+                    gl.enableVertexAttribArray(positionAttributeLocation);
+                    gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+
+                    const colorAttributeLocation = gl.getAttribLocation(program, "vert_color");
+                    offset = 3 * Float32Array.BYTES_PER_ELEMENT;
+                    gl.enableVertexAttribArray(colorAttributeLocation);
+                    gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
+
+                    const tranLoc = gl.getUniformLocation(program, 'transform');
+                    gl.uniform3fv(tranLoc, new Float32Array(this.loc));
+                    const thetaLoc = gl.getUniformLocation(program, 'rotation');
+                    gl.uniform3fv(thetaLoc, new Float32Array(this.rot));
+                    const scaleLoc = gl.getUniformLocation(program, "scale");
+                    gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
+
+                    // Draw sphere
+                    gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 6);
+                }
+            }
+		</script>
+		
+		<script>
+            class Enemy extends SpotLight {
+                constructor() {
+                    super();
+                    this.lightLoc = [0, 0, 0];
+                    this.lightDir = [0, 0, 0];
+                    this.isTrigger = true;
+                    this.moveSpeed = 0.2;
+
+                    this.vertices = [];
+                    this.sphere(20);
+
+                    this.moveTimer = 0;
+                    this.moveInterval = 120;
+
+                    this.buffer = gl.createBuffer();
+                    this.colorBuffer = gl.createBuffer();
+                    
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+                }
+
+                enemyMovement() {
+                    // Random direction: 0 = N, 1 = NE, 2 = E, 3 = SE, 4 = S, 5 = SW, 6 = W, 7 = NW
+                    const randomEnemyMovement = Math.floor(Math.random() * 8);
+
+                    this.velocity = [0, 0, 0];
+
+                    // Use hardcoded directions
+                    switch (randomEnemyMovement) {
+                        case 0:
+                            this.velocity[2] = this.moveSpeed;
+                            break;
+                        case 1:
+                            this.velocity[0] = this.moveSpeed * Math.cos(Math.PI / 4);
+                            this.velocity[2] = this.moveSpeed * Math.sin(Math.PI / 4);
+                            break;
+                        case 2:
+                            this.velocity[0] = this.moveSpeed;
+                            break;
+                        case 3:
+                            this.velocity[0] = this.moveSpeed * Math.cos(Math.PI / 4);
+                            this.velocity[2] = -this.moveSpeed * Math.sin(Math.PI / 4);
+                            break;
+                        case 4:
+                            this.velocity[2] = -this.moveSpeed;
+                            break;
+                        case 5:
+                            this.velocity[0] = -this.moveSpeed * Math.cos(Math.PI / 4);
+                            this.velocity[2] = -this.moveSpeed * Math.sin(Math.PI / 4);
+                            break;
+                        case 6: 
+                            this.velocity[0] = -this.moveSpeed;
+                            break;
+                        case 7:
+                            this.velocity[0] = -this.moveSpeed * Math.cos(Math.PI / 4);
+                            this.velocity[2] = this.moveSpeed * Math.sin(Math.PI / 4);
+                            break;
+                    }
+                }
+
+                update() {
+                    this.moveTimer++;
+                    if (this.moveTimer > this.moveInterval) {
+                        this.enemyMovement()
+                        this.moveTimer = 0;
+                    }
+
+                    this.Move();
+                    this.lightLoc = [...this.loc];
+                    this.collisionLocation = [this.loc[0], this.collisionLocation[1], this.loc[2]];
+                }
+
+                latLngToCartesian([radius, lat, lng]) {
+                    lng = -lng + Math.PI / 2;
+                    const yOffset = 0;
+                    return [
+                        radius * Math.cos(lat) * Math.cos(lng),
+                        radius * Math.sin(lat) + yOffset,
+                        radius * -Math.cos(lat) * Math.sin(lng),
+                    ];
+                }
+
+                sphere(density) {
+                    const radsPerUnit = Math.PI / density;
+                    const sliceVertCount = density * 2;
+                    const radius = 1.5;
+                    const leafColor = [1.0, 0.0, 0.0];
+
+                    const positions = [];
+                    let latitude = -Math.PI / 2;
+                    for (let i = 0; i <= density; i++) {
+                        if (i === 0 || i === density) { // Polar caps
+                            positions.push(this.latLngToCartesian([radius, latitude, 0]));
+                        } else {
+                            let longitude = 0;
+                            for (let j = 0; j < sliceVertCount; j++) {
+                                positions.push(this.latLngToCartesian([radius, latitude, longitude]));
+                                longitude += radsPerUnit;
+                            }
+                        }
+                        latitude += radsPerUnit;
+                    }
+
+                    // Generate triangles
+                    for (let ring = 0; ring < density - 1; ring++) {
+                        const initialP = (ring * sliceVertCount) + 1;
+                        for (let sliceVert = 0; sliceVert < sliceVertCount; sliceVert++) {
+                            const thisP = initialP + sliceVert;
+                            const nextP = initialP + ((sliceVert + 1) % sliceVertCount);
+
+                            if (ring === 0) {
+                                this.vertices.push(...positions[0], ...leafColor);
+                                this.vertices.push(...positions[nextP], ...leafColor);
+                                this.vertices.push(...positions[thisP], ...leafColor);
+                            }
+
+                            if (ring === density - 2) {
+                                this.vertices.push(...positions[thisP], ...leafColor);
+                                this.vertices.push(...positions[nextP], ...leafColor);
+                                this.vertices.push(...positions[positions.length - 1], ...leafColor);
+                            }
+
+                            if (ring < density - 2 && density > 2) {
+                                this.vertices.push(...positions[thisP], ...leafColor);
+                                this.vertices.push(...positions[nextP + sliceVertCount], ...leafColor);
+                                this.vertices.push(...positions[thisP + sliceVertCount], ...leafColor);
+
+                                this.vertices.push(...positions[thisP], ...leafColor);
+                                this.vertices.push(...positions[nextP], ...leafColor);
+                                this.vertices.push(...positions[nextP + sliceVertCount], ...leafColor);
+                            }
+                        }
+                    }
+                }
+            }
+		</script>
+		
+        <script>
+            class Ground extends GameObject {
+                constructor() {
+                    super();
+                    this.loc = [0, 0, 0];
+                    this.rot = [0, 0, 0];
+
+                    this.buffer = gl.createBuffer();
+                    this.colorBuffer = gl.createBuffer();
+                    
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    this.vertices = [
+                        -50, 0, -50, 0, 1, 0,
+                        50,  0, -50, 0, 1, 0,
+                        -50, 0, 50,  0, 1, 0,
+                        50,  0, 50,  0, 1, 0 
+                    ];
+                
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+                }
+                
+                update() {
+                    //Do Nothing
+                }
+
+                render(program) {
+                    var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    var size = 3;
+                    var type = gl.FLOAT;
+                    var normalize = false;
+                    var stride = 6 * Float32Array.BYTES_PER_ELEMENT;
+                    var offset = 0;
+                    gl.enableVertexAttribArray(positionAttributeLocation);
+                    gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+                    
+                    //Now we have to do this for color
+                    var colorAttributeLocation = gl.getAttribLocation(program,"vert_color");
+                    size = 3;
+                    type = gl.FLOAT;
+                    normalize = false;
+                    stride = 6*Float32Array.BYTES_PER_ELEMENT;
+                    offset = 3*Float32Array.BYTES_PER_ELEMENT;
+                    gl.enableVertexAttribArray(colorAttributeLocation);
+                    gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
+                            
+                    var tranLoc  = gl.getUniformLocation(program,'transform');
+                    gl.uniform3fv(tranLoc,new Float32Array(this.loc));
+                    var thetaLoc = gl.getUniformLocation(program,'rotation');
+                    gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
+                    const scaleLoc = gl.getUniformLocation(program, "scale");
+                    gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
+                    
+                    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+                }
+            }
+		</script>
+		
+        <script>
+            class Rock extends GameObject {
+                constructor() {
+                    super();
+
+                    this.angVelocity = [0, 0, 0];
+                    this.collisionRadius = 0.4;
+                    
+                    this.buffer = gl.createBuffer();
+                    this.colorBuffer = gl.createBuffer();
+                    
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+
+                    this.vertices = [];
+                    this.sphere(4)
+                
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+                }
+
+                update() {
+                    // do nothing
+                }
+
+                latLngToCartesian([radius, lat, lng]) {
+                    lng = -lng + Math.PI / 2;
+                    const yOffset = 0;
+                    return [
+                        radius * Math.cos(lat) * Math.cos(lng),
+                        radius * Math.sin(lat) + yOffset,
+                        radius * -Math.cos(lat) * Math.sin(lng),
+                    ];
+                }
+
+                sphere(density) {
+                    const radsPerUnit = Math.PI / density;
+                    const sliceVertCount = density * 2;
+                    const radius = 0.75;
+                    const leafColor = [0.8, 0.8, 0.8];
+
+                    const positions = [];
+                    let latitude = -Math.PI / 2;
+                    for (let i = 0; i <= density; i++) {
+                        if (i === 0 || i === density) { // Polar caps
+                            positions.push(this.latLngToCartesian([radius, latitude, 0]));
+                        } else {
+                            let longitude = 0;
+                            for (let j = 0; j < sliceVertCount; j++) {
+                                positions.push(this.latLngToCartesian([radius, latitude, longitude]));
+                                longitude += radsPerUnit;
+                            }
+                        }
+                        latitude += radsPerUnit;
+                    }
+
+                    // Generate triangles
+                    for (let ring = 0; ring < density - 1; ring++) {
+                        const initialP = (ring * sliceVertCount) + 1;
+                        for (let sliceVert = 0; sliceVert < sliceVertCount; sliceVert++) {
+                            const thisP = initialP + sliceVert;
+                            const nextP = initialP + ((sliceVert + 1) % sliceVertCount);
+
+                            if (ring === 0) {
+                                this.vertices.push(...positions[0], ...leafColor);
+                                this.vertices.push(...positions[nextP], ...leafColor);
+                                this.vertices.push(...positions[thisP], ...leafColor);
+                            }
+
+                            if (ring === density - 2) {
+                                this.vertices.push(...positions[thisP], ...leafColor);
+                                this.vertices.push(...positions[nextP], ...leafColor);
+                                this.vertices.push(...positions[positions.length - 1], ...leafColor);
+                            }
+
+                            if (ring < density - 2 && density > 2) {
+                                this.vertices.push(...positions[thisP], ...leafColor);
+                                this.vertices.push(...positions[nextP + sliceVertCount], ...leafColor);
+                                this.vertices.push(...positions[thisP + sliceVertCount], ...leafColor);
+
+                                this.vertices.push(...positions[thisP], ...leafColor);
+                                this.vertices.push(...positions[nextP], ...leafColor);
+                                this.vertices.push(...positions[nextP + sliceVertCount], ...leafColor);
+                            }
+                        }
+                    }
+                }
+
+                render(program) {
+                    var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    var size = 3;
+                    var type = gl.FLOAT;
+                    var normalize = false;
+                    var stride = 6*Float32Array.BYTES_PER_ELEMENT;
+                    var offset = 0;
+                    gl.enableVertexAttribArray(positionAttributeLocation);
+                    gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+                    
+                    //Now we have to do this for color
+                    var colorAttributeLocation = gl.getAttribLocation(program,"vert_color");
+
+                    size = 3;
+                    type = gl.FLOAT;
+                    normalize = false;
+                    stride = 6*Float32Array.BYTES_PER_ELEMENT;
+                    offset = 3*Float32Array.BYTES_PER_ELEMENT;
+                    gl.enableVertexAttribArray(colorAttributeLocation);
+                    gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
+                            
+                    var tranLoc  = gl.getUniformLocation(program,'transform');
+                    gl.uniform3fv(tranLoc,new Float32Array(this.loc));
+                    var thetaLoc = gl.getUniformLocation(program,'rotation');
+                    gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
+                    const scaleLoc = gl.getUniformLocation(program, "scale");
+                    gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
+                
+                    gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 6);
+                }
+            }
+		</script>
+		
+        <script>
+            class Tree extends GameObject {
+                constructor() {
+                    super();
+
+                    const treeWidth = 0.25;
+                    const logHeight = 5.0; 
+                    this.logHeight = logHeight;
+                    this.collisionRadius = 0.3;
+
+                    this.logVertices = [
+                        // Bottom
+                        -treeWidth, 0.0, treeWidth,  0.588, 0.294, 0.0,
+                        -treeWidth, 0.0, -treeWidth, 0.588, 0.294, 0.0,
+                        treeWidth, 0.0, -treeWidth,  0.588, 0.294, 0.0,
+                        
+                        treeWidth, 0.0, -treeWidth,  0.588, 0.294, 0.0,
+                        treeWidth, 0.0, treeWidth,   0.588, 0.294, 0.0,
+                        -treeWidth, 0.0, treeWidth,  0.588, 0.294, 0.0,
+
+                        // Left
+                        -treeWidth, 0.0, treeWidth,  0.588, 0.294, 0.0,
+                        -treeWidth, 0.0, -treeWidth, 0.588, 0.294, 0.0,
+                        -treeWidth, logHeight, -treeWidth, 0.588, 0.294, 0.0,
+                        
+                        -treeWidth, logHeight, -treeWidth, 0.588, 0.294, 0.0,
+                        -treeWidth, logHeight, treeWidth,  0.588, 0.294, 0.0,
+                        -treeWidth, 0.0, treeWidth,  0.588, 0.294, 0.0,
+
+                        // Right
+                        treeWidth, 0.0, treeWidth,   0.588, 0.294, 0.0,
+                        treeWidth, 0.0, -treeWidth,  0.588, 0.294, 0.0,
+                        treeWidth, logHeight, -treeWidth,  0.588, 0.294, 0.0,
+                        
+                        treeWidth, logHeight, -treeWidth,  0.588, 0.294, 0.0,
+                        treeWidth, logHeight, treeWidth,   0.588, 0.294, 0.0,
+                        treeWidth, 0.0, treeWidth,   0.588, 0.294, 0.0,
+
+                        // Front
+                        -treeWidth, 0.0, treeWidth, 0.588, 0.294, 0.0,
+                        -treeWidth, logHeight, treeWidth, 0.588, 0.294, 0.0,
+                        treeWidth, logHeight, treeWidth,  0.588, 0.294, 0.0,
+                        
+                        treeWidth, logHeight, treeWidth,  0.588, 0.294, 0.0,
+                        treeWidth, 0.0, treeWidth,  0.588, 0.294, 0.0,
+                        -treeWidth, 0.0, treeWidth, 0.588, 0.294, 0.0,
+
+                        // Back
+                        -treeWidth, 0.0, -treeWidth, 0.588, 0.294, 0.0,
+                        -treeWidth, logHeight, -treeWidth, 0.588, 0.294, 0.0,
+                        treeWidth, logHeight, -treeWidth,  0.588, 0.294, 0.0,
+                        
+                        treeWidth, logHeight, -treeWidth,  0.588, 0.294, 0.0,
+                        treeWidth, 0.0, -treeWidth,  0.588, 0.294, 0.0,
+                        -treeWidth, 0.0, -treeWidth, 0.588, 0.294, 0.0,
+                    ];
+
+                    this.logVertexCount = this.logVertices.length / 6;
+
+                    // Generate sphere vertices
+                    this.vertices = [...this.logVertices];
+                    this.sphere(20);
+
+                    this.sphereVertexCount = (this.vertices.length - this.logVertices.length) / 6; 
+
+                    this.buffer = gl.createBuffer();
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+                }
+
+                onCollisionEnter(other) {
+                    // Do nothing
+                }
+
+                update() {
+                    // Do nothing
+                }
+
+                render(program) {
+                    const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    const size = 3;
+                    const type = gl.FLOAT;
+                    const normalize = false;
+                    const stride = 6 * Float32Array.BYTES_PER_ELEMENT;
+                    let offset = 0;
+                    gl.enableVertexAttribArray(positionAttributeLocation);
+                    gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+
+                    const colorAttributeLocation = gl.getAttribLocation(program, "vert_color");
+                    offset = 3 * Float32Array.BYTES_PER_ELEMENT;
+                    gl.enableVertexAttribArray(colorAttributeLocation);
+                    gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
+
+                    const tranLoc = gl.getUniformLocation(program, 'transform');
+                    gl.uniform3fv(tranLoc, new Float32Array(this.loc));
+                    const thetaLoc = gl.getUniformLocation(program, 'rotation');
+                    gl.uniform3fv(thetaLoc, new Float32Array(this.rot));
+                    const scaleLoc = gl.getUniformLocation(program, "scale");
+                    gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
+
+                    // Draw log
+                    gl.drawArrays(gl.TRIANGLES, 0, this.logVertexCount);
+
+                    // Draw sphere
+                    gl.drawArrays(gl.TRIANGLES, this.logVertexCount, this.sphereVertexCount);
+                }
+
+                latLngToCartesian([radius, lat, lng]) {
+                    lng = -lng + Math.PI / 2;
+                    const yOffset = this.logHeight
+                    return [
+                        radius * Math.cos(lat) * Math.cos(lng),
+                        radius * Math.sin(lat) + yOffset,
+                        radius * -Math.cos(lat) * Math.sin(lng),
+                    ];
+                }
+
+                sphere(density) {
+                    const radsPerUnit = Math.PI / density;
+                    const sliceVertCount = density * 2;
+                    const radius = 1.5;
+                    const leafColor = [0.0, 0.6, 0.0];
+
+                    const positions = [];
+                    let latitude = -Math.PI / 2;
+                    for (let i = 0; i <= density; i++) {
+                        if (i === 0 || i === density) { // Polar caps
+                            positions.push(this.latLngToCartesian([radius, latitude, 0]));
+                        } else {
+                            let longitude = 0;
+                            for (let j = 0; j < sliceVertCount; j++) {
+                                positions.push(this.latLngToCartesian([radius, latitude, longitude]));
+                                longitude += radsPerUnit;
+                            }
+                        }
+                        latitude += radsPerUnit;
+                    }
+
+                    // Generate triangles
+                    for (let ring = 0; ring < density - 1; ring++) {
+                        const initialP = (ring * sliceVertCount) + 1;
+                        for (let sliceVert = 0; sliceVert < sliceVertCount; sliceVert++) {
+                            const thisP = initialP + sliceVert;
+                            const nextP = initialP + ((sliceVert + 1) % sliceVertCount);
+
+                            if (ring === 0) {
+                                this.vertices.push(...positions[0], ...leafColor);
+                                this.vertices.push(...positions[nextP], ...leafColor);
+                                this.vertices.push(...positions[thisP], ...leafColor);
+                            }
+
+                            if (ring === density - 2) {
+                                this.vertices.push(...positions[thisP], ...leafColor);
+                                this.vertices.push(...positions[nextP], ...leafColor);
+                                this.vertices.push(...positions[positions.length - 1], ...leafColor);
+                            }
+
+                            if (ring < density - 2 && density > 2) {
+                                this.vertices.push(...positions[thisP], ...leafColor);
+                                this.vertices.push(...positions[nextP + sliceVertCount], ...leafColor);
+                                this.vertices.push(...positions[thisP + sliceVertCount], ...leafColor);
+
+                                this.vertices.push(...positions[thisP], ...leafColor);
+                                this.vertices.push(...positions[nextP], ...leafColor);
+                                this.vertices.push(...positions[nextP + sliceVertCount], ...leafColor);
+                            }
+                        }
+                    }
+                }
+            }
+		</script>
+		
+		<script>
+            class Moon extends DirectionalLight {
+                constructor() {
+                    super();
+                    this.vertices = [];
+                    this.isMoon = 1;
+                    this.sphere(20)
+                
+                    this.buffer = gl.createBuffer();
+                    this.colorBuffer = gl.createBuffer();
+
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+                }
+
+                // The following sphere generation code was taken from
+                // https://dev.to/ndesmic/webgl-3d-engine-from-scratch-part-6-procedural-sphere-generation-29bf
+                // It has been very slightly modified to fit into the project
+                latLngToCartesian([radius, lat, lng]){
+                    lng = -lng + Math.PI / 2;
+                    return [
+                        radius * Math.cos(lat) * Math.cos(lng),
+                        radius * Math.sin(lat),
+                        radius * -Math.cos(lat) * Math.sin(lng),
+                    ];
+                }
+
+                sphere(density){
+                    const radsPerUnit = Math.PI / density;
+                    const sliceVertCount = density * 2;
+                
+                    const positions = [];
+                    let latitude = -Math.PI / 2;
+                    //latitude
+                    for(let i = 0; i <= density; i++){
+                        if(i === 0 || i === density){ //polar caps
+                            positions.push(this.latLngToCartesian([1, latitude, 0]));
+                        } else {
+                            let longitude = 0;
+                            for (let j = 0; j < sliceVertCount; j++) {
+                                positions.push(this.latLngToCartesian([1, latitude, longitude]));
+                                longitude += radsPerUnit;
+                            }
+                        }
+                        latitude += radsPerUnit;
+                    }
+                
+                    // Colors
+                    const colors = [];
+                    for(let i = 0; i < positions.length; i++){
+                        colors.push([1, 1, 1]);
+                    }
+
+                    // Triangles
+                    const triangles = [];
+                    for(let ring = 0; ring < density - 1; ring++){
+                        const initialP = (ring * sliceVertCount) + 1;
+                        for (let sliceVert = 0; sliceVert < sliceVertCount; sliceVert++){
+                            const thisP = initialP + sliceVert;
+                            const nextP = initialP + ((sliceVert + 1) % sliceVertCount);
+
+                            if(ring === 0) {
+                                triangles.push(...positions[0])
+                                triangles.push(...colors[0])
+                                triangles.push(...positions[nextP])
+                                triangles.push(...colors[nextP])
+                                triangles.push(...positions[thisP])
+                                triangles.push(...colors[thisP])                    
+                            }
+
+                            if(ring === density - 2) {
+                                triangles.push(...positions[thisP])
+                                triangles.push(...colors[thisP])
+                                triangles.push(...positions[nextP])
+                                triangles.push(...colors[nextP])
+                                triangles.push(...positions[positions.length - 1])
+                                triangles.push(...colors[positions.length - 1])
+                            }
+
+                            if(ring < density - 2 && density > 2){
+                                triangles.push(...positions[thisP])
+                                triangles.push(...colors[thisP])
+                                triangles.push(...positions[nextP + sliceVertCount])
+                                triangles.push(...colors[nextP + sliceVertCount])
+                                triangles.push(...positions[thisP + sliceVertCount])
+                                triangles.push(...colors[thisP + sliceVertCount])
+
+                                triangles.push(...positions[thisP])
+                                triangles.push(...colors[thisP])
+                                triangles.push(...positions[nextP])
+                                triangles.push(...colors[nextP])
+                                triangles.push(...positions[nextP + sliceVertCount])
+                                triangles.push(...colors[nextP + sliceVertCount])
+                            }
+                        }
+                    }
+                    
+                    this.vertices = triangles;
+                }
+
+                update() {
+                    // Do nothing
+                }
+            }
+		</script>
+		
+		<script>
+            class Candle extends PointLight {
+                constructor() {
+                    super();
+                    this.buffer = gl.createBuffer();
+                    this.colorBuffer = gl.createBuffer();
+                    this.collisionRadius = 0.01;
+                    
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+
+                    const candleSize = 0.1;
+                    const baseHeight = candleSize * 5;
+                    this.vertices = [
+                        // Create the yellow of the torch
+                        // Top
+                        -candleSize, candleSize, candleSize,   1, 1, 0,
+                        candleSize, candleSize, candleSize,    1, 1, 0,
+                        candleSize, candleSize, -candleSize,   1, 1, 0,
+                        
+                        candleSize, candleSize, -candleSize,   1, 1, 0,
+                        -candleSize, candleSize, -candleSize,  1, 1, 0,
+                        -candleSize, candleSize, candleSize,   1, 1, 0,
+
+                        // Bottom
+                        -candleSize, -candleSize, candleSize,  1, 1, 0,
+                        candleSize, -candleSize, candleSize,   1, 1, 0,
+                        candleSize, -candleSize, -candleSize,  1, 1, 0,
+
+                        candleSize, -candleSize, -candleSize,  1, 1, 0,
+                        -candleSize, -candleSize, -candleSize, 1, 1, 0,
+                        -candleSize, -candleSize, candleSize,  1, 1, 0,
+
+                        // Left
+                        -candleSize, -candleSize, candleSize,  1, 1, 0,
+                        -candleSize, candleSize, candleSize,   1, 1, 0,
+                        -candleSize, candleSize, -candleSize,  1, 1, 0,
+
+                        -candleSize, candleSize, -candleSize,  1, 1, 0,
+                        -candleSize, -candleSize, -candleSize, 1, 1, 0,
+                        -candleSize, -candleSize, candleSize,  1, 1, 0,
+
+                        // Right
+                        candleSize, -candleSize, candleSize,   1, 1, 0,
+                        candleSize, candleSize, candleSize,    1, 1, 0,
+                        candleSize, candleSize, -candleSize,   1, 1, 0,
+
+                        candleSize, candleSize, -candleSize,   1, 1, 0,
+                        candleSize, -candleSize, -candleSize,  1, 1, 0,
+                        candleSize, -candleSize, candleSize,   1, 1, 0,
+
+                        // Front
+                        -candleSize, -candleSize, -candleSize,  1, 1, 0,
+                        -candleSize, candleSize, -candleSize,   1, 1, 0,
+                        candleSize, candleSize, -candleSize,    1, 1, 0,
+
+                        candleSize, candleSize, -candleSize,    1, 1, 0,
+                        candleSize, -candleSize, -candleSize,   1, 1, 0,
+                        -candleSize, -candleSize, -candleSize,  1, 1, 0,
+
+                        // Back
+                        -candleSize, candleSize, candleSize,   1, 1, 0,
+                        candleSize, candleSize, candleSize,    1, 1, 0,
+                        candleSize, -candleSize, candleSize,   1, 1, 0,
+
+                        candleSize, -candleSize, candleSize,   1, 1, 0,
+                        -candleSize, -candleSize, candleSize,  1, 1, 0,
+                        -candleSize, candleSize, candleSize,   1, 1, 0,
+
+                        // Create the wooden part of the torch
+                        // Bottom
+                        -candleSize, -baseHeight, candleSize,  0.588, 0.294, 0.0,
+                        -candleSize, -baseHeight, -candleSize, 0.588, 0.294, 0.0,
+                        candleSize, -baseHeight, -candleSize,  0.588, 0.294, 0.0,
+
+                        candleSize, -baseHeight, -candleSize,  0.588, 0.294, 0.0,
+                        candleSize, -baseHeight, candleSize,   0.588, 0.294, 0.0,
+                        -candleSize, -baseHeight, candleSize,  0.588, 0.294, 0.0,
+
+                        // Left
+                        -candleSize, -baseHeight, candleSize,  0.588, 0.294, 0.0,
+                        -candleSize, -baseHeight, -candleSize, 0.588, 0.294, 0.0,
+                        -candleSize, -candleSize, -candleSize, 0.588, 0.294, 0.0,
+
+                        -candleSize, -candleSize, -candleSize, 0.588, 0.294, 0.0,
+                        -candleSize, -candleSize, candleSize,  0.588, 0.294, 0.0,
+                        -candleSize, -baseHeight, candleSize,  0.588, 0.294, 0.0,
+                        
+                        // Right
+                        candleSize, -baseHeight, candleSize,   0.588, 0.294, 0.0,
+                        candleSize, -baseHeight, -candleSize,  0.588, 0.294, 0.0,
+                        candleSize, -candleSize, -candleSize,  0.588, 0.294, 0.0,
+
+                        candleSize, -candleSize, -candleSize,  0.588, 0.294, 0.0,
+                        candleSize, -candleSize, candleSize,   0.588, 0.294, 0.0,
+                        candleSize, -baseHeight, candleSize,   0.588, 0.294, 0.0,
+
+                        // Front
+                        -candleSize, -baseHeight, candleSize, 0.588, 0.294, 0.0,
+                        -candleSize, -candleSize, candleSize, 0.588, 0.294, 0.0,
+                        candleSize, -candleSize, candleSize,  0.588, 0.294, 0.0,
+
+                        candleSize, -candleSize, candleSize,  0.588, 0.294, 0.0,
+                        candleSize, -baseHeight, candleSize,  0.588, 0.294, 0.0,
+                        -candleSize, -baseHeight, candleSize, 0.588, 0.294, 0.0,
+
+                        // Back
+                        -candleSize, -baseHeight, -candleSize, 0.588, 0.294, 0.0,
+                        -candleSize, -candleSize, -candleSize, 0.588, 0.294, 0.0,
+                        candleSize, -candleSize, -candleSize,  0.588, 0.294, 0.0,
+
+                        candleSize, -candleSize, -candleSize,  0.588, 0.294, 0.0,
+                        candleSize, -baseHeight, -candleSize,  0.588, 0.294, 0.0,
+                        -candleSize, -baseHeight, -candleSize, 0.588, 0.294, 0.0,
+                    ]
+                
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+                }
+
+                update() {
+                    // Do nothing
+                }
+            }
+		</script>
+		
+        <script>
+            class WebGL_Interface {
+                constructor() {
+                    this.vertexShaderSource = document.getElementById("2dVertexShader").text;
+                    this.fragmentShaderSource = document.getElementById("2dFragmentShader").text;
+                    this.vertexShader = this.createShader(gl.VERTEX_SHADER, this.vertexShaderSource);
+                    this.fragmenShader = this.createShader(gl.FRAGMENT_SHADER, this.fragmentShaderSource);
+                    //Link to program
+                    this.program = this.createProgram(this.vertexShader, this.fragmenShader);
+                    //setup our viewport
+                    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+                    //set clear colors
+                    gl.clearColor(0, 0, 0, 1);
+                    gl.clear(gl.COLOR_BUFFER_BIT);		
+                    //what progbram to use;
+                    
+                    //We will need this for now!
+                    gl.enable(gl.DEPTH_TEST);
+                    
+                    gl.useProgram(this.program);
+                    
+                    var camLoc  = gl.getUniformLocation(this.program, 'worldLoc');
+                    gl.uniform3fv(camLoc, new Float32Array([0, 0, 0]));
+                    var worldLoc = gl.getUniformLocation(this.program, 'worldRotation');
+                    gl.uniform3fv(worldLoc, new Float32Array([0, 0, 0]));
+                    
+                    var tempLoc = gl.getUniformLocation(this.program, 'n');
+                    gl.uniform1f(tempLoc, 0.1);
+                    tempLoc = gl.getUniformLocation(this.program, 'f');
+                    gl.uniform1f(tempLoc, 500);
+                    tempLoc = gl.getUniformLocation(this.program, 'r');
+                    gl.uniform1f(tempLoc, 0.1);
+                    tempLoc = gl.getUniformLocation(this.program, 't');
+                    gl.uniform1f(tempLoc, 0.06);	
+                }
+                
+                createShader(type, source) {
+                    var shader = gl.createShader(type);
+                    gl.shaderSource(shader, source);
+                    gl.compileShader(shader);
+                    var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+                    if(success) {
+                        return shader;
+                    }
+
+                    //Else it didn't work
+                    console.error(gl.getShaderInfoLog(shader));
+                    gl.deleteShader(shader);
+                }
+                
+                createProgram(vs, fs) {
+                    var program = gl.createProgram();
+                    gl.attachShader(program, vs);
+                    gl.attachShader(program, fs);
+                    gl.linkProgram(program);
+                    var succsess = gl.getProgramParameter(program, gl.LINK_STATUS);
+                    if(succsess) {
+                        return program;
+                    }
+
+                    console.error(gl.getProgramInfoLog(program));
+                    gl.deleteProgram(program);	
+                }
+
+            }
+		</script>
+		
+
+		<script>
+			class main {	
+				constructor() {
+					this.Visual = [];
+					this.Solid = [];
+					this.Trigger = [];
+					this.ObjectCounter = 0;			
+
+					this.myWEBGL = new WebGL_Interface();
+					this.myTriangle = [];
+					this.Keys = [];
+
+					const worldCords = [-40, -40, 40, 40]
+
+					// Start by placing the lights in the world
+
+					// We start with torches
+					const numTorches = 5;
+					for (let i = 0; i < numTorches; i++) {
+						let spawnLoc = this.generateSpawnLocation(...worldCords, -0.25, 0)
+
+						this.createLightObject({
+							type: 2,
+							prefab: Candle,
+							loc: spawnLoc,
+							rot: [0, 0, 0],
+							scale: [0.25, 0.5, 0.25],
+							lightData: [spawnLoc[0], 0.0, spawnLoc[2]],
+							name: "Candle",
+							collisionLocation: spawnLoc
+						});
+					}
+
+					// Make sure to add all the torch light to the scene
+					let pointLightPositions = [];
+					for (let i in this.Trigger) {
+						if (this.Trigger[i].name == "Candle") {
+							pointLightPositions.push(...this.Trigger[i].lightLoc);
+						}
+					}
+
+					const pointLightPos = gl.getUniformLocation(this.myWEBGL.program, 'pointLightPos')
+					gl.uniform3fv(pointLightPos, new Float32Array(pointLightPositions));
+
+					// Next create the moon
+					this.createLightObject({
+						type: 2,
+						prefab: Moon,
+						loc: [200, 15, 20],
+						rot: [0, 0, 0],
+						scale: [5, 5, 5],
+						lightData: [20, 5, 20],
+						name: "Moon",
+						collisionLocation: [200, 15, 20]
+					});
+
+					// Next place the enemy
+					let spawnLoc = this.generateSpawnLocation(...worldCords, 15, 0)
+
+					this.createLightObject({
+						type: 2,
+						prefab: Enemy,
+						loc: spawnLoc,
+						rot: [0, 0, 0],
+						scale: [2, 0.5, 2],
+						lightData: spawnLoc,
+						name: "Enemy",
+						lightLoc: [0, 1, 0],
+						collisionLocation: [spawnLoc[0], 1, spawnLoc[2]]
+					});
+
+					// Now lets place trees. We need to do random trees and we need
+					// to line the world with trees
+
+					// First line the map with trees
+					const treesAlongBorder = 150;
+					this.spawnTrees(treesAlongBorder, worldCords);
+
+					// Next spawn random trees
+					for (let i = 0; i < treesAlongBorder; i++) {
+						spawnLoc = this.generateSpawnLocation(worldCords[0], worldCords[1], worldCords[2], worldCords[3], -0.5, 0)
+						this.createObject({
+							type: 1,
+							prefab: Tree,
+							loc: spawnLoc,
+							rot: [0, 0, 0], 
+							scale: [1, 1, 1],
+							name: "Tree",
+							collisionLocation: spawnLoc
+						});
+					}
+
+					// Place the camera randomly
+					this.createObject({
+						type: 1,
+						prefab: Camera,
+						loc: [0, 0, 0],
+						rot: [0, 0, 0], 
+						scale: [1, 1, 1],
+						name: "Player",
+						collisionLocation: [0, 0, 0]
+					});
+
+					// Now we create the rocks
+					const numRocks = 20;
+					for (let i = 0; i < numRocks; i++) {
+						spawnLoc = this.generateSpawnLocation(worldCords[0], worldCords[1], worldCords[2], worldCords[3], -0.5, 0)
+						this.createObject({
+							type: 1,
+							prefab: Rock,
+							loc: spawnLoc,
+							rot: [0, 0, 0], 
+							scale: [1, 0.75, 1],
+							name: "Rock",
+							collisionLocation: [spawnLoc[0], 0, spawnLoc[2]]
+						});
+					}
+					
+					// Spawn the ground
+					this.createObject({
+						type: 2,
+						prefab: Ground,
+						loc: [0, -0.5, 0],
+						rot: [0, 0, 0], 
+						scale: [1, 1, 1],
+						name: "Ground",
+						collisionLocation: [0, 0, 0]
+					});
+
+					// Lastly, randomly spawn the goal
+					spawnLoc = this.generateSpawnLocation(worldCords[0], worldCords[1], worldCords[2], worldCords[3], -0.5, 0)
+					this.createObject({
+						type: 2,
+						prefab: Goal,
+						loc: spawnLoc,
+						rot: [0, 0, 0],
+						scale: [2, 0.1, 2],
+						name: "Goal",
+						collisionLocation: spawnLoc
+					})
+				}
+				
+				updateAll() {
+					for (let i in this.Visual) {
+						this.Visual[i].update();
+					}
+
+					for (let i in this.Solid) {
+						this.Solid[i].update();
+					}
+
+					for (let i in this.Trigger) {
+						this.Trigger[i].update();
+					}
+				
+				}
+				
+				renderAll() {
+					gl.clear(gl.COLOR_BUFFER_BIT);
+
+					for(let i in this.Visual) {
+						this.Visual[i].render(this.myWEBGL.program);
+					}
+					
+					for(let i in this.Solid) {
+						this.Solid[i].render(this.myWEBGL.program);
+					}
+
+					for(let i in this.Trigger) {
+						this.Trigger[i].render(this.myWEBGL.program);
+					}
+				}
+
+				generateSpawnLocation(x1, z1, x2, z2, y, clearRadius) {
+					// When spawning an object, if the distance between two objects is 
+					// less than the clearRadius, try spawning again, with 5 attempts
+					const maxAttempts = 5;
+					let attempt = 0;
+					let spawnLocation = [0, y, 0];
+
+					let xSpawn = this.getRandomNumber(x1, x2);
+					let zSpawn = this.getRandomNumber(z1, z2)
+
+					spawnLocation = [xSpawn, y, zSpawn]
+
+					return spawnLocation;
+				}
+
+				spawnTrees(treesAlongBorder, worldCords) {
+					for (let i = 0; i < treesAlongBorder; i++) {
+						let spawnLoc = this.generateSpawnLocation(worldCords[0], worldCords[1], worldCords[2], worldCords[1] + 2, -0.5, 0)
+						this.createObject({
+							type: 1,
+							prefab: Tree,
+							loc: spawnLoc,
+							rot: [0, 0, 0], 
+							scale: [1, 1, 1],
+							name: "Tree",
+							collisionLocation: spawnLoc
+						});
+
+						spawnLoc = this.generateSpawnLocation(worldCords[0], worldCords[1], worldCords[0] + 2, worldCords[3], -0.5, 0)
+						this.createObject({
+							type: 1,
+							prefab: Tree,
+							loc: spawnLoc,
+							rot: [0, 0, 0], 
+							scale: [1, 1, 1],
+							name: "Tree",
+							collisionLocation: spawnLoc
+						});
+
+						spawnLoc = this.generateSpawnLocation(worldCords[2], worldCords[1], worldCords[2] - 2, worldCords[3], -0.5, 0)
+						this.createObject({
+							type: 1,
+							prefab: Tree,
+							loc: spawnLoc,
+							rot: [0, 0, 0], 
+							scale: [1, 1, 1],
+							name: "Tree",
+							collisionLocation: spawnLoc
+						});
+
+						spawnLoc = this.generateSpawnLocation(worldCords[0], worldCords[3], worldCords[2], worldCords[3] - 2, -0.5, 0)
+						this.createObject({
+							type: 1,
+							prefab: Tree,
+							loc: spawnLoc,
+							rot: [0, 0, 0], 
+							scale: [1, 1, 1],
+							name: "Tree",
+							collisionLocation: spawnLoc
+						});
+					}
+				}
+
+				getRandomNumber(min, max) {
+					return Math.random() * (max - min + 1) + min;
+				}
+
+				// For now just use simple sphere collider
+                getDistance(loc1, loc2) {
+                    return Math.sqrt(Math.pow(loc1[0] - loc2[0], 2) + Math.pow(loc1[1] - loc2[1], 2) + Math.pow(loc1[2] + loc2[2], 2));
+                }
+
+                checkCollision(loc1, rad1, loc2, rad2) {
+                    let distance = this.getDistance(loc1, loc2);
+                    return (rad1 + rad2) > distance;
+                }
+				
+				createObject({type, prefab, loc, rot, scale, name, collisionLocation}) {
+					// type 0 = visual, type 1 = solid, type 2 = trigger
+
+					let temp = new prefab;
+					let id = "ID" + this.ObjectCounter;
+					this.ObjectCounter ++;
+					temp.id = id;
+					temp.prefab = prefab;
+					temp.name = name;
+					
+					temp.loc = loc;
+					temp.rot = rot;
+					temp.scale = scale;
+
+					temp.collisionLocation = collisionLocation;
+
+					switch(type) {
+						case 0:
+							this.Visual[id] = temp;
+							break;
+						case 1:
+							this.Solid[id] = temp;
+							break;
+						case 2:
+							this.Trigger[id] = temp;
+							break;
+						default:
+							break;
+					}
+
+					return temp;
+				}
+
+				createLightObject({type, prefab, loc, rot, scale, lightData, name, lightLoc, collisionLocation}) {
+					let temp = this.createObject({
+						type: type,
+						prefab: prefab,
+						loc: loc,
+						rot: rot, 
+						scale: scale,
+						name: name,
+						collisionLocation: collisionLocation
+					});
+
+					if (lightLoc) {
+						temp.setLightData(lightData, lightLoc);
+					} else {
+						temp.setLightData(lightData);
+					}
+
+					return temp;
+				}
+				
+				
+				destroyObject(id) {
+					if(id in this.Visual) {
+						delete this.Visual[id];
+					}
+
+					if(id in this.Solid) {
+						delete this.Solid[id];
+					}
+
+					if(id in this.Trigger) {
+						delete this.Trigger[id];
+					}
+				}
+				
+				KeyDown(event) {
+					this.Keys[String.fromCharCode(event.keyCode)] = true;
+				}
+				
+				KeyUp(event)
+				{
+					this.Keys[String.fromCharCode(event.keyCode)] = false;
+				}
+				
+				//Static call backs go down here
+				//   |
+				//  \ /
+				//   v
+				static keyD(event) {
+					m.KeyDown(event);
+				}
+
+				static keyU(event) {
+					m.KeyUp(event);
+				}
+				
+				static MainLoop() {
+					m.updateAll();
+					m.renderAll();
+					requestAnimationFrame(main.MainLoop);
+				}
+			}
+		</script>
+	</Head>
+
+	<BODY style="padding: 15px;">
+		<HEADER></HEADER>
+		
+		<CANVAS id="myCanvas" width="1280" height="720" style = "border: 1px solid #000;">
+			Your browser does not support canvas.
+		</CANVAS>
+		
+		<SCRIPT>
+			const canvas = document.getElementById("myCanvas");
+			const gl = canvas.getContext("webgl");
+			const m = new main();
+			window.onkeydown = main.keyD;
+			window.onkeyup = main.keyU;
+			
+			requestAnimationFrame(main.MainLoop);	
+		</SCRIPT>
+
+		<FOOTER></FOOTER>
+	</BODY>
+</HTML>
