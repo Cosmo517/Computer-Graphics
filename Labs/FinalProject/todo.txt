@@ -37,7 +37,7 @@ Extra Credit:
 2. Create a 3 frame texture for an explosion (to represent a monster dying)
     1. Already found the sprites to use I think
 3. Create a title menu
-    1. Needs to have play button
+    1. Play button needs a texture
     2. Needs to have player options. Maybe different weapons, or variable health/difficulty
 4. Create sound effects
     1. Probably find some online
