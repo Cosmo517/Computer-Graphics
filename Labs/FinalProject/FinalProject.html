@@ -253,6 +253,8 @@
 		</script>
 		
 		<script src="Transform.js"></script>
+		<script src="Levels.js"></script>
+		<script src="Sprites.js"></script>
 		<script src="GameObject.js"></script>
 		<script src="Quad.js"></script>
 		<script src="Ground.js"></script>
@@ -321,7 +323,34 @@
 					this.myWEBGL = new WebGL_Interface();
 					this.myTriangle = [];
 					this.Keys = [];
+					
+					// Handle Levels
+					this.totalLevels = 3;
+					this.currentLevel = 0; // Level 0 is menu
 
+					// this.generateLevel();
+					this.showMenu();
+				}
+
+				showMenu() {
+					this.createObject({ 
+						type: 2, 
+						prefab: Quad, 
+						loc: [0, 0, -5], 
+						rot: [0, 0, 0],
+						tag: "Quad",
+						collisionLocation: [0, 0, 0],
+					});
+				}
+
+				reset() {
+					this.Visual = [];
+					this.Solid = [];
+					this.Trigger = [];
+					this.ObjectCounter = 0;
+				}
+
+				generateLevel() {
 					this.createObject({
 						type: 1, 
 						prefab: Camera, 
@@ -507,13 +536,19 @@
 				
 				MouseClick(event)
 				{
-					var rect = canvas.getBoundingClientRect();
-					var realX = event.clientX - rect.left;
-					var realY = event.clientY - rect.top;
-					console.log(realX+","+realY);
-					var x = -1 + 2*realX/myCanvas.width;
-					var y = -1 + 2*(myCanvas.height - realY)/myCanvas.height;
-					console.log("The click occurred on "+x+","+y);
+					const rect = canvas.getBoundingClientRect();
+					const realX = event.clientX - rect.left;
+					const realY = event.clientY - rect.top;
+					// console.log(realX + ", " + realY);
+					const x = -1 + 2 * realX / myCanvas.width;
+					const y = -1 + 2 * (myCanvas.height - realY) / myCanvas.height;
+					console.log("The click occurred on " + x + ", " + y);
+					
+					// Use the following to allow "play" and other options to be selected
+					if (x > -0.2 && x < 0.19 && y < 0.32 && y > -0.33) {
+						this.reset()
+						this.generateLevel();
+					}
 				}
 
 				
