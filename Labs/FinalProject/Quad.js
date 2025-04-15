@@ -76,11 +76,10 @@ class Quad extends GameObject {
 		gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
 		const scaleLoc = gl.getUniformLocation(program, 'scale')
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
-	 
-		const FaceCamLoc = gl.getUniformLocation(program,'FaceCam');
+		const FaceCamLoc = gl.getUniformLocation(program, 'FaceCam');
 		gl.uniform1i(FaceCamLoc, true);
 
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-		gl.uniform1i(FaceCamLoc,false);
+		gl.uniform1i(FaceCamLoc, false);
 	}
 }

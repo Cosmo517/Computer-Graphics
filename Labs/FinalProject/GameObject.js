@@ -32,11 +32,12 @@ class GameObject {
 		}
 
 		if (!this.isTrigger) {
-			var clear = true;
+			let clear = true;
 			// Handle collisions with other solids
 			for (var so in m.Solid) {
 				if (m.Solid[so] != this) {
 					if (m.checkCollision(tempP, this.collisionRadius, m.Solid[so].collisionLocation, m.Solid[so].collisionRadius)) {
+						console.log("I am: " + this.tag + " colliding with: " + m.Solid[so].tag)
 						try {
 							m.Solid[so].onCollisionEnter(this);
 						} catch {}

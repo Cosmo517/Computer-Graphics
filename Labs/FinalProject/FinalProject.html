@@ -321,6 +321,69 @@
 					this.myWEBGL = new WebGL_Interface();
 					this.myTriangle = [];
 					this.Keys = [];
+
+					this.createObject({
+						type: 1, 
+						prefab: Camera, 
+						loc: [0, 0, 0], 
+						rot: [0, 0, 0],
+						tag: "Player",
+						collisionLocation: [-10, 0, 0],
+					});
+					
+					this.createObject({ 
+						type: 1,
+						prefab: Hex,
+						loc: [0, 0, -2],
+						rot: [0, 0, 0],
+						tag: "Hex",
+						collisionLocation: [0, 0, -2],
+					});
+
+					this.createObject({ 
+						type: 1, 
+						prefab: Hex, 
+						loc: [3, 0, -2],
+						rot: [0, 0, 0],
+						tag: "Hex",
+						collisionLocation: [3, 0, -2],
+					});
+
+					this.createObject({
+						type: 1, 
+						prefab: Hex, 
+						loc: [-3, 0, -2], 
+						rot: [0, 0, 0],
+						tag: "Hex",
+						collisionLocation: [-3, 0, -2],
+					});
+
+					this.createObject({
+						type: 1, 
+						prefab: Hex,
+						loc: [-20, 0, -8],
+						rot: [0, 0, 0],
+						tag: "Hex",
+						collisionLocation: [-20, 0, -8],
+					});
+
+					this.createObject({ 
+						type: 2, 
+						prefab: Ground, 
+						loc: [0, -1, 0], 
+						rot: [0, 0, 0] ,
+						tag: "Ground",
+						collisionLocation: [0, 0, 0],
+					});
+
+					this.createObject({ 
+						type: 2, 
+						prefab: Quad, 
+						loc: [2, 0, 0], 
+						rot: [0, 0, 0],
+						tag: "Quad",
+						collisionLocation: [0, 0, 0],
+					});
 				}
 				
 				updateAll() {
@@ -364,7 +427,7 @@
                     return (rad1 + rad2) > distance;
                 }
 				
-				createObject({type, prefab, loc, rot}) {
+				createObject({type, prefab, loc, rot, collisionLocation, tag}) {
 					// type 0 = visual, type 1 = solid, type 2 = trigger
 					const temp = new prefab;
 					const id = "ID" + this.ObjectCounter;
@@ -376,9 +439,10 @@
 					temp.rot = rot;
 
 					// Tag
-					temp.tag = ""
+					temp.tag = tag
 
 					// Collision
+					temp.collisionLocation = collisionLocation
 
 					switch(type) {
 						case 0:
@@ -397,14 +461,14 @@
 					return temp;
 				}
 
-				createLightObject({type, prefab, loc, rot, scale, lightData, name, lightLoc, collisionLocation}) {
+				createLightObject({type, prefab, loc, rot, scale, lightData, tag, lightLoc, collisionLocation}) {
 					let temp = this.createObject({
 						type: type,
 						prefab: prefab,
 						loc: loc,
 						rot: rot, 
 						scale: scale,
-						name: name,
+						tag: tag,
 						collisionLocation: collisionLocation
 					});
 
@@ -505,56 +569,6 @@
 				}
 			}*/
 
-			m.createObject({
-				type: 2, 
-				prefab: Camera, 
-				loc: [0, 0, 0], 
-				rot: [0, 0, 0]
-			});
-			
-			m.createObject({ 
-				type: 2,
-				prefab: Hex,
-				loc: [0, 0, -2],
-				rot: [0, 0, 0]
-			});
-
-			m.createObject({ 
-				type: 2, 
-				prefab: Hex, 
-				loc: [3, 0, -2],
-				rot: [0, 0, 0] 
-			});
-
-			m.createObject({
-				type: 2, 
-				prefab: Hex, 
-				loc: [-3, 0, -2], 
-				rot: [0, 0, 0] 
-			});
-
-			m.createObject({
-				type: 2, 
-				prefab: Hex,
-				loc: [-20, 0, -8],
-				rot: [0, 0, 0] 
-			});
-
-			m.createObject({ 
-				type: 2, 
-				prefab: Ground, 
-				loc: [0, -1, 0], 
-				rot: [0, 0, 0] 
-			});
-
-			m.createObject({ 
-				type: 2, 
-				prefab: Quad, 
-				loc: [2, 0, 0], 
-				rot: [0, 0, 0] 
-			});
-
-			
 			requestAnimationFrame(main.MainLoop);	
 		</SCRIPT>
 	</BODY>
