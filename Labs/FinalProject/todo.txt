@@ -1,0 +1,47 @@
+Core Features:
+
+1. Textures:
+    1. Floor
+    2. Wall 1
+    3. Wall 2
+2. Collision Detection
+    1. Already "implemented" but might want to improve. Currently using sphere collider
+3. Directional Light
+    1. Setup in the shader, though it breaks things... I believe thats because i dont have one setup yet
+4. 10 point lights
+    1. Setup in the fragment shader, though I need to make some sort of light object
+5. Need a goal of some kind. Maybe a prize or artifact.
+    1. Texture?
+6. Need 3 enemies
+    1. One will patrol back and forth
+    2. One will randomly move once it hits a wall
+    3. One will randomly move and periodically shoot a bullet at the player (either a sprite or 3d object)
+    4. If a bad guy collides with you, you restart the level
+    5. If you get hit with 5 bullets, you restart the level
+    6. Each monster has different HP. When hit by the heroes bullets, it takes one damage
+        1. Monster explodes/dies when it reaches 0 HP
+    7. The below are subject to change but just ideas
+        1. Wizard
+        2. Necromancer
+        3. Knight
+7. Player needs to be able to "shoot"
+    1. Pressing space bar shoots a bullet (either a sprite or 3d object)
+8. Level will be stored in array based format
+
+
+
+Extra Credit:
+
+1. Simulate monster animation by using 3 textures and swapping between them
+    1. Already found *possibly* the sprites to use
+2. Create a 3 frame texture for an explosion (to represent a monster dying)
+    1. Already found the sprites to use I think
+3. Create a title menu
+    1. Needs to have play button
+    2. Needs to have player options. Maybe different weapons, or variable health/difficulty
+4. Create sound effects
+    1. Probably find some online
+5. Create at least three levels
+    1. Use an array based implementation. Load the level from an array, where
+        different values mean different things. I.e. 1 = wall1, 2 = wall2, 3 = enemy1 effects
+6. Include a story (optional)
