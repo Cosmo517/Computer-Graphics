@@ -12,7 +12,6 @@ class GameObject {
         // Collision
 		this.collisionRadius = 0.5;
 		this.collisionLocation = [0, 0, 0];
-        this.collisionType = 
 
 		this.isTrigger = false;
 		this.tag = "default";
@@ -26,7 +25,7 @@ class GameObject {
 	Move() {
 		let tempP = [0, 0, 0]
 		
-        for(var i = 0; i < 3; i++) {
+        for (var i = 0; i < 3; i++) {
 			tempP[i] = this.loc[i];
 			tempP[i] += this.velocity[i];
 			this.rot[i] += this.angVelocity[i];

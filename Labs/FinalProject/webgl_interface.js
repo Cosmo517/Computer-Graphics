@@ -20,7 +20,7 @@ class WebGL_Interface {
 		const worldLoc = gl.getUniformLocation(this.program, 'worldRotation');
 		gl.uniform3fv(worldLoc, new Float32Array([0, 0, 0]));
 		
-		const tempLoc = gl.getUniformLocation(this.program,'n');
+		let tempLoc = gl.getUniformLocation(this.program,'n');
 		gl.uniform1f(tempLoc, 0.1);
 		tempLoc = gl.getUniformLocation(this.program,'f');
 		gl.uniform1f(tempLoc, 500);
