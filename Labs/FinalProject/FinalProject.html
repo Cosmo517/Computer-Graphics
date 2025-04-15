@@ -281,6 +281,40 @@
 
 				return myPic;
 			}
+
+			function CreateWallType() {
+				let myWall = [];
+				for (let i = WallType.length; i > 0 ; i--) {
+					const color = WallType[i];
+
+					// Extract RGBA components from the 32-bit color value
+					const r = (color >> 24) & 0xFF;
+					const g = (color >> 16) & 0xFF;
+					const b = (color >> 8) & 0xFF;
+					const a = color & 0xFF;
+
+					myWall.push(r, g, b, a);
+				}
+
+				return myWall;
+			}
+
+			function CreateLightType() {
+				let myLight = [];
+				for (let i = LightType.length; i > 0 ; i--) {
+					const color = LightType[i];
+
+					// Extract RGBA components from the 32-bit color value
+					const r = (color >> 24) & 0xFF;
+					const g = (color >> 16) & 0xFF;
+					const b = (color >> 8) & 0xFF;
+					const a = color & 0xFF;
+
+					myLight.push(r, g, b, a);
+				}
+
+				return myLight;
+			}
 			
 			function CreateBrick() {
 				var myPic2 = [];

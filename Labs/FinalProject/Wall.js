@@ -6,72 +6,73 @@ class Wall extends GameObject {
         this.collisionRadius = 0.01;
 
         // Texture
-        this.MyPicture = CreateBrick();
+        this.MyPicture = CreateWallType();
+        // this.MyPicture = CreateLightType();
 		this.MyTexture = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
 
 		//We only want to do this once.
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 16, 16, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(this.MyPicture));
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 64, 64, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(this.MyPicture));
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
         const boxSize = 1;
         this.vertices = [
-            // Create the yellow of the torch
-            // Top
-            -boxSize, boxSize,  boxSize,   0, 0,
-            boxSize, boxSize,  boxSize,   0, 0,
-            boxSize, boxSize, -boxSize,   0, 0,
+            // Top face (Y+)
+            -boxSize, boxSize, -boxSize,  0, 0,
+            boxSize, boxSize, -boxSize,  1, 0,
+            boxSize, boxSize,  boxSize,  1, 1,
 
-            boxSize, boxSize, -boxSize,   0, 0,
-            -boxSize, boxSize, -boxSize,   0, 0,
-            -boxSize, boxSize,  boxSize,   0, 0,
+            boxSize, boxSize,  boxSize,  1, 1,
+            -boxSize, boxSize,  boxSize,  0, 1,
+            -boxSize, boxSize, -boxSize,  0, 0,
 
-            // Bottom
-            -boxSize, -boxSize, boxSize, 0, 0,
-            boxSize, -boxSize, boxSize,  0, 0,
-            boxSize, -boxSize, -boxSize, 0, 0,
+            // Bottom face (Y-)
+            -boxSize, -boxSize,  boxSize, 0, 1,
+            boxSize, -boxSize,  boxSize, 1, 1,
+            boxSize, -boxSize, -boxSize, 1, 0,
 
-            boxSize, -boxSize, -boxSize, 0, 0,
+            boxSize, -boxSize, -boxSize, 1, 0,
             -boxSize, -boxSize, -boxSize, 0, 0,
-            -boxSize, -boxSize, boxSize, 0, 0,
+            -boxSize, -boxSize,  boxSize, 0, 1,
 
-            // Left
-            -boxSize, -boxSize, boxSize, 0, 0,
-            -boxSize, boxSize, boxSize, 0, 0,
-            -boxSize, boxSize, -boxSize, 0, 0,
-
-            -boxSize, boxSize, -boxSize, 0, 0,
+            // Left face (X-)
             -boxSize, -boxSize, -boxSize, 0, 0,
-            -boxSize, -boxSize, boxSize, 0, 0,
+            -boxSize,  boxSize, -boxSize, 0, 1,
+            -boxSize,  boxSize,  boxSize, 1, 1,
 
-            // Right
-            boxSize, -boxSize, boxSize, 0, 0,
-            boxSize, boxSize, boxSize, 0, 0,
-            boxSize, boxSize, -boxSize, 0, 0,
-
-            boxSize, boxSize, -boxSize, 0, 0,
-            boxSize, -boxSize, -boxSize, 0, 0,
-            boxSize, -boxSize, boxSize, 0, 0,
-
-            // Front
-            -boxSize, -boxSize, -boxSize, 0, 0,
-            -boxSize, boxSize, -boxSize, 0, 0,
-            boxSize, boxSize, -boxSize, 0, 0,
-
-            boxSize, boxSize, -boxSize, 0, 0,
-            boxSize, -boxSize, -boxSize, 0, 0,
+            -boxSize,  boxSize,  boxSize, 1, 1,
+            -boxSize, -boxSize,  boxSize, 1, 0,
             -boxSize, -boxSize, -boxSize, 0, 0,
 
-            // Back
-            -boxSize, boxSize, boxSize, 0, 0,
-            boxSize, boxSize, boxSize, 0, 0,
-            boxSize, -boxSize, boxSize, 0, 0,
+            // Right face (X+)
+            boxSize, -boxSize,  boxSize, 0, 0,
+            boxSize,  boxSize,  boxSize, 0, 1,
+            boxSize,  boxSize, -boxSize, 1, 1,
 
-            boxSize, -boxSize, boxSize, 0, 0,
-            -boxSize, -boxSize, boxSize, 0, 0,
-            -boxSize, boxSize, boxSize, 0, 0,
-        ]
+            boxSize,  boxSize, -boxSize, 1, 1,
+            boxSize, -boxSize, -boxSize, 1, 0,
+            boxSize, -boxSize,  boxSize, 0, 0,
+
+            // Front face (Z-)
+            -boxSize, -boxSize, -boxSize, 0, 0,
+            boxSize, -boxSize, -boxSize, 1, 0,
+            boxSize,  boxSize, -boxSize, 1, 1,
+
+            boxSize,  boxSize, -boxSize, 1, 1,
+            -boxSize,  boxSize, -boxSize, 0, 1,
+            -boxSize, -boxSize, -boxSize, 0, 0,
+
+            // Back face (Z+)
+            -boxSize,  boxSize,  boxSize, 0, 1,
+            boxSize,  boxSize,  boxSize, 1, 1,
+            boxSize, -boxSize,  boxSize, 1, 0,
+
+            boxSize, -boxSize,  boxSize, 1, 0,
+            -boxSize, -boxSize,  boxSize, 0, 0,
+            -boxSize,  boxSize,  boxSize, 0, 1,
+        ];
+
 	
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 	}
