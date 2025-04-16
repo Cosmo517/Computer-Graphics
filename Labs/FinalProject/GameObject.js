@@ -13,8 +13,12 @@ class GameObject {
 		this.collisionRadius = 0.5;
 		this.collisionLocation = [0, 0, 0];
 
+		// Misc
 		this.isTrigger = false;
 		this.tag = "default";
+
+		// Lighting
+		this.isLightWall = 0;
 
 		// Automatically handled
 		this.id = 0;

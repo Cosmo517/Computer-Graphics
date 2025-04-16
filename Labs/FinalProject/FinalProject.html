@@ -35,7 +35,7 @@
 			uniform bool FaceCam;
 			
 			// Used for lighting
-			const int NUMBER_OF_LIGHTS = 10;
+			const int NUMBER_OF_LIGHTS = 1;
 			uniform vec3 pointLightPos[NUMBER_OF_LIGHTS];
 			uniform vec3 spotLightPos;
 			
@@ -171,7 +171,7 @@
 		</SCRIPT>
         
 		<script id="2dFragmentShader" type="notjs">
-			const int NUMBER_OF_LIGHTS = 10;
+			const int NUMBER_OF_LIGHTS = 1;
 			//Fragment shaders do not have precision so we have to set it.
 			precision mediump float;
 			//varying vec3 fragColor;
@@ -185,7 +185,7 @@
 			// Handles the dynamic positions of the lights
 			uniform vec3 directionalLightDir;
 			uniform vec3 spotLightDir;
-			uniform int isTorch;
+			uniform int isLightWall;
 			
 			//!!!!!!!!!!!!!!!!Texture change !!!!!!!!!!!!!!!
 			varying vec2 v_texcord;
@@ -194,61 +194,65 @@
 			
 			void main()
 			{
-				vec4 tempColor = texture2D(sampler, v_texcord); // Maybe we use tempColor as our fragColor?
-																// Correct. replace fragColor with tempColor.xyz
-				if(tempColor.w < 1.0) {
-					discard;
-				}
-				
-				// Make the lighting happen here. So move lighting to BELOW this comment
-				// And replace fragColor with tempColor.xyz
-				
-				// Ambient light
-				float ambient = 0.3;	
-
-				// Directional Light
-				float d_light = dot(normalize(fakenormal), normalize(directionalLightDir)) * 0.3;
-				if (d_light < 0.0) {
-					d_light = 0.0;
-				}
-
-				// Point Light
-				float p_light = dot(normalize(fakenormal), normalize(v_surfaceToLight[0])) * 2.0 / length(v_surfaceToLight[0]);
-
-				for (int i = 1; i < NUMBER_OF_LIGHTS; i++) {
-					p_light += dot(normalize(fakenormal), normalize(v_surfaceToLight[i])) * 2.0 / length(v_surfaceToLight[i]);
-				}
-
-				if (p_light < 0.0) {
-					p_light = 0.0;
-				}
-				
-				// For specularity
-				float p_specular = 0.0;
-				float shine = 50.0;
-				for (int i = 0; i < NUMBER_OF_LIGHTS; i++) {
-					vec3 toLight = normalize(v_surfaceToLight[i]);
-					float diff = max(dot(normalize(fakenormal), toLight), 0.0);
-					if (diff > 0.0) {
-						vec3 halfVector = normalize(toLight + normalize(v_surfaceToView));
-						p_specular += pow(max(dot(normalize(fakenormal), halfVector), 0.0), shine);
+				if (isLightWall == 1) {
+					vec4 texColor = texture2D(sampler, v_texcord);
+					
+					if (texColor.w < 1.0) {
+						discard;
 					}
-				}
-				
-				float spot_light = dot(normalize(v_spot_surfaceToLight), spotLightDir);
-				float spot_light_power = 0.0;
-				
-				if (spot_light >= 0.98) {
-					spot_light_power = dot(normalize(fakenormal), normalize(v_spot_surfaceToLight));
-					if (spot_light_power < 0.0) {
-						spot_light_power = 0.0;
-					}
-				}
+					
+					vec3 emissiveColor = vec3(1.0, 1.0, 1.0); // White glow, adjust as needed
+					
+					// Calculate luminance to determine if this is the "bright spot"
+					float luminance = dot(texColor.xyz, vec3(0.299, 0.587, 0.114));
+					
+					float emissiveFactor = smoothstep(0.8, 1.0, luminance);
+					vec3 finalColor = texColor.xyz * (1.0 + emissiveFactor * emissiveColor * 1.5); 
+					
+					gl_FragColor = vec4(finalColor, texColor.w);
+				} else {
+					vec4 tempColor = texture2D(sampler, v_texcord);
 
-				// Need to add back d_light into the ()
-				// and + vec3(p_specular * 0.8) to the far right outside the ()
-				vec3 finalColor = tempColor.xyz * (ambient + p_light + spot_light_power);
-				gl_FragColor = vec4(finalColor, tempColor.w);
+					if(tempColor.w < 1.0) {
+						discard;
+					}
+
+					// Ambient light
+					float ambient = 0.3;	
+
+					// Directional Light
+					float d_light = dot(normalize(fakenormal), normalize(directionalLightDir)) * 0.3;
+					if (d_light < 0.0) {
+						d_light = 0.0;
+					}
+
+					// Point Light
+					float p_light = dot(normalize(fakenormal), normalize(v_surfaceToLight[0])) * 5.0 / length(v_surfaceToLight[0]);
+
+					for (int i = 1; i < NUMBER_OF_LIGHTS; i++) {
+						p_light += dot(normalize(fakenormal), normalize(v_surfaceToLight[i])) * 5.0 / length(v_surfaceToLight[i]);
+					}
+
+					if (p_light < 0.0) {
+						p_light = 0.0;
+					}
+
+					// Spot light 
+					float spot_light = dot(normalize(v_spot_surfaceToLight), spotLightDir);
+					float spot_light_power = 0.0;
+
+					if (spot_light >= 0.98) {
+						spot_light_power = dot(normalize(fakenormal), normalize(v_spot_surfaceToLight));
+						if (spot_light_power < 0.0) {
+							spot_light_power = 0.0;
+						}
+					}
+
+					// Need to add back d_light into the ()
+					//vec3 finalColor = tempColor.xyz * p_light;
+					vec3 finalColor = tempColor.xyz * (ambient + p_light + spot_light_power);
+					gl_FragColor = vec4(finalColor, tempColor.w);
+				}
 			}
 		</script>
 		
@@ -256,6 +260,7 @@
 		<script src="Levels.js"></script>
 		<script src="Sprites.js"></script>
 		<script src="GameObject.js"></script>
+		<script src="PointLight.js"></script>
 		<script src="Quad.js"></script>
 		<script src="Ground.js"></script>
 		<script src="Hex.js"></script>
@@ -272,7 +277,7 @@
 					for (j = 0; j < 16; j ++) {
 						if (i % 2 == j % 2) {
 							//Push red
-							myPic.push(255, 30, 30, 255); // R, G, B, Alpha
+							myPic.push(255, 30, 30, 255);
 						} else {
 							myPic.push(30, 255, 30, 255);
 						}	
@@ -282,18 +287,41 @@
 				return myPic;
 			}
 
+			function CreateFloor() {
+				let myFloor = [];
+				for (let y = 64; y > 0; y--) {
+					for (let x = 0; x < 64; x++) {
+						const color = FloorType[y * 64 + x];
+
+						// Extract RGBA components from the 32-bit color value
+						const r = (color >> 24) & 0xFF;
+						const g = (color >> 16) & 0xFF;
+						const b = (color >> 8) & 0xFF;
+						const a = color & 0xFF;
+
+						myFloor.push(r, g, b, 255);
+					}
+				}
+
+				console.log(myFloor)
+
+				return myFloor;
+			}
+
 			function CreateWallType() {
 				let myWall = [];
-				for (let i = WallType.length; i > 0 ; i--) {
-					const color = WallType[i];
+				for (let y = 64; y > 0; y--) {
+					for (let x = 0; x < 64; x++) {
+						const color = WallType[y * 64 + x];
 
-					// Extract RGBA components from the 32-bit color value
-					const r = (color >> 24) & 0xFF;
-					const g = (color >> 16) & 0xFF;
-					const b = (color >> 8) & 0xFF;
-					const a = color & 0xFF;
+						// Extract RGBA components from the 32-bit color value
+						const r = (color >> 24) & 0xFF;
+						const g = (color >> 16) & 0xFF;
+						const b = (color >> 8) & 0xFF;
+						const a = color & 0xFF;
 
-					myWall.push(r, g, b, a);
+						myWall.push(r, g, b, a);
+					}
 				}
 
 				return myWall;
@@ -301,16 +329,18 @@
 
 			function CreateLightType() {
 				let myLight = [];
-				for (let i = LightType.length; i > 0 ; i--) {
-					const color = LightType[i];
+				for (let y = 64; y > 0; y--) {
+					for (let x = 0; x < 64; x++) {
+						const color = LightType[y * 64 + x];
 
-					// Extract RGBA components from the 32-bit color value
-					const r = (color >> 24) & 0xFF;
-					const g = (color >> 16) & 0xFF;
-					const b = (color >> 8) & 0xFF;
-					const a = color & 0xFF;
+						// Extract RGBA components from the 32-bit color value
+						const r = (color >> 24) & 0xFF;
+						const g = (color >> 16) & 0xFF;
+						const b = (color >> 8) & 0xFF;
+						const a = color & 0xFF;
 
-					myLight.push(r, g, b, a);
+						myLight.push(r, g, b, a);
+					}
 				}
 
 				return myLight;
@@ -453,11 +483,31 @@
 					this.createObject({ 
 						type: 1, 
 						prefab: Wall, 
-						loc: [10, 0, -10], 
+						loc: [12, -0.01, -10], 
 						rot: [0, 0, 0],
 						tag: "Wall",
-						collisionLocation: [10, 0, -10],
+						collisionLocation: [12, -0.01, -10],
 					});
+
+					this.createLightObject({ 
+						type: 1, 
+						prefab: LightWall, 
+						loc: [10, -0.01, -10], 
+						rot: [0, 0, 0],
+						tag: "LightWall",
+						collisionLocation: [10, 0, -10],
+						lightData: [10, -0.01, -10]
+					});
+
+					let pointLightPositions = [];
+					for (let i in this.Solid) {
+						if (this.Solid[i].tag == "LightWall") {
+							pointLightPositions.push(...this.Solid[i].lightLoc);
+						}
+					}
+
+					const pointLightPos = gl.getUniformLocation(this.myWEBGL.program, 'pointLightPos')
+					gl.uniform3fv(pointLightPos, new Float32Array(pointLightPositions));
 				}
 				
 				updateAll() {
@@ -477,6 +527,7 @@
 				
 				renderAll() {
 					gl.clear(gl.COLOR_BUFFER_BIT);
+
 					for (let i in this.Visual) {
 						this.Visual[i].render(this.myWEBGL.program);
 					}
@@ -488,7 +539,6 @@
 					for (let i in this.Trigger) {
 						this.Trigger[i].render(this.myWEBGL.program);
 					}
-				
 				}
 
 				// For now just use simple sphere collider
@@ -590,9 +640,12 @@
 					console.log("The click occurred on " + x + ", " + y);
 					
 					// Use the following to allow "play" and other options to be selected
-					if (x > -0.2 && x < 0.19 && y < 0.32 && y > -0.33) {
-						this.reset()
-						this.generateLevel();
+					if (this.currentLevel == 0) {
+						if (x > -0.2 && x < 0.19 && y < 0.32 && y > -0.33) {
+							this.reset()
+							this.currentLevel = 1;
+							this.generateLevel();
+						}
 					}
 				}
 

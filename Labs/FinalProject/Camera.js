@@ -4,6 +4,7 @@ class Camera extends GameObject {
 		this.moveSpeed = 0.1;
 		this.rotateSpeed = 0.03;
 		this.spawnLoc = this.loc;
+		this.collisionRadius = 0.6;
 	}
 
 	onCollisionEnter(other) {

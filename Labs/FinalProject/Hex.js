@@ -89,6 +89,8 @@ class Hex extends GameObject {
 		gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
 		const scaleLoc = gl.getUniformLocation(program, 'scale')
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
+		const isLightWall = gl.getUniformLocation(program, 'isLightWall');
+		gl.uniform1i(isLightWall, this.isLightWall);
 
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 18);
 	}

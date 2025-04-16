@@ -6,16 +6,16 @@ class Ground extends GameObject {
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 		
 		//!!!!!!!!!!!!!TEXTURE CHANGE !!!!!!!!!!!
-		this.picture = CreateCheckered();
-		
+		this.picture = CreateFloor();
+
 		// s and t are u and v in our example. so s = u and t = v
 		// This isnt mathematically true, but for us, it is
 		this.vertices =
 		[//  X     Y  Z     s t
-			-1000,0,-1000,  0,0,
-			1000,0, -1000,  100,0,
-			-1000,0,1000,   0,100,
-			1000, 0,1000,   100,100	
+			-1000, 0, -1000,  0,   0,
+			1000,  0, -1000,  500, 0,      // 2000/8 = 500
+			-1000, 0, 1000,   0,   500,
+			1000,  0, 1000,   500, 500
 		];
 		
 		this.MyTexture = gl.createTexture();
@@ -23,7 +23,7 @@ class Ground extends GameObject {
 		//We only want to do this once.
 		//void gl.texImage2D(target, level, internalformat, width, height, border, format, 
 		//type, ArrayBufferView? pixels);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 16, 16, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(this.picture));
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 64, 64, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(this.picture));
 	
 		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
@@ -77,6 +77,8 @@ class Ground extends GameObject {
 		gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
 		const scaleLoc = gl.getUniformLocation(program, 'scale')
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
+		const isLightWall = gl.getUniformLocation(program, 'isLightWall');
+		gl.uniform1i(isLightWall, this.isLightWall);
 	
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 	}

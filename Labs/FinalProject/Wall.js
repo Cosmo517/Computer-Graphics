@@ -3,7 +3,7 @@ class Wall extends GameObject {
 		super();
 		this.buffer = gl.createBuffer();
 		this.colorBuffer = gl.createBuffer();
-        this.collisionRadius = 0.01;
+        this.collisionRadius = 1.0;
 
         // Texture
         this.MyPicture = CreateWallType();
@@ -18,7 +18,7 @@ class Wall extends GameObject {
 
         const boxSize = 1;
         this.vertices = [
-            // Top face (Y+)
+            // Top face
             -boxSize, boxSize, -boxSize,  0, 0,
             boxSize, boxSize, -boxSize,  1, 0,
             boxSize, boxSize,  boxSize,  1, 1,
@@ -27,7 +27,7 @@ class Wall extends GameObject {
             -boxSize, boxSize,  boxSize,  0, 1,
             -boxSize, boxSize, -boxSize,  0, 0,
 
-            // Bottom face (Y-)
+            // Bottom face
             -boxSize, -boxSize,  boxSize, 0, 1,
             boxSize, -boxSize,  boxSize, 1, 1,
             boxSize, -boxSize, -boxSize, 1, 0,
@@ -36,7 +36,7 @@ class Wall extends GameObject {
             -boxSize, -boxSize, -boxSize, 0, 0,
             -boxSize, -boxSize,  boxSize, 0, 1,
 
-            // Left face (X-)
+            // Left face
             -boxSize, -boxSize, -boxSize, 0, 0,
             -boxSize,  boxSize, -boxSize, 0, 1,
             -boxSize,  boxSize,  boxSize, 1, 1,
@@ -45,7 +45,7 @@ class Wall extends GameObject {
             -boxSize, -boxSize,  boxSize, 1, 0,
             -boxSize, -boxSize, -boxSize, 0, 0,
 
-            // Right face (X+)
+            // Right face
             boxSize, -boxSize,  boxSize, 0, 0,
             boxSize,  boxSize,  boxSize, 0, 1,
             boxSize,  boxSize, -boxSize, 1, 1,
@@ -54,7 +54,7 @@ class Wall extends GameObject {
             boxSize, -boxSize, -boxSize, 1, 0,
             boxSize, -boxSize,  boxSize, 0, 0,
 
-            // Front face (Z-)
+            // Front face
             -boxSize, -boxSize, -boxSize, 0, 0,
             boxSize, -boxSize, -boxSize, 1, 0,
             boxSize,  boxSize, -boxSize, 1, 1,
@@ -63,7 +63,7 @@ class Wall extends GameObject {
             -boxSize,  boxSize, -boxSize, 0, 1,
             -boxSize, -boxSize, -boxSize, 0, 0,
 
-            // Back face (Z+)
+            // Back face
             -boxSize,  boxSize,  boxSize, 0, 1,
             boxSize,  boxSize,  boxSize, 1, 1,
             boxSize, -boxSize,  boxSize, 1, 0,
@@ -72,7 +72,6 @@ class Wall extends GameObject {
             -boxSize, -boxSize,  boxSize, 0, 0,
             -boxSize,  boxSize,  boxSize, 0, 1,
         ];
-
 	
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 	}
@@ -120,6 +119,8 @@ class Wall extends GameObject {
 		gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
 		const scaleLoc = gl.getUniformLocation(program, 'scale')
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
+        const isLightWall = gl.getUniformLocation(program, 'isLightWall');
+		gl.uniform1i(isLightWall, this.isLightWall);
 
 		gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 5);
 	}
