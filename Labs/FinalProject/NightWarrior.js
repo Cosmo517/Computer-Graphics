@@ -1,56 +1,57 @@
-class Hex extends GameObject {
+class NightWarrior extends Enemy {
 	constructor() {
 		super();
-		this.angVelocity = [0, 0.005, 0];
+		this.angVelocity = [0, 0, 0];
 		this.isTrigger = false;
-		this.buffer=gl.createBuffer();
+		this.buffer = gl.createBuffer();
 		
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-		
-		//!!!!!!!!!!!!!!!!!Changes due to texture
-		this.MyPicture = CreateBrick();
 
-		//Get vertices from announcements
+        const mageSize = 3;
 		this.vertices = [
-			//X, Y,  Z,  U,  V,
-			-.5,-.5,-.25,0,0,
-			-.5, .5,-.25,0,10,
-			-.25,-.5,-.5,10,0,
-			-.25, .5,-.5,10,10,
-			.25,-.5,-.5,0,0,
-			.25,.5,-.5,0,10,
-			.5,-.5,-.25,10,0,
-			.5, .5,-.25,10,10,
-			.5,-.5,.25,0,0,
-			.5, .5,.25,0,10,
-			.25,-.5,.5,10,0,
-			.25, .5,.5,10,10,
-			-.25,-.5,.5,0,0,
-			-.25, .5,.5,0,10,
-			-.5,-.5,.25,10,0,
-			-.5, .5,.25,10,10,
-			-.5, -.5,-.25,0,0,
-			-.5, .5,-.25,0,10
+			//X 	Y 	Z   S   T
+			-mageSize,		-mageSize,	0, 0,   1,
+			mageSize,		-mageSize, 0, 1,   1,
+			-mageSize,      mageSize, 0, 0,   0,
+			mageSize,		mageSize,  0, 1,   0
 		];
 		
+        this.WarriorSprites = [ Warrior_Type_Run_1, Warrior_Type_Run_2, Warrior_Type_Run_3,
+            Warrior_Type_Run_4, Warrior_Type_Run_5, Warrior_Type_Run_6
+        ];
+        this.spriteCounter = 0;
+        this.frameTimer = 0;
+
+        this.MyPicture = CreateWarriorType(this.WarriorSprites[0]);
 		this.MyTexture = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
-
 		//We only want to do this once.
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 16, 16, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(this.MyPicture));
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 80, 80, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(this.MyPicture));
 		
 		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
-		this.loc=[0, 0, 0];
-		this.rot=[0, 0, 0];
+		this.loc = [0, 0, 0];
+		this.rot = [0, 0, 0];
 	}
 
 	update() {
+        this.frameTimer++;
+        if (this.frameTimer % 12 === 0) {
+            this.spriteCounter++;
+            if (this.spriteCounter >= this.WarriorSprites.length) {
+                this.spriteCounter = 0;
+            }
+        
+            this.MyPicture = CreateWarriorType(this.WarriorSprites[this.spriteCounter]);
+            gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 80, 80, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(this.MyPicture));
+        }
+
 		this.Move();
 	}
 
-	render(program) {
+    render(program) {
 		let positionAttributeLocation = gl.getAttribLocation(program, "a_position");
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 		let size = 3;
@@ -75,10 +76,12 @@ class Hex extends GameObject {
 		gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
 				
 		gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
+
 		//setup S
-		gl.texParameteri(gl.TEXTURE_2D,	gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT); //gl.MIRRORED_REPEAT//gl.CLAMP_TO_EDGE
+		gl.texParameteri(gl.TEXTURE_2D,	gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); //gl.MIRRORED_REPEAT//gl.CLAMP_TO_EDGE
+
 		//Sets up our T
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT); //gl.MIRRORED_REPEAT//gl.CLAMP_TO_EDGE                   
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); //gl.MIRRORED_REPEAT//gl.CLAMP_TO_EDGE                   
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);					
 		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -89,9 +92,12 @@ class Hex extends GameObject {
 		gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
 		const scaleLoc = gl.getUniformLocation(program, 'scale')
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
+		const FaceCamLoc = gl.getUniformLocation(program, 'FaceCam');
+		gl.uniform1i(FaceCamLoc, true);
 		const isLightWall = gl.getUniformLocation(program, 'isLightWall');
 		gl.uniform1i(isLightWall, this.isLightWall);
 
-		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 18);
+		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+		gl.uniform1i(FaceCamLoc, false);
 	}
 }

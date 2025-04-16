@@ -264,9 +264,12 @@
 		<script src="PlayButton.js"></script>
 		<script src="PointLight.js"></script>
 		<script src="Ground.js"></script>
-		<script src="Hex.js"></script>
 		<script src="Wall.js"></script>
 		<script src="LightWall.js"></script>
+		<script src="Enemy.js"></script>
+		<script src="Mage.js"></script>
+		<script src="Necromancer.js"></script>
+		<script src="NightWarrior.js"></script>
 		<script src="Camera.js"></script>
 		<script src="webgl_interface.js"></script>
 
@@ -303,8 +306,6 @@
 						myFloor.push(r, g, b, 255);
 					}
 				}
-
-				console.log(myFloor)
 
 				return myFloor;
 			}
@@ -366,19 +367,61 @@
 				return myButton;
 			}
 
-			function CreateBrick() {
-				var myPic2 = [];
-				for (i = 0; i < 16; i++) {
-					for (j = 0; j < 16; j ++) {
-						if (i == 0 || j == 0) {
-							myPic2.push(0, 0, 0, 255);
-						} else {
-							myPic2.push(255, 30, 30, 255);
-						}		
+			function CreateMageType(mageArray) {
+				let myMage = [];
+				for (let y = 0; y < 64; y++) {
+					for (let x = 0; x < 64; x++) {
+						const color = mageArray[y * 64 + x];
+
+						// Extract RGBA components from the 32-bit color value
+						const r = (color >> 24) & 0xFF;
+						const g = (color >> 16) & 0xFF;
+						const b = (color >> 8) & 0xFF;
+						const a = color & 0xFF;
+
+						myMage.push(r, g, b, a);
 					}
 				}
 
-				return myPic2;
+				return myMage;
+			}
+
+			function CreateNecromancerType(necromancerArray) {
+				let myNecromancer = [];
+				for (let y = 0; y < 128; y++) {
+					for (let x = 0; x < 160; x++) {
+						const color = necromancerArray[y * 160 + x];
+
+						// Extract RGBA components from the 32-bit color value
+						const r = (color >> 24) & 0xFF;
+						const g = (color >> 16) & 0xFF;
+						const b = (color >> 8) & 0xFF;
+						const a = color & 0xFF;
+
+						myNecromancer.push(r, g, b, a);
+					}
+				}
+
+				return myNecromancer;
+			}
+		
+			function CreateWarriorType(warriorArray) {
+				let myWarrior = [];
+				for (let y = 0; y < 80; y++) {
+					for (let x = 0; x < 80; x++) {
+						const color = warriorArray[y * 80 + x];
+
+						// Extract RGBA components from the 32-bit color value
+						const r = (color >> 24) & 0xFF;
+						const g = (color >> 16) & 0xFF;
+						const b = (color >> 8) & 0xFF;
+						const a = color & 0xFF;
+
+						myWarrior.push(r, g, b, a);
+					}
+				}
+
+				return myWarrior;
 			}
 		
 			function CreateCrate() {
@@ -447,42 +490,6 @@
 					});
 					
 					this.createObject({ 
-						type: 1,
-						prefab: Hex,
-						loc: [0, 0, -2],
-						rot: [0, 0, 0],
-						tag: "Hex",
-						collisionLocation: [0, 0, -2],
-					});
-
-					this.createObject({ 
-						type: 1, 
-						prefab: Hex, 
-						loc: [3, 0, -2],
-						rot: [0, 0, 0],
-						tag: "Hex",
-						collisionLocation: [3, 0, -2],
-					});
-
-					this.createObject({
-						type: 1, 
-						prefab: Hex, 
-						loc: [-3, 0, -2], 
-						rot: [0, 0, 0],
-						tag: "Hex",
-						collisionLocation: [-3, 0, -2],
-					});
-
-					this.createObject({
-						type: 1, 
-						prefab: Hex,
-						loc: [-20, 0, -8],
-						rot: [0, 0, 0],
-						tag: "Hex",
-						collisionLocation: [-20, 0, -8],
-					});
-
-					this.createObject({ 
 						type: 2, 
 						prefab: Ground, 
 						loc: [0, -1, 0], 
@@ -493,11 +500,29 @@
 
 					this.createObject({ 
 						type: 2, 
-						prefab: Quad, 
+						prefab: Mage, 
 						loc: [2, 0, 0], 
 						rot: [0, 0, 0],
 						tag: "Quad",
-						collisionLocation: [0, 0, 0],
+						collisionLocation: [2, 0, 0],
+					});
+
+					this.createObject({ 
+						type: 2, 
+						prefab: Necromancer, 
+						loc: [2, 2, 4], 
+						rot: [0, 0, 0],
+						tag: "Quad",
+						collisionLocation: [2, 2, 4],
+					});
+
+					this.createObject({ 
+						type: 2, 
+						prefab: NightWarrior, 
+						loc: [2, 2, 8], 
+						rot: [0, 0, 0],
+						tag: "Quad",
+						collisionLocation: [2, 2, 8],
 					});
 
 					this.createObject({ 

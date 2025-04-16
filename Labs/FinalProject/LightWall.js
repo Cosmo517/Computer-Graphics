@@ -7,7 +7,6 @@ class LightWall extends PointLight {
 
         // Texture
         this.MyPicture = CreateLightType();
-        // this.MyPicture = CreateLightType();
 		this.MyTexture = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
 
