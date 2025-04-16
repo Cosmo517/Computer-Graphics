@@ -349,9 +349,9 @@
 			
 			function CreatePlayButton() {
 				let myButton = [];
-				for (let y = 83; y > 0; y--) {
+				for (let y = 83 ; y > 0; y--) {
 					for (let x = 0; x < 420; x++) {
-						const color = PlayButtonType[y * 83 + x];
+						const color = PlayButtonType[y * 420 + x];
 
 						// Extract RGBA components from the 32-bit color value
 						const r = (color >> 24) & 0xFF;

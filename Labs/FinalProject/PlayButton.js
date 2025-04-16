@@ -9,14 +9,20 @@ class PlayButton extends Quad {
 		
 		//!!!!!!!!!!!!!!!!!Changes due to texture
 		this.MyPicture = CreatePlayButton();
+		console.log(this.MyPicture.length)
 
 		// Get vertices from announcements
+		const boxSize = 1;
+		const horizMulti = 4;
 		this.vertices = [
 			//X 	Y 	Z   S   T
-			-2,		-1,	0, 0,   1,
-			2,		-1, 0, 1,   1,
-			-2,      1, 0, 0,   0,
-			2,		1,  0, 1,   0
+			-boxSize * horizMulti, -boxSize, 0, 1, 0,
+			boxSize * horizMulti, -boxSize, 0, 0, 0,
+			-boxSize * horizMulti, boxSize, 0, 1, 1,
+
+			-boxSize * horizMulti, boxSize, 0, 1, 1,
+			boxSize * horizMulti, -boxSize, 0, 0, 0,
+			boxSize * horizMulti, boxSize, 0, 0, 1
 		];
 		
 		this.MyTexture = gl.createTexture();
@@ -79,7 +85,7 @@ class PlayButton extends Quad {
 		const FaceCamLoc = gl.getUniformLocation(program, 'FaceCam');
 		gl.uniform1i(FaceCamLoc, true);
 
-		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+		gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 5);
 		gl.uniform1i(FaceCamLoc, false);
 	}
 }
