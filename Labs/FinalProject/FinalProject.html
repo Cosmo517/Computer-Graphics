@@ -260,8 +260,9 @@
 		<script src="Levels.js"></script>
 		<script src="Sprites.js"></script>
 		<script src="GameObject.js"></script>
-		<script src="PointLight.js"></script>
 		<script src="Quad.js"></script>
+		<script src="PlayButton.js"></script>
+		<script src="PointLight.js"></script>
 		<script src="Ground.js"></script>
 		<script src="Hex.js"></script>
 		<script src="Wall.js"></script>
@@ -346,6 +347,25 @@
 				return myLight;
 			}
 			
+			function CreatePlayButton() {
+				let myButton = [];
+				for (let y = 83; y > 0; y--) {
+					for (let x = 0; x < 420; x++) {
+						const color = PlayButtonType[y * 83 + x];
+
+						// Extract RGBA components from the 32-bit color value
+						const r = (color >> 24) & 0xFF;
+						const g = (color >> 16) & 0xFF;
+						const b = (color >> 8) & 0xFF;
+						const a = color & 0xFF;
+
+						myButton.push(r, g, b, a);
+					}
+				}
+
+				return myButton;
+			}
+
 			function CreateBrick() {
 				var myPic2 = [];
 				for (i = 0; i < 16; i++) {
@@ -401,10 +421,10 @@
 				showMenu() {
 					this.createObject({ 
 						type: 2, 
-						prefab: Quad, 
+						prefab: PlayButton, 
 						loc: [0, 0, -5], 
 						rot: [0, 0, 0],
-						tag: "Quad",
+						tag: "PlayButton",
 						collisionLocation: [0, 0, 0],
 					});
 				}

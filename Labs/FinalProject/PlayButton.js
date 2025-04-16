@@ -1,4 +1,4 @@
-class Quad extends GameObject {
+class PlayButton extends Quad {
 	constructor() {
 		super();
 		this.angVelocity = [0, 0, 0];
@@ -8,21 +8,21 @@ class Quad extends GameObject {
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 		
 		//!!!!!!!!!!!!!!!!!Changes due to texture
-		this.MyPicture = CreateCrate();
+		this.MyPicture = CreatePlayButton();
 
 		// Get vertices from announcements
 		this.vertices = [
 			//X 	Y 	Z   S   T
-			-1,		-1,	0, 0,   1,
-			1,		-1, 0, 1,   1,
-			-1,      1, 0, 0,   0,
-			1,		1,  0, 1,   0
+			-2,		-1,	0, 0,   1,
+			2,		-1, 0, 1,   1,
+			-2,      1, 0, 0,   0,
+			2,		1,  0, 1,   0
 		];
 		
 		this.MyTexture = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
 		//We only want to do this once.
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 64, 64, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(this.MyPicture));
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 420, 83, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(this.MyPicture));
 		
 		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	
@@ -62,10 +62,10 @@ class Quad extends GameObject {
 		gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
 
 		//setup S
-		gl.texParameteri(gl.TEXTURE_2D,	gl.TEXTURE_WRAP_S, gl.REPEAT); //gl.MIRRORED_REPEAT//gl.CLAMP_TO_EDGE
+		gl.texParameteri(gl.TEXTURE_2D,	gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); //gl.MIRRORED_REPEAT//gl.CLAMP_TO_EDGE
 
 		//Sets up our T
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT); //gl.MIRRORED_REPEAT//gl.CLAMP_TO_EDGE                   
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); //gl.MIRRORED_REPEAT//gl.CLAMP_TO_EDGE                   
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);					
 		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
