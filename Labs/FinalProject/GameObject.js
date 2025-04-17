@@ -4,6 +4,7 @@ class GameObject {
 		this.loc = [0, 0, 0];
 		this.rot = [0, 0, 0];
         this.scale = [1, 1, 1];
+		this.spawnLoc = this.loc
 
 		// Movement
 		this.velocity = [0, 0, 0];
@@ -54,6 +55,7 @@ class GameObject {
 			for (var tr in m.Trigger) {
 				if (m.Trigger[tr] != this) {
 					if (m.checkCollision(tempP, this.collisionRadius, m.Trigger[tr].collisionLocation, m.Trigger[tr].collisionRadius)) {
+						console.log("I am: " + this.tag + " colliding with: " + m.Trigger[tr].tag)
 						try {
 							m.Trigger[tr].onTriggerEnter(this);
 						} catch {}
@@ -65,6 +67,7 @@ class GameObject {
 				this.loc = tempP;
 			}
 		} else {
+			let clear = true;
 			if (clear) {
 				this.loc = tempP;
 			}

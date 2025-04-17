@@ -340,13 +340,13 @@
 						type: 1, 
 						prefab: Camera, 
 						loc: [-4, 0, -4], 
-						rot: [0, Math.PI / 2, 0],
+						rot: [0, 0, 0],
 						tag: "Player",
 						collisionLocation: [-10, 0, 0],
 					});
 					
 					this.createObject({ 
-						type: 2, 
+						type: 0, 
 						prefab: Ground, 
 						loc: [0, -1, 0], 
 						rot: [0, 0, 0] ,
@@ -366,28 +366,19 @@
 					this.createObject({ 
 						type: 2, 
 						prefab: Necromancer, 
-						loc: [2, 2, 4], 
+						loc: [2, 1.6, 4], 
 						rot: [0, 0, 0],
 						tag: "Necromancer",
-						collisionLocation: [2, 2, 4],
+						collisionLocation: [2, 0, 4],
 					});
 
 					this.createObject({ 
 						type: 2, 
 						prefab: NightWarrior, 
-						loc: [2, 2, 8], 
+						loc: [2, 1, 8], 
 						rot: [0, 0, 0],
 						tag: "Nightwarrior",
-						collisionLocation: [2, 2, 8],
-					});
-
-					this.createObject({ 
-						type: 1, 
-						prefab: Wall, 
-						loc: [12, -0.01, -10], 
-						rot: [0, 0, 0],
-						tag: "Wall",
-						collisionLocation: [12, -0.01, -10],
+						collisionLocation: [2, 0, 8],
 					});
 
 					this.createLightObject({ 
@@ -398,6 +389,15 @@
 						tag: "LightWall",
 						collisionLocation: [10, 0, -10],
 						lightData: [10, -0.01, -10]
+					});
+					
+					this.createObject({ 
+						type: 2, 
+						prefab: Wall, 
+						loc: [10, -0.01, -12], 
+						rot: [0, 0, 0],
+						tag: "Wall",
+						collisionLocation: [10, -0.01, -12],
 					});
 
 					this.createLightObject({ 
@@ -475,6 +475,7 @@
 					temp.loc = loc;
 					temp.rot = rot;
 					temp.scale = scale;
+					temp.spawnLoc = loc;
 
 					// Tag
 					temp.tag = tag

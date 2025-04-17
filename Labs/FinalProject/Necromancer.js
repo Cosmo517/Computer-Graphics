@@ -2,8 +2,10 @@ class Necromancer extends Enemy {
 	constructor() {
 		super();
 		this.angVelocity = [0, 0, 0];
-		this.isTrigger = false;
+		this.isTrigger = true;
 		this.buffer = gl.createBuffer();
+		this.collisionRadius = 1.3;
+		this.health = 8;
 		
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
@@ -15,7 +17,7 @@ class Necromancer extends Enemy {
 			-mageSize,      mageSize, 0, 0,   0,
 			mageSize,		mageSize,  0, 1,   0
 		];
-		
+	
         this.NecromancerSprites = [ Necromancer_Type_Run_1, Necromancer_Type_Run_2, Necromancer_Type_Run_3,
             Necromancer_Type_Run_4, Necromancer_Type_Run_5, Necromancer_Type_Run_6, Necromancer_Type_Run_7, 
             Necromancer_Type_Run_8
@@ -34,6 +36,16 @@ class Necromancer extends Enemy {
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 		this.loc = [0, 0, 0];
 		this.rot = [0, 0, 0];
+	}
+
+	onTriggerEnter(other) {
+		if (other.tag == "Bullet") {
+			this.health--;
+			if (this.health <= 0) {
+				m.destroyObject(this.id);
+			}
+			m.destroyObject(other.id);
+		}
 	}
 
 	update() {

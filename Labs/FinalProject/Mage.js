@@ -2,8 +2,10 @@ class Mage extends Enemy {
 	constructor() {
 		super();
 		this.angVelocity = [0, 0, 0];
-		this.isTrigger = false;
+		this.isTrigger = true;
 		this.buffer = gl.createBuffer();
+		this.collisionRadius = 0.5;
+		this.health = 5;
 		
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
@@ -33,6 +35,16 @@ class Mage extends Enemy {
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 		this.loc = [0, 0, 0];
 		this.rot = [0, 0, 0];
+	}
+
+	onTriggerEnter(other) {
+		if (other.tag == "Bullet") {
+			this.health--;
+			if (this.health <= 0) {
+				m.destroyObject(this.id);
+			}
+			m.destroyObject(other.id);
+		}
 	}
 
 	update() {

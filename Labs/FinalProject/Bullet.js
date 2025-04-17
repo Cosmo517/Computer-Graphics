@@ -8,8 +8,7 @@ class Bullet extends Quad {
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
         this.moveSpeed = 0.1;
-        this.despawnDistance = 100;
-        this.spawnLoc = this.loc
+        this.despawnDistance = 50;
 
 		this.vertices = [
 			//X 	Y 	Z   S   T
@@ -37,7 +36,6 @@ class Bullet extends Quad {
 	}
 
 	update() {
-        console.log(this.loc)
         if (m.getDistance(this.loc, this.spawnLoc) > this.despawnDistance) {
             m.destroyObject(this.id);
         }

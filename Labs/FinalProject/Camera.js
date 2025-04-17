@@ -53,10 +53,18 @@ class Camera extends GameObject {
 
 		// This will handle shooting
 		if (this.timeSinceLastShot > this.reloadSpeed && " " in m.Keys && m.Keys[" "]) {
+			let bulletLoc = [...this.loc];
+			const bulletVelocity = [0, 0, 0]
+			// Move the bullet a bit infront of the player
+			this.transform.doRotations(this.rot);
+			let tempF = this.transform.forward;
+			for (let i = 0; i < 3; i++) {
+				bulletLoc[i] += tempF[i] * (this.moveSpeed * 25); 
+			}
 			m.createObject({
 				type: 0,
 				prefab: Bullet, 
-				loc: [this.loc[0], this.loc[1], this.loc[2]], 
+				loc: [...bulletLoc], 
 				rot: [...this.rot],
 				scale: [1, 1, 1],
 				collisionLocation: [...this.loc],
