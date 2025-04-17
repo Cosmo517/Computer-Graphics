@@ -42,6 +42,15 @@ class Necromancer extends Enemy {
 		if (other.tag == "Bullet") {
 			this.health--;
 			if (this.health <= 0) {
+				m.createObject({ 
+					type: 0, 
+					prefab: Explosion, 
+					loc: [this.loc[0], this.loc[1] - 1, this.loc[2]], 
+					rot: [0, 0, 0],
+					scale: [1.5, 1.5, 1.5],
+					tag: "Explosion",
+					collisionLocation: [...this.loc],
+				});
 				m.destroyObject(this.id);
 			}
 			m.destroyObject(other.id);

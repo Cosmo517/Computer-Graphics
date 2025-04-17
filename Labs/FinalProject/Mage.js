@@ -41,7 +41,16 @@ class Mage extends Enemy {
 		if (other.tag == "Bullet") {
 			this.health--;
 			if (this.health <= 0) {
+				m.createObject({ 
+					type: 0, 
+					prefab: Explosion, 
+					loc: [...this.loc], 
+					rot: [0, 0, 0],
+					tag: "Explosion",
+					collisionLocation: [...this.loc],
+				});
 				m.destroyObject(this.id);
+
 			}
 			m.destroyObject(other.id);
 		}

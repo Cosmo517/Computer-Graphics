@@ -158,6 +158,27 @@ function CreateWarriorType(warriorArray) {
     return myWarrior;
 }
 
+function CreateFireExplosion(fireArray) {
+    let myExplosion = [];
+    const width = 32;
+    const height = 32;
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const color = fireArray[y * width + x];
+
+            // Extract RGBA components from the 32-bit color value
+            const r = (color >> 24) & 0xFF;
+            const g = (color >> 16) & 0xFF;
+            const b = (color >> 8) & 0xFF;
+            const a = color & 0xFF;
+
+            myExplosion.push(r, g, b, a);
+        }
+    }
+
+    return myExplosion;    
+}
+
 function CreateFireBullet(fireBullet) {
     let myBullet = [];
     const width = 16;
