@@ -9,20 +9,20 @@ class PlayButton extends Quad {
 		
 		//!!!!!!!!!!!!!!!!!Changes due to texture
 		this.MyPicture = CreatePlayButton();
-		console.log(this.MyPicture.length)
+		this.FaceCam = 0;
 
 		// Get vertices from announcements
 		const boxSize = 1;
-		const horizMulti = 4;
+		const horizMulti = 4 * boxSize;
 		this.vertices = [
 			//X 	Y 	Z   S   T
-			-boxSize * horizMulti, -boxSize, 0, 1, 0,
-			boxSize * horizMulti, -boxSize, 0, 0, 0,
-			-boxSize * horizMulti, boxSize, 0, 1, 1,
+			-boxSize * horizMulti, -boxSize, 0, 0, 0,
+			boxSize * horizMulti, -boxSize, 0, 1, 0,
+			-boxSize * horizMulti, boxSize, 0, 0, 1,
 
-			-boxSize * horizMulti, boxSize, 0, 1, 1,
-			boxSize * horizMulti, -boxSize, 0, 0, 0,
-			boxSize * horizMulti, boxSize, 0, 0, 1
+			-boxSize * horizMulti, boxSize, 0, 0, 1,
+			boxSize * horizMulti, -boxSize, 0, 1, 0,
+			boxSize * horizMulti, boxSize, 0, 1, 1
 		];
 		
 		this.MyTexture = gl.createTexture();
@@ -83,7 +83,7 @@ class PlayButton extends Quad {
 		const scaleLoc = gl.getUniformLocation(program, 'scale')
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
 		const FaceCamLoc = gl.getUniformLocation(program, 'FaceCam');
-		gl.uniform1i(FaceCamLoc, true);
+		gl.uniform1i(FaceCamLoc, this.FaceCam);
 		const isSun = gl.getUniformLocation(program, 'isSun');
 		gl.uniform1i(isSun, 0);
 		const isTorch = gl.getUniformLocation(program, 'isTorch');

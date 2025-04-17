@@ -13,6 +13,8 @@ class Quad extends GameObject {
 			-1,      1, 0, 0,   0,
 			1,		1,  0, 1,   0
 		];
+
+		this.FaceCam = 1;
 		
 		this.MyPicture = CreateCrate();
 		this.MyTexture = gl.createTexture();
@@ -73,7 +75,7 @@ class Quad extends GameObject {
 		const scaleLoc = gl.getUniformLocation(program, 'scale')
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
 		const FaceCamLoc = gl.getUniformLocation(program, 'FaceCam');
-		gl.uniform1i(FaceCamLoc, true);
+		gl.uniform1i(FaceCamLoc, this.FaceCam);
 		const isLightWall = gl.getUniformLocation(program, 'isLightWall');
 		gl.uniform1i(isLightWall, this.isLightWall);
 		const isSun = gl.getUniformLocation(program, 'isSun');

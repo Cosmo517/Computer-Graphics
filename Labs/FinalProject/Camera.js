@@ -5,6 +5,9 @@ class Camera extends GameObject {
 		this.rotateSpeed = 0.02;
 		this.spawnLoc = this.loc;
 		this.collisionRadius = 0.6;
+
+		this.timeSinceLastShot = 0;
+		this.reloadSpeed = 60;
 	}
 
 	onCollisionEnter(other) {
@@ -46,6 +49,24 @@ class Camera extends GameObject {
 			this.velocity[0] = (this.transform.right[0]) * this.moveSpeed;
 			this.velocity[2] = (this.transform.right[2]) * this.moveSpeed;
 		}
+
+
+		// This will handle shooting
+		if (this.timeSinceLastShot > this.reloadSpeed && " " in m.Keys && m.Keys[" "]) {
+			m.createObject({
+				type: 0,
+				prefab: Bullet, 
+				loc: [this.loc[0], this.loc[1], this.loc[2]], 
+				rot: [...this.rot],
+				scale: [1, 1, 1],
+				collisionLocation: [...this.loc],
+				tag: "Bullet"
+			});
+
+			this.timeSinceLastShot = 0;
+		}
+
+		this.timeSinceLastShot++;
 
 		this.Move()
 
