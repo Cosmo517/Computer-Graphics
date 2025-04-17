@@ -186,6 +186,7 @@
 			uniform vec3 directionalLightDir;
 			uniform vec3 spotLightDir;
 			uniform int isLightWall;
+			uniform int isSun;
 			
 			//!!!!!!!!!!!!!!!!Texture change !!!!!!!!!!!!!!!
 			varying vec2 v_texcord;
@@ -195,21 +196,29 @@
 			void main()
 			{
 				if (isLightWall == 1) {
-					vec4 texColor = texture2D(sampler, v_texcord);
+					vec4 tempColor = texture2D(sampler, v_texcord);
 					
-					if (texColor.w < 1.0) {
+					if (tempColor.w < 1.0) {
 						discard;
 					}
 					
 					vec3 emissiveColor = vec3(1.0, 1.0, 1.0); // White glow, adjust as needed
 					
 					// Calculate luminance to determine if this is the "bright spot"
-					float luminance = dot(texColor.xyz, vec3(0.299, 0.587, 0.114));
+					float luminance = dot(tempColor.xyz, vec3(0.299, 0.587, 0.114));
 					
 					float emissiveFactor = smoothstep(0.8, 1.0, luminance);
-					vec3 finalColor = texColor.xyz * (1.0 + emissiveFactor * emissiveColor * 1.5); 
+					vec3 finalColor = tempColor.xyz * (1.0 + emissiveFactor * emissiveColor * 1.5); 
 					
-					gl_FragColor = vec4(finalColor, texColor.w);
+					gl_FragColor = vec4(finalColor, tempColor.w);
+				} else if (isSun == 1) {
+					vec4 tempColor = texture2D(sampler, v_texcord);
+					
+					if (tempColor.w < 1.0) {
+						discard;
+					}
+
+					gl_FragColor = vec4(tempColor.xyz, tempColor.a);
 				} else {
 					vec4 tempColor = texture2D(sampler, v_texcord);
 
@@ -218,10 +227,10 @@
 					}
 
 					// Ambient light
-					float ambient = 0.3;	
+					float ambient = 0.4;	
 
 					// Directional Light
-					float d_light = dot(normalize(fakenormal), normalize(directionalLightDir)) * 0.3;
+					float d_light = dot(normalize(fakenormal), normalize(directionalLightDir)) * 0.6;
 					if (d_light < 0.0) {
 						d_light = 0.0;
 					}
@@ -249,8 +258,8 @@
 					}
 
 					// Need to add back d_light into the ()
-					//vec3 finalColor = tempColor.xyz * p_light;
-					vec3 finalColor = tempColor.xyz * (ambient + p_light + spot_light_power);
+					//vec3 finalColor = tempColor.xyz * d_light;
+					vec3 finalColor = tempColor.xyz * (ambient + d_light + p_light + spot_light_power);
 					gl_FragColor = vec4(finalColor, tempColor.w);
 				}
 			}
@@ -270,32 +279,31 @@
 		<script src="Mage.js"></script>
 		<script src="Necromancer.js"></script>
 		<script src="NightWarrior.js"></script>
+		<script src="Sun.js"></script>
 		<script src="Camera.js"></script>
 		<script src="webgl_interface.js"></script>
 
 		<script>
-			function CreateCheckered() {
-				//Actually get our texture;
-				var myPic = [];
-				for (i = 0; i < 16; i++) {
-					for (j = 0; j < 16; j ++) {
-						if (i % 2 == j % 2) {
-							//Push red
-							myPic.push(255, 30, 30, 255);
-						} else {
-							myPic.push(30, 255, 30, 255);
-						}	
+			function CreateSun() {
+				let mySun = [];
+				const width = 16;
+				const height = 16;
+				for (let y = height; y > 0; y--) {
+					for (let x = 0; x < width; x++) {
+						mySun.push(255, 255, 0, 255);
 					}
 				}
 
-				return myPic;
+				return mySun;
 			}
 
 			function CreateFloor() {
 				let myFloor = [];
-				for (let y = 64; y > 0; y--) {
-					for (let x = 0; x < 64; x++) {
-						const color = FloorType[y * 64 + x];
+				const width = 64;
+				const height = 64;
+				for (let y = height; y > 0; y--) {
+					for (let x = 0; x < width; x++) {
+						const color = FloorType[y * width + x];
 
 						// Extract RGBA components from the 32-bit color value
 						const r = (color >> 24) & 0xFF;
@@ -312,9 +320,11 @@
 
 			function CreateWallType() {
 				let myWall = [];
-				for (let y = 64; y > 0; y--) {
-					for (let x = 0; x < 64; x++) {
-						const color = WallType[y * 64 + x];
+				const width = 64;
+				const height = 64;
+				for (let y = height; y > 0; y--) {
+					for (let x = 0; x < width; x++) {
+						const color = WallType[y * width + x];
 
 						// Extract RGBA components from the 32-bit color value
 						const r = (color >> 24) & 0xFF;
@@ -331,9 +341,11 @@
 
 			function CreateLightType() {
 				let myLight = [];
-				for (let y = 64; y > 0; y--) {
-					for (let x = 0; x < 64; x++) {
-						const color = LightType[y * 64 + x];
+				const width = 64;
+				const height = 64;
+				for (let y = height; y > 0; y--) {
+					for (let x = 0; x < width; x++) {
+						const color = LightType[y * width + x];
 
 						// Extract RGBA components from the 32-bit color value
 						const r = (color >> 24) & 0xFF;
@@ -350,9 +362,11 @@
 			
 			function CreatePlayButton() {
 				let myButton = [];
-				for (let y = 83 ; y > 0; y--) {
-					for (let x = 0; x < 420; x++) {
-						const color = PlayButtonType[y * 420 + x];
+				const width = 420;
+				const height = 83;
+				for (let y = height ; y > 0; y--) {
+					for (let x = 0; x < width; x++) {
+						const color = PlayButtonType[y * width + x];
 
 						// Extract RGBA components from the 32-bit color value
 						const r = (color >> 24) & 0xFF;
@@ -369,9 +383,11 @@
 
 			function CreateMageType(mageArray) {
 				let myMage = [];
-				for (let y = 0; y < 64; y++) {
-					for (let x = 0; x < 64; x++) {
-						const color = mageArray[y * 64 + x];
+				const width = 64;
+				const height = 64;
+				for (let y = 0; y < height; y++) {
+					for (let x = 0; x < width; x++) {
+						const color = mageArray[y * width + x];
 
 						// Extract RGBA components from the 32-bit color value
 						const r = (color >> 24) & 0xFF;
@@ -388,9 +404,11 @@
 
 			function CreateNecromancerType(necromancerArray) {
 				let myNecromancer = [];
-				for (let y = 0; y < 128; y++) {
-					for (let x = 0; x < 160; x++) {
-						const color = necromancerArray[y * 160 + x];
+				const width = 160;
+				const height = 128;
+				for (let y = 0; y < height; y++) {
+					for (let x = 0; x < width; x++) {
+						const color = necromancerArray[y * width + x];
 
 						// Extract RGBA components from the 32-bit color value
 						const r = (color >> 24) & 0xFF;
@@ -407,9 +425,11 @@
 		
 			function CreateWarriorType(warriorArray) {
 				let myWarrior = [];
-				for (let y = 0; y < 80; y++) {
-					for (let x = 0; x < 80; x++) {
-						const color = warriorArray[y * 80 + x];
+				const width = 80;
+				const height = 80;
+				for (let y = 0; y < height; y++) {
+					for (let x = 0; x < width; x++) {
+						const color = warriorArray[y * width + x];
 
 						// Extract RGBA components from the 32-bit color value
 						const r = (color >> 24) & 0xFF;
@@ -544,6 +564,18 @@
 						lightData: [10, -0.01, -10]
 					});
 
+					this.createLightObject({ 
+						type: 0, 
+						prefab: Sun, 
+						loc: [200, 40, 20], 
+						rot: [0, 0, 0],
+						scale: [5, 5, 5],
+						tag: "Sun",
+						collisionLocation: [200, 20, 20],
+						lightData: [-10, 20, -10]
+					});
+
+
 					let pointLightPositions = [];
 					for (let i in this.Solid) {
 						if (this.Solid[i].tag == "LightWall") {
@@ -596,7 +628,7 @@
                     return (rad1 + rad2) > distance;
                 }
 				
-				createObject({type, prefab, loc, rot, collisionLocation, tag}) {
+				createObject({type, prefab, loc, rot, scale = [1, 1, 1], collisionLocation, tag}) {
 					// type 0 = visual, type 1 = solid, type 2 = trigger
 					const temp = new prefab;
 					const id = "ID" + this.ObjectCounter;
@@ -606,6 +638,7 @@
 					// Position
 					temp.loc = loc;
 					temp.rot = rot;
+					temp.scale = scale;
 
 					// Tag
 					temp.tag = tag

@@ -84,6 +84,10 @@ class PlayButton extends Quad {
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
 		const FaceCamLoc = gl.getUniformLocation(program, 'FaceCam');
 		gl.uniform1i(FaceCamLoc, true);
+		const isSun = gl.getUniformLocation(program, 'isSun');
+		gl.uniform1i(isSun, 0);
+		const isTorch = gl.getUniformLocation(program, 'isTorch');
+		gl.uniform1i(isTorch, 0);
 
 		gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 5);
 		gl.uniform1i(FaceCamLoc, false);

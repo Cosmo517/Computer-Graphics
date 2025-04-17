@@ -76,6 +76,8 @@ class Quad extends GameObject {
 		gl.uniform1i(FaceCamLoc, true);
 		const isLightWall = gl.getUniformLocation(program, 'isLightWall');
 		gl.uniform1i(isLightWall, this.isLightWall);
+		const isSun = gl.getUniformLocation(program, 'isSun');
+		gl.uniform1i(isSun, 0);
 
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 		gl.uniform1i(FaceCamLoc, false);

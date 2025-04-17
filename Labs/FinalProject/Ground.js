@@ -79,6 +79,8 @@ class Ground extends GameObject {
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
 		const isLightWall = gl.getUniformLocation(program, 'isLightWall');
 		gl.uniform1i(isLightWall, this.isLightWall);
+		const isSun = gl.getUniformLocation(program, 'isSun');
+		gl.uniform1i(isSun, 0);
 	
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 	}
