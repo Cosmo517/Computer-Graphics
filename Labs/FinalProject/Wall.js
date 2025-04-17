@@ -89,6 +89,10 @@ class Wall extends GameObject {
             });
             m.destroyObject(other.id);
 		}
+
+        if (other.tag == "Mage") {
+            other.needsReversed = true;
+        }
     }
 
 	update() {

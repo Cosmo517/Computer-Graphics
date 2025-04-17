@@ -6,7 +6,11 @@ class Mage extends Enemy {
 		this.buffer = gl.createBuffer();
 		this.collisionRadius = 0.5;
 		this.health = 5;
-		
+
+		this.needsReversed = false;
+		this.reverseDirection = false;
+		this.randomDirection = Math.round(Math.random()) // 0 means x, 1 means z
+
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
 		this.vertices = [
@@ -67,6 +71,17 @@ class Mage extends Enemy {
             this.MyPicture = CreateMageType(this.MageSprites[this.spriteCounter]);
             gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 64, 64, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(this.MyPicture));
+        }
+
+		if (this.needsReversed) {
+			this.reverseDirection = !this.reverseDirection;
+			this.needsReversed = false;
+		}
+
+		this.velocity = [0, 0, 0];
+
+        for (let i = 0; i < 3; i++) {
+            this.velocity[i] += (this.transform.forward[i] * (this.reverseDirection ? -1 : 1)) * 0.01;
         }
 
 		this.Move();

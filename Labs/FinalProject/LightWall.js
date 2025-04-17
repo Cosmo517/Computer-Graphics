@@ -88,6 +88,10 @@ class LightWall extends PointLight {
             });
             m.destroyObject(other.id);
 		}
+        
+        if (other.tag == "Mage") {
+            other.needsReversed = true;
+        }
     }
 
 	update() {

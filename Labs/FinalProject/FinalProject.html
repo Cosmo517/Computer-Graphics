@@ -35,7 +35,7 @@
 			uniform bool FaceCam;
 			
 			// Used for lighting
-			const int NUMBER_OF_LIGHTS = 1;
+			const int NUMBER_OF_LIGHTS = 10;
 			uniform vec3 pointLightPos[NUMBER_OF_LIGHTS];
 			uniform vec3 spotLightPos;
 			
@@ -172,7 +172,7 @@
 		</SCRIPT>
         
 		<script id="2dFragmentShader" type="notjs">
-			const int NUMBER_OF_LIGHTS = 1;
+			const int NUMBER_OF_LIGHTS = 10;
 			//Fragment shaders do not have precision so we have to set it.
 			precision mediump float;
 			//varying vec3 fragColor;
@@ -237,10 +237,10 @@
 					}
 
 					// Point Light
-					float p_light = dot(normalize(fakenormal), normalize(v_surfaceToLight[0])) * 5.0 / length(v_surfaceToLight[0]);
+					float p_light = dot(normalize(fakenormal), normalize(v_surfaceToLight[0])) * 1.0 / length(v_surfaceToLight[0]);
 
 					for (int i = 1; i < NUMBER_OF_LIGHTS; i++) {
-						p_light += dot(normalize(fakenormal), normalize(v_surfaceToLight[i])) * 5.0 / length(v_surfaceToLight[i]);
+						p_light += dot(normalize(fakenormal), normalize(v_surfaceToLight[i])) * 1.0 / length(v_surfaceToLight[i]);
 					}
 
 					if (p_light < 0.0) {
@@ -346,39 +346,83 @@
 					const height = levelArray.length
 					for (let y = 0; y < height; y++) {
 						for (let x = 0; x < width; x++) {
-							const locX = width * 2;
-							const locZ = height * 2 // Acts as our "y"
+							const locX = x * 2;
+							const locZ = y * 2 // Acts as our "y"
 
 							switch (levelArray[y][x]) {
-								case 1:
+								case 1: // Wall
+									this.createObject({ 
+										type: 1, 
+										prefab: Wall, 
+										loc: [locX, -0.01, locZ], 
+										rot: [0, 0, 0],
+										tag: "Wall",
+										collisionLocation: [locX, -0.01, locZ],
+									});
 									break;
-								case 2:
+								case 2: // Light Wall
+									this.createLightObject({ 
+										type: 1, 
+										prefab: LightWall, 
+										loc: [locX, -0.01, locZ], 
+										rot: [0, 0, 0],
+										tag: "LightWall",
+										collisionLocation: [locX, 0, locZ],
+										lightData: [locX, -0.01, locZ]
+									});
 									break;
-								case 3:
+								case 3: // Start Position
+									this.createObject({
+										type: 1, 
+										prefab: Camera, 
+										loc: [locX, 0, locZ], 
+										rot: [0, 0, 0],
+										tag: "Player",
+										collisionLocation: [locX, 0, locZ],
+									});
 									break;
-								case 4:
+								case 4: // Goal Position
 									break;
-								case 5:
+								case 5: // Enemy Type 1: Mage
+									this.createObject({ 
+										type: 2, 
+										prefab: Mage, 
+										loc: [locX, 0, locZ], 
+										rot: [0, 0, 0],
+										tag: "Mage",
+										collisionLocation: [locX, 0, locZ],
+									});
 									break;
-								case 6:
+								case 6: // Enemy Type 2: Necromancer
+									this.createObject({ 
+										type: 2, 
+										prefab: Necromancer, 
+										loc: [locX, 1.6, locZ], 
+										rot: [0, 0, 0],
+										tag: "Necromancer",
+										collisionLocation: [locX, 0, locZ],
+									});
 									break;
-								case 7:
+								case 7: // Enemy Type 3: Night Warrior
+									this.createObject({ 
+										type: 2, 
+										prefab: NightWarrior, 
+										loc: [locX, 1, locZ], 
+										rot: [0, 0, 0],
+										tag: "Nightwarrior",
+										collisionLocation: [locX, 0, locZ],
+									});
+									break;
+								default:
 									break;
 							}
 						}
 					}
+
+					this.addStaticObjects();
 				}
 
-				generateLevel() {
-					this.createObject({
-						type: 1, 
-						prefab: Camera, 
-						loc: [-4, 0, -4], 
-						rot: [0, 0, 0],
-						tag: "Player",
-						collisionLocation: [-10, 0, 0],
-					});
-					
+				addStaticObjects() {
 					this.createObject({ 
 						type: 0, 
 						prefab: Ground, 
@@ -386,52 +430,6 @@
 						rot: [0, 0, 0] ,
 						tag: "Ground",
 						collisionLocation: [0, 0, 0],
-					});
-
-					this.createObject({ 
-						type: 2, 
-						prefab: Mage, 
-						loc: [2, 0, 0], 
-						rot: [0, 0, 0],
-						tag: "Mage",
-						collisionLocation: [2, 0, 0],
-					});
-
-					this.createObject({ 
-						type: 2, 
-						prefab: Necromancer, 
-						loc: [2, 1.6, 4], 
-						rot: [0, 0, 0],
-						tag: "Necromancer",
-						collisionLocation: [2, 0, 4],
-					});
-
-					this.createObject({ 
-						type: 2, 
-						prefab: NightWarrior, 
-						loc: [2, 1, 8], 
-						rot: [0, 0, 0],
-						tag: "Nightwarrior",
-						collisionLocation: [2, 0, 8],
-					});
-
-					this.createLightObject({ 
-						type: 1, 
-						prefab: LightWall, 
-						loc: [10, -0.01, -10], 
-						rot: [0, 0, 0],
-						tag: "LightWall",
-						collisionLocation: [10, 0, -10],
-						lightData: [10, -0.01, -10]
-					});
-					
-					this.createObject({ 
-						type: 1, 
-						prefab: Wall, 
-						loc: [10, -0.01, -12], 
-						rot: [0, 0, 0],
-						tag: "Wall",
-						collisionLocation: [10, -0.01, -12],
 					});
 
 					this.createLightObject({ 
@@ -590,10 +588,10 @@
 					
 					// Use the following to allow "play" and other options to be selected
 					if (this.currentLevel == 0) {
-						if (x > -0.2 && x < 0.19 && y < 0.32 && y > -0.33) {
+						if (x > -0.44 && x < 0.43 && y < 0.18 && y > -0.16) {
 							this.reset()
 							this.currentLevel = 1;
-							this.generateLevel();
+							this.readLevel(this.currentLevel);
 						}
 					}
 				}
