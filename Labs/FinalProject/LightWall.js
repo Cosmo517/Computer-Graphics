@@ -75,6 +75,21 @@ class LightWall extends PointLight {
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 	}
 
+    onCollisionEnter(other) {
+        if (other.tag == "Bullet") {
+            m.createObject({ 
+                type: 0, 
+                prefab: Explosion, 
+                loc: [other.loc[0], other.loc[1], other.loc[2]], 
+                rot: [0, 0, 0],
+                scale: [1.5, 1.5, 1.5],
+                tag: "Explosion",
+                collisionLocation: [...other.loc],
+            });
+            m.destroyObject(other.id);
+		}
+    }
+
 	update() {
         // Do nothing
     }
