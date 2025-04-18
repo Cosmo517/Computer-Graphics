@@ -200,10 +200,53 @@ function CreateFireBullet(fireBullet) {
     return myBullet;
 }
 
+function CreateChestType(chestArray) {
+    let myChest = [];
+    const width = 48;
+    const height = 32;
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const color = chestArray[y * width + x];
+
+            // Extract RGBA components from the 32-bit color value
+            const r = (color >> 24) & 0xFF;
+            const g = (color >> 16) & 0xFF;
+            const b = (color >> 8) & 0xFF;
+            const a = color & 0xFF;
+
+            myChest.push(r, g, b, a);
+        }
+    }
+
+    return myChest;
+}
+
+function CreateStaffSprite(staffArray) {
+    let myStaff = [];
+    const width = 26;
+    const height = 43;
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const color = staffArray[y * width + x];
+
+            // Extract RGBA components from the 32-bit color value
+            const r = (color >> 24) & 0xFF;
+            const g = (color >> 16) & 0xFF;
+            const b = (color >> 8) & 0xFF;
+            const a = color & 0xFF;
+
+            myStaff.push(r, g, b, a);
+        }
+    }
+
+    return myStaff;
+}
+
+
+
+
 function CreateCrate() {
-    //we want to create a crate with black around the sides
-    //and a black x throug the middle
-    //The rest will be brown.   
+    // This is purely used as a backup sprite for the quad
     var myCrate = [];
     for (i = 0; i < 64; i ++) {
         for (j = 0; j < 64; j++) {

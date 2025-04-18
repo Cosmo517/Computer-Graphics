@@ -116,4 +116,10 @@ class Camera extends GameObject {
 		const scaleLoc = gl.getUniformLocation(program, "scale");
 		gl.uniform3fv(scaleLoc, new Float32Array(this.scale));
 	}
+
+	reset() {
+		console.log("resetting")
+		this.loc = [0, 0, 0];
+		this.rot = [0, 0, 0];
+	}
 }

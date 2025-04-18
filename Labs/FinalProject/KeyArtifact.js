@@ -1,4 +1,4 @@
-class MapArtifact extends Quad {
+class KeyArtifact extends Quad {
 	constructor() {
 		super();
 		this.angVelocity = [0, 0, 0];
@@ -8,11 +8,11 @@ class MapArtifact extends Quad {
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 		
-        this.mapSprite = Map_Type_1;
+        this.keySprite = Key_Type_1;
         this.spriteCounter = 0;
         this.frameTimer = 0;
 
-        this.MyPicture = CreateMageType(this.mapSprite);
+        this.MyPicture = CreateMageType(this.keySprite);
 		this.MyTexture = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
 		//We only want to do this once.

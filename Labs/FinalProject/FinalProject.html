@@ -288,6 +288,9 @@
 		<script src="Sun.js"></script>
 		<script src="Bullet.js"></script>
 		<script src="MapArtifact.js"></script>
+		<script src="KeyArtifact.js"></script>
+		<script src="StaffArtifact.js"></script>
+		<script src="ChestArtifact.js"></script>
 		<script src="Camera.js"></script>
 		<script src="webgl_interface.js"></script>
 
@@ -307,7 +310,6 @@
 					this.totalLevels = 3;
 					this.currentLevel = 0; // Level 0 is menu
 
-					// this.generateLevel();
 					this.showMenu();
 				}
 
@@ -334,6 +336,23 @@
 				}
 
 				reset() {
+					for (let i in this.Visual) {
+						try{
+							this.destroyObject(i.id)
+						} catch {}
+					}
+					
+					for (let i in this.Solid) {
+						try {
+							this.destroyObject(i.id)
+						} catch {}
+					}
+					
+					for (let i in this.Trigger) {
+						try {
+							this.destroyObject(i.id)
+						} catch {}
+					}
 					this.Visual = [];
 					this.Solid = [];
 					this.Trigger = [];
@@ -341,18 +360,21 @@
 				}
 
 				nextLevel() {
-					console.log("Current Level: " + this.currentLevel)
-					console.log("Total Levels: " + this.totalLevels)
 					if (this.currentLevel < this.totalLevels) {
 						this.currentLevel++;
 						this.readLevel(this.currentLevel);
-						return;
 					} else if (this.currentLevel == this.totalLevels) {
 						alert("You win!");
-						return;
+						for (var so in m.Solid) {
+							if (m.Solid[so].tag == "Player") {
+								m.Solid[so].reset();
+								break;
+							}
+						}
+						this.reset()
+						this.currentLevel = 0;
+						this.showMenu();
 					}
-
-					alert("Uhhhhh something went wrong");
 				}
 
 				readLevel(levelNum) {
@@ -402,9 +424,14 @@
 									});
 									break;
 								case 4: // Goal Position
-								this.createObject({ 
+									let goalPrefab = null;
+									if (this.currentLevel == 1) { goalPrefab = MapArtifact; }
+									if (this.currentLevel == 2) { goalPrefab = KeyArtifact; }
+									if (this.currentLevel == 3) { goalPrefab = ChestArtifact; }
+
+									this.createObject({ 
 										type: 2, 
-										prefab: MapArtifact, 
+										prefab: goalPrefab, 
 										loc: [locX, 0, locZ], 
 										rot: [0, 0, 0],
 										tag: "MapArtifact",
@@ -501,7 +528,6 @@
 							this.Trigger[i].update();
 						} catch {}
 					}
-				
 				}
 				
 				renderAll() {
