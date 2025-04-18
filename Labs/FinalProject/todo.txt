@@ -2,8 +2,6 @@ Core Features:
 
 1. Collision Detection
     1. Already "implemented" but might want to improve. Currently using sphere collider
-3. Need a goal of some kind. Maybe a prize or artifact.
-    1. Figured it out, just need to implement the textures
 
 Extra Credit:
 
@@ -13,7 +11,4 @@ Extra Credit:
     1. Found sound effects. 
     2. Change the monster sound
     3. Change explosion sound to match fireball
-4. Create at least three levels
-    1. Use an array based implementation. Load the level from an array, where
-        different values mean different things. I.e. 1 = wall1, 2 = wall2, 3 = enemy1 effects
 5. Include a story (optional)
