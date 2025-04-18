@@ -314,6 +314,13 @@
 				}
 
 				showMenu() {
+					const camLoc  = gl.getUniformLocation(this.myWEBGL.program, 'worldLoc');
+					gl.uniform3fv(camLoc, new Float32Array([0, 0, 0]));
+					const worldLoc = gl.getUniformLocation(this.myWEBGL.program, 'worldRotation');
+					gl.uniform3fv(worldLoc, new Float32Array([0, 0, 0]));
+
+					console.log("Displaying Menu")
+
 					this.createObject({ 
 						type: 2, 
 						prefab: PlayButton, 
@@ -331,28 +338,11 @@
 						scale: [5, 5, 5],
 						tag: "Sun",
 						collisionLocation: [200, 20, 20],
-						lightData: [0, 0, 2]
+						lightData: [0, 0, -1]
 					});
 				}
 
 				reset() {
-					for (let i in this.Visual) {
-						try{
-							this.destroyObject(i.id)
-						} catch {}
-					}
-					
-					for (let i in this.Solid) {
-						try {
-							this.destroyObject(i.id)
-						} catch {}
-					}
-					
-					for (let i in this.Trigger) {
-						try {
-							this.destroyObject(i.id)
-						} catch {}
-					}
 					this.Visual = [];
 					this.Solid = [];
 					this.Trigger = [];
@@ -478,6 +468,7 @@
 				}
 
 				addStaticObjects() {
+					console.log("Um")
 					this.createObject({ 
 						type: 0, 
 						prefab: Ground, 
@@ -649,7 +640,6 @@
 					// Use the following to allow "play" and other options to be selected
 					if (this.currentLevel == 0) {
 						if (x > -0.44 && x < 0.43 && y < 0.18 && y > -0.16) {
-							this.reset()
 							this.currentLevel = 1;
 							this.readLevel(this.currentLevel);
 						}
