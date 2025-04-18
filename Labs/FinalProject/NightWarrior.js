@@ -12,13 +12,13 @@ class NightWarrior extends Enemy {
 		
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
-        const mageSize = 3;
+        const nightWarriorSize = 3;
 		this.vertices = [
 			//X 	Y 	Z   S   T
-			-mageSize,		-mageSize,	0, 0,   1,
-			mageSize,		-mageSize, 0, 1,   1,
-			-mageSize,      mageSize, 0, 0,   0,
-			mageSize,		mageSize,  0, 1,   0
+			-nightWarriorSize,	-nightWarriorSize,	0, 0, 1,
+			nightWarriorSize,	-nightWarriorSize,  0, 1, 1,
+			-nightWarriorSize,	 nightWarriorSize,  0, 0, 0,
+			nightWarriorSize,	 nightWarriorSize,  0, 1, 0
 		];
 		
         this.WarriorSprites = [ Warrior_Type_Run_1, Warrior_Type_Run_2, Warrior_Type_Run_3,
@@ -98,7 +98,7 @@ class NightWarrior extends Enemy {
 		
 		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!TEXTURE CHANGE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		//Now we have to do this for color
-		let colorAttributeLocation = gl.getAttribLocation(program,"texcord");
+		let colorAttributeLocation = gl.getAttribLocation(program, "texcord");
 		//We don't have to bind because we already have the correct buffer bound.
 		size = 2;
 		type = gl.FLOAT;

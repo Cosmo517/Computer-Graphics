@@ -13,14 +13,6 @@ class Mage extends Enemy {
 		this.randomDirection = Math.round(Math.random()) // 0 means x, 1 means z
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-
-		this.vertices = [
-			//X 	Y 	Z   S   T
-			-1,		-1,	0, 0,   1,
-			1,		-1, 0, 1,   1,
-			-1,      1, 0, 0,   0,
-			1,		1,  0, 1,   0
-		];
 		
         this.MageSprites = [Mage_Type_1, Mage_Type_2, Mage_Type_3, Mage_Type_4, Mage_Type_5,
             Mage_Type_6, Mage_Type_7, Mage_Type_8, Mage_Type_9, Mage_Type_10, Mage_Type_11,
