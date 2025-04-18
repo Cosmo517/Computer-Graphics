@@ -4,21 +4,8 @@ Core Features:
     1. Already "implemented" but might want to improve. Currently using sphere collider
 3. Need a goal of some kind. Maybe a prize or artifact.
     1. Figured it out, just need to implement the textures
-4. Need 3 enemies
-    1. One will patrol back and forth
-        1. Wizard
-    2. One will randomly move once it hits a wall
-        1. Night Warrior
-    3. One will randomly move and periodically shoot a bullet at the player (either a sprite or 3d object)
-        1. Necromancer
-    5. If you get hit with 5 bullets, you restart the level
-    6. Each monster has different HP. When hit by the heroes bullets, it takes one damage
-        1. Monster explodes/dies when it reaches 0 HP
-
-
 
 Extra Credit:
-
 
 2. Create a title menu
     2. Needs to have player options. Maybe different weapons, or variable health/difficulty
