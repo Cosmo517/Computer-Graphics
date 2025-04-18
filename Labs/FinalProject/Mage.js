@@ -2,10 +2,11 @@ class Mage extends Enemy {
 	constructor() {
 		super();
 		this.angVelocity = [0, 0, 0];
-		this.isTrigger = true;
+		this.isTrigger = false;
 		this.buffer = gl.createBuffer();
 		this.collisionRadius = 0.5;
 		this.health = 5;
+		this.moveSpeed = 0.03;
 
 		this.needsReversed = false;
 		this.reverseDirection = false;
@@ -44,15 +45,15 @@ class Mage extends Enemy {
 	onTriggerEnter(other) {
 		if (other.tag == "Bullet") {
 			this.health--;
+			m.createObject({ 
+				type: 0, 
+				prefab: Explosion, 
+				loc: [...this.loc], 
+				rot: [0, 0, 0],
+				tag: "Explosion",
+				collisionLocation: [...this.loc],
+			});
 			if (this.health <= 0) {
-				m.createObject({ 
-					type: 0, 
-					prefab: Explosion, 
-					loc: [...this.loc], 
-					rot: [0, 0, 0],
-					tag: "Explosion",
-					collisionLocation: [...this.loc],
-				});
 				m.destroyObject(this.id);
 
 			}
@@ -75,15 +76,21 @@ class Mage extends Enemy {
 
 		if (this.needsReversed) {
 			this.reverseDirection = !this.reverseDirection;
+			// console.log("Reversing direction! ", this.reverseDirection)
 			this.needsReversed = false;
 		}
 
 		this.velocity = [0, 0, 0];
 
-        for (let i = 0; i < 3; i++) {
-            this.velocity[i] += (this.transform.forward[i] * (this.reverseDirection ? -1 : 1)) * 0.01;
-        }
+		if (this.randomDirection) {
+			this.velocity[2] = this.moveSpeed * (this.reverseDirection ? -1 : 1);
+		} else {
+			this.velocity[0] = this.moveSpeed * (this.reverseDirection ? -1 : 1);
+		}
 
 		this.Move();
+
+		// Update the collision location to match the player location
+		this.collisionLocation = [this.loc[0], this.collisionLocation[1], this.loc[2]];
 	}
 }

@@ -35,14 +35,13 @@ class GameObject {
 			tempP[i] += this.velocity[i];
 			this.rot[i] += this.angVelocity[i];
 		}
-
 		if (!this.isTrigger) {
 			let clear = true;
 			// Handle collisions with other solids
 			for (var so in m.Solid) {
 				if (m.Solid[so] != this) {
 					if (m.checkCollision(tempP, this.collisionRadius, m.Solid[so].collisionLocation, m.Solid[so].collisionRadius)) {
-						console.log("I am: " + this.tag + " colliding with: " + m.Solid[so].tag)
+						// console.log("I am: " + this.tag + " colliding with: " + m.Solid[so].tag)
 						try {
 							m.Solid[so].onCollisionEnter(this);
 						} catch {}
@@ -55,7 +54,7 @@ class GameObject {
 			for (var tr in m.Trigger) {
 				if (m.Trigger[tr] != this) {
 					if (m.checkCollision(tempP, this.collisionRadius, m.Trigger[tr].collisionLocation, m.Trigger[tr].collisionRadius)) {
-						console.log("I am: " + this.tag + " colliding with: " + m.Trigger[tr].tag)
+						// console.log("I am: " + this.tag + " triggering with: " + m.Trigger[tr].tag)
 						try {
 							m.Trigger[tr].onTriggerEnter(this);
 						} catch {}

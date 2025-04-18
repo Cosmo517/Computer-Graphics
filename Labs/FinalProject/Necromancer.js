@@ -2,10 +2,15 @@ class Necromancer extends Enemy {
 	constructor() {
 		super();
 		this.angVelocity = [0, 0, 0];
-		this.isTrigger = true;
+		this.isTrigger = false;
 		this.buffer = gl.createBuffer();
 		this.collisionRadius = 1.3;
 		this.health = 8;
+		this.changeDirection = true;
+		this.moveSpeed = 0.03;
+		this.reloadSpeed = 120;
+		this.timeSinceLastShot = 31;
+		this.player = null;
 		
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
@@ -36,21 +41,27 @@ class Necromancer extends Enemy {
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 		this.loc = [0, 0, 0];
 		this.rot = [0, 0, 0];
+
+		for (var so in m.Solid) {
+			if (m.Solid[so].tag == "Player") {
+				this.player = m.Solid[so];
+			}
+		}
 	}
 
 	onTriggerEnter(other) {
 		if (other.tag == "Bullet") {
 			this.health--;
+			m.createObject({ 
+				type: 0, 
+				prefab: Explosion, 
+				loc: [other.loc[0], other.loc[1], other.loc[2]], 
+				rot: [0, 0, 0],
+				scale: [1.5, 1.5, 1.5],
+				tag: "Explosion",
+				collisionLocation: [...this.loc],
+			});
 			if (this.health <= 0) {
-				m.createObject({ 
-					type: 0, 
-					prefab: Explosion, 
-					loc: [this.loc[0], this.loc[1] - 1, this.loc[2]], 
-					rot: [0, 0, 0],
-					scale: [1.5, 1.5, 1.5],
-					tag: "Explosion",
-					collisionLocation: [...this.loc],
-				});
 				m.destroyObject(this.id);
 			}
 			m.destroyObject(other.id);
@@ -69,6 +80,35 @@ class Necromancer extends Enemy {
             gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 160, 128, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(this.MyPicture));
         }
+
+		// Randomly move every 12 frames or if colliding with a wall
+		if (this.changeDirection || this.frameTimer % 120 == 0) {
+			this.velocity[0] = this.moveSpeed * Math.cos(2 * Math.PI * Math.random());
+			this.velocity[2] = this.moveSpeed * Math.sin(2 * Math.PI * Math.random());
+			this.changeDirection = false;
+		}
+
+		if (this.timeSinceLastShot > this.reloadSpeed) {
+			const direction_x = this.player.loc[0] - this.loc[0];
+			const direction_z = this.player.loc[2] - this.loc[2];
+			const angle = Math.atan2(direction_x, direction_z)
+			m.createObject({
+				type: 0,
+				prefab: Bullet, 
+				loc: [this.loc[0], this.loc[1] - 1, this.loc[2]], 
+				rot: [0, angle, 0],
+				scale: [1, 1, 1],
+				collisionLocation: [...this.loc],
+				tag: "EnemyBullet"
+			});
+			this.timeSinceLastShot = 0;
+		}
+		
+		this.timeSinceLastShot++;
+		this.Move();
+
+		// Update the collision location to match the player location
+		this.collisionLocation = [this.loc[0], this.collisionLocation[1], this.loc[2]];
 
 		this.Move();
 	}

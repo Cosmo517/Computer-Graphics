@@ -2,10 +2,12 @@ class NightWarrior extends Enemy {
 	constructor() {
 		super();
 		this.angVelocity = [0, 0, 0];
-		this.isTrigger = true;
+		this.isTrigger = false;
 		this.buffer = gl.createBuffer();
 		this.collisionRadius = 1;
 		this.health = 10;
+		this.changeDirection = true;
+		this.moveSpeed = 0.03;
 
 		
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
@@ -41,16 +43,16 @@ class NightWarrior extends Enemy {
 	onTriggerEnter(other) {
 		if (other.tag == "Bullet") {
 			this.health--;
+			m.createObject({ 
+				type: 0, 
+				prefab: Explosion, 
+				loc: [this.loc[0], this.loc[1] - 0.5, this.loc[2]], 
+				rot: [0, 0, 0],
+				scale: [1.5, 1.5, 1.5],
+				tag: "Explosion",
+				collisionLocation: [...this.loc],
+			});
 			if (this.health <= 0) {
-				m.createObject({ 
-					type: 0, 
-					prefab: Explosion, 
-					loc: [this.loc[0], this.loc[1] - 0.5, this.loc[2]], 
-					rot: [0, 0, 0],
-					scale: [1.5, 1.5, 1.5],
-					tag: "Explosion",
-					collisionLocation: [...this.loc],
-				});
 				m.destroyObject(this.id);
 			}
 			m.destroyObject(other.id);
@@ -70,7 +72,16 @@ class NightWarrior extends Enemy {
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 80, 80, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(this.MyPicture));
         }
 
+		if (this.changeDirection) {
+			this.velocity[0] = this.moveSpeed * Math.cos(2 * Math.PI * Math.random());
+			this.velocity[2] = this.moveSpeed * Math.sin(2 * Math.PI * Math.random());
+			this.changeDirection = false;
+		}
+		
 		this.Move();
+
+		// Update the collision location to match the player location
+		this.collisionLocation = [this.loc[0], this.collisionLocation[1], this.loc[2]];
 	}
 
     render(program) {

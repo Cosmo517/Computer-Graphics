@@ -76,7 +76,7 @@ class LightWall extends PointLight {
 	}
 
     onCollisionEnter(other) {
-        if (other.tag == "Bullet") {
+        if (other.tag == "Bullet" || other.tag == "EnemyBullet") {
             m.createObject({ 
                 type: 0, 
                 prefab: Explosion, 
@@ -91,6 +91,10 @@ class LightWall extends PointLight {
         
         if (other.tag == "Mage") {
             other.needsReversed = true;
+        } else if (other.tag == "Nightwarrior") {
+            other.changeDirection = true;
+        } else if (other.tag == "Necromancer") {
+            other.changeDirection = true;
         }
     }
 

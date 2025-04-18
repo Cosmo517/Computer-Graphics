@@ -137,17 +137,20 @@
 
 			void main() {
 				if (length(a_position) < 5.0) {
-					fakenormal = RotateObject(ScaleObject(a_position)).xyz;
+					fakenormal = RotateObject(a_position).xyz;
 				} else {
 					fakenormal = vec3(0.0, 1.0, 0.0);
 				}
 
+				if (FaceCam) {
+					fakenormal = normalize(worldLoc - transform);  // From quad center to camera
+				}
 				vec4 worldSpace = vec4(0.0, 0.0, 0.0, 1.0);
 
 				if(FaceCam) {
-					vec3 F = normalize(vec3(worldLoc.x,worldLoc.y,worldLoc.z)- transform);
-					vec3 U = vec3(0.0,1.0,0.0);
-					worldSpace = PositionObject(LookAt(F,U,ScaleObject(a_position)));
+					vec3 F = normalize(vec3(worldLoc.x, worldLoc.y, worldLoc.z) - transform);
+					vec3 U = vec3(0.0, 1.0, 0.0);
+					worldSpace = PositionObject(LookAt(F, U, ScaleObject(a_position)));
 				} else {
 					worldSpace = PositionObject(RotateObject(ScaleObject(a_position)));
 				}
@@ -337,6 +340,7 @@
 				}
 
 				readLevel(levelNum) {
+					this.reset();
 					let levelArray = [];
 					if (levelNum == 1) { levelArray = level1; }
 					else if (levelNum == 2) { levelArray = level2; }
@@ -457,15 +461,21 @@
 				
 				updateAll() {
 					for (let i in this.Visual) {
-						this.Visual[i].update();
+						try{
+							this.Visual[i].update();
+						} catch {}
 					}
 					
 					for (let i in this.Solid) {
-						this.Solid[i].update();
+						try {
+							this.Solid[i].update();
+						} catch {}
 					}
 					
 					for (let i in this.Trigger) {
-						this.Trigger[i].update();
+						try {
+							this.Trigger[i].update();
+						} catch {}
 					}
 				
 				}

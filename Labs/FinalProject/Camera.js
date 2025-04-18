@@ -5,6 +5,7 @@ class Camera extends GameObject {
 		this.rotateSpeed = 0.02;
 		this.spawnLoc = this.loc;
 		this.collisionRadius = 0.6;
+		this.health = 5;
 
 		this.timeSinceLastShot = 0;
 		this.reloadSpeed = 60;
@@ -80,6 +81,31 @@ class Camera extends GameObject {
 
 		// Update the collision location to match the player location
 		this.collisionLocation = this.loc;
+	}
+
+	onCollisionEnter(other) {
+		if (other.tag == "Mage" ||
+			other.tag == "Necromancer" ||
+			other.tag == "Nightwarrior") {
+			m.readLevel(m.currentLevel);
+		}
+
+		if (other.tag == "EnemyBullet") {
+			this.health--;
+			m.createObject({ 
+                type: 0, 
+                prefab: Explosion, 
+                loc: [other.loc[0], other.loc[1], other.loc[2]], 
+                rot: [0, 0, 0],
+                scale: [1.5, 1.5, 1.5],
+                tag: "Explosion",
+                collisionLocation: [...other.loc],
+            });
+			m.destroyObject(other.id)
+			if (this.health <= 0) {
+				m.readLevel(m.currentLevel);
+			}
+		}
 	}
 
 	render(program) {
