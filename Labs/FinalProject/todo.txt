@@ -1,14 +1,6 @@
-Core Features:
-
-1. Collision Detection
-    1. Already "implemented" but might want to improve. Currently using sphere collider
-
 Extra Credit:
 
-2. Create a title menu
+1.. Create a title menu
     2. Needs to have player options. Maybe different weapons, or variable health/difficulty
-3. Create sound effects
-    1. Found sound effects. 
-    2. Change the monster sound
-    3. Change explosion sound to match fireball
-5. Include a story (optional)
+2.. Include a story (optional)
+    1. Just add cutscene text between levels
