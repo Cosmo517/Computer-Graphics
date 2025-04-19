@@ -77,6 +77,7 @@ class LightWall extends PointLight {
 
     onCollisionEnter(other) {
         if (other.tag == "Bullet" || other.tag == "EnemyBullet") {
+            console.log(other.loc)
             m.createObject({ 
                 type: 0, 
                 prefab: Explosion, 

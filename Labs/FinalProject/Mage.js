@@ -12,6 +12,9 @@ class Mage extends Enemy {
 		this.reverseDirection = false;
 		this.randomDirection = Math.round(Math.random()) // 0 means x, 1 means z
 
+		this.audio = new Audio("./sound/Mage.mp3");
+		this.hasAudioPlayed = false;
+
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 		
         this.MageSprites = [Mage_Type_1, Mage_Type_2, Mage_Type_3, Mage_Type_4, Mage_Type_5,
@@ -46,8 +49,11 @@ class Mage extends Enemy {
 				collisionLocation: [...this.loc],
 			});
 			if (this.health <= 0) {
+				this.audio.play();
 				m.destroyObject(this.id);
-
+			} else if (this.health <= 2 && !this.hasAudioPlayed) {
+				this.hasAudioPlayed = true;
+				this.audio.play();
 			}
 			m.destroyObject(other.id);
 		}

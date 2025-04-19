@@ -33,6 +33,7 @@ class ChestArtifact extends Quad {
 
 	onTriggerEnter(other) {
         if (other.tag == "Player" && !this.openChest) {
+			other.walkAudio.pause()
             this.openChest = true;
         }
 	}

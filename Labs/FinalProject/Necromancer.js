@@ -11,6 +11,9 @@ class Necromancer extends Enemy {
 		this.reloadSpeed = 120;
 		this.timeSinceLastShot = 31;
 		this.player = null;
+		this.audio = new Audio("./sound/Necromancer.mp3");
+		this.bulletAudio = new Audio("./sound/Fireball.mp3");
+		this.hasAudioPlayed = false;
 		
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
@@ -52,7 +55,7 @@ class Necromancer extends Enemy {
 	onTriggerEnter(other) {
 		if (other.tag == "Bullet") {
 			this.health--;
-			m.createObject({ 
+			let temp = m.createObject({ 
 				type: 0, 
 				prefab: Explosion, 
 				loc: [other.loc[0], other.loc[1], other.loc[2]], 
@@ -61,8 +64,13 @@ class Necromancer extends Enemy {
 				tag: "Explosion",
 				collisionLocation: [...this.loc],
 			});
+
 			if (this.health <= 0) {
+				this.audio.play();
 				m.destroyObject(this.id);
+			} else if (this.health <= 4 && !this.hasAudioPlayed) {
+				this.hasAudioPlayed = true;
+				this.audio.play();
 			}
 			m.destroyObject(other.id);
 		}
@@ -101,6 +109,13 @@ class Necromancer extends Enemy {
 				collisionLocation: [...this.loc],
 				tag: "EnemyBullet"
 			});
+			this.bulletAudio.currentTime = 0;
+			this.bulletAudio.play()
+
+			const distance = m.getDistance(this.loc, this.player.loc)
+			const max_distance = 30;
+			this.bulletAudio.volume = (distance > max_distance) ? 0 : (1 / (1 + distance * 0.25));
+
 			this.timeSinceLastShot = 0;
 		}
 		

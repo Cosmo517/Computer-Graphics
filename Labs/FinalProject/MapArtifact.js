@@ -27,6 +27,7 @@ class MapArtifact extends Quad {
 
 	onTriggerEnter(other) {
         if (other.tag == "Player") {
+			other.walkAudio.pause()
             m.destroyObject(this.id)
             m.nextLevel();
         }

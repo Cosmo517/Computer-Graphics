@@ -9,7 +9,7 @@ class WebGL_Interface {
 		//setup our viewport
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 		//set clear colors
-		gl.clearColor(0.5, 0.5, 1, 1);
+		gl.clearColor(0.5, 0.7, 1, 1);
 		gl.clear(gl.COLOR_BUFFER_BIT);
 		gl.enable(gl.DEPTH_TEST);
 		

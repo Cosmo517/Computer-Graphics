@@ -6,7 +6,18 @@ class Explosion extends Quad {
 		this.buffer = gl.createBuffer();
 		this.collisionRadius = 0.5;
 		this.health = 5;
-		
+		this.audio = new Audio("./sound/Explosion.mp3")
+
+		// Find player
+		for (var so in m.Solid) {
+			if (m.Solid[so].tag == "Player") {
+				this.player = m.Solid[so];
+			}
+		}
+
+		// Handle Volume
+
+
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
 		this.vertices = [
@@ -37,6 +48,13 @@ class Explosion extends Quad {
 	}
 
 	update() {
+		if (this.frameTimer == 0) {
+			const distance = m.getDistance(this.loc, this.player.loc)
+			const max_distance = 30;
+			this.audio.play()
+			this.audio.volume = (distance > max_distance) ? 0 : (1 / (1 + distance * 0.25));
+		}
+		
         this.frameTimer++;
         if (this.frameTimer % 12 === 0) {
             this.spriteCounter++;

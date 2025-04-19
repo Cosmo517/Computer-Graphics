@@ -305,6 +305,8 @@
 					this.myWEBGL = new WebGL_Interface();
 					this.myTriangle = [];
 					this.Keys = [];
+
+					this.audio = new Audio("./sound/BackgroundMusic.mp3");
 					
 					// Handle Levels
 					this.totalLevels = 3;
@@ -642,6 +644,8 @@
 						if (x > -0.44 && x < 0.43 && y < 0.18 && y > -0.16) {
 							this.currentLevel = 1;
 							this.readLevel(this.currentLevel);
+							this.audio.play();
+							this.audio.volume = 0.3; // 0 - 1
 						}
 					}
 				}

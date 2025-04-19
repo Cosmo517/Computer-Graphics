@@ -6,6 +6,11 @@ class Camera extends GameObject {
 		this.spawnLoc = this.loc;
 		this.collisionRadius = 0.6;
 		this.health = 5;
+		this.audio = new Audio("./sound/Hurt.mp3");
+		this.walkAudio = new Audio("./sound/Walking.mp3");
+		this.bulletAudio = new Audio("./sound/Fireball.mp3")
+		this.playWalk = false;
+		this.isWalkPlaying = false;
 
 		this.timeSinceLastShot = 0;
 		this.reloadSpeed = 60;
@@ -71,11 +76,30 @@ class Camera extends GameObject {
 				collisionLocation: [...this.loc],
 				tag: "Bullet"
 			});
+			this.bulletAudio.currentTime = 0;
+			this.bulletAudio.play()
+			
 
 			this.timeSinceLastShot = 0;
 		}
 
 		this.timeSinceLastShot++;
+		
+		if (this.velocity[0] > 0 || this.velocity[2] > 0 
+			|| this.velocity[0] < 0 || this.velocity[2] < 0 
+		) {
+			this.playWalk = true;
+		} else {
+			this.playWalk = false;
+		}
+
+		if (!this.isWalkPlaying && this.playWalk) {
+			this.walkAudio.play();
+			this.isWalkPlaying = true;
+		} else if (this.isWalkPlaying && !this.playWalk) {
+			this.walkAudio.pause();
+			this.isWalkPlaying = false;
+		}
 
 		this.Move()
 
@@ -91,6 +115,7 @@ class Camera extends GameObject {
 		}
 
 		if (other.tag == "EnemyBullet") {
+			this.audio.play()
 			this.health--;
 			m.createObject({ 
                 type: 0, 
