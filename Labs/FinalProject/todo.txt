@@ -1,6 +1,5 @@
 Extra Credit:
 
-1. Create a title menu
-    2. Needs to have player options. Maybe different weapons, or variable health/difficulty
+1. Add different weapons?
 2. Include a story (optional)
     1. Just add cutscene text between levels
