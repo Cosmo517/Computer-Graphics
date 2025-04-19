@@ -18,6 +18,8 @@ class ChestArtifact extends Quad {
         this.endAnimation = false;
         this.endLevel = false;
 
+		this.audio = new Audio("./sound/ChestOpening.mp3");
+
         this.MyPicture = CreateMageType(this.chestSprites[0]);
 		this.MyTexture = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
@@ -35,6 +37,7 @@ class ChestArtifact extends Quad {
         if (other.tag == "Player" && !this.openChest) {
 			other.walkAudio.pause()
             this.openChest = true;
+			this.audio.play();
         }
 	}
 
