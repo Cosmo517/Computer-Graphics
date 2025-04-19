@@ -310,6 +310,7 @@
 					this.Keys = [];
 
 					this.audio = new Audio("./sound/BackgroundMusic.mp3");
+					this.buttonAudio = new Audio("./sound/ButtonClick.mp3");
 					this.difficulty = 1;
 					
 					// Handle Levels
@@ -682,14 +683,20 @@
 
 						if (x > -0.44 && x < -0.22 && y < -0.19 && y > -0.54) {
 							this.difficulty = 0.5;
+							this.buttonAudio.currentTime = 0;
+							this.buttonAudio.play()
 						}
 
 						if (x > -0.10 && x < 0.10 && y < -0.19 && y > -0.54) {
 							this.difficulty = 1;
+							this.buttonAudio.currentTime = 0;
+							this.buttonAudio.play()
 						}
 
 						if (x > 0.23 && x < 0.44 && y < -0.19 && y > -0.54) {
 							this.difficulty = 2;
+							this.buttonAudio.currentTime = 0;
+							this.buttonAudio.play()
 						}
 					}
 				}
