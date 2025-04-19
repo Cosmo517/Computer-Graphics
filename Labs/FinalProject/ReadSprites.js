@@ -242,7 +242,68 @@ function CreateStaffSprite(staffArray) {
     return myStaff;
 }
 
+function CreateEasyButton(easyArray) {
+    let myButton = [];
+    const width = 64;
+    const height = 64;
+    for (let y = height ; y > 0; y--) {
+        for (let x = 0; x < width; x++) {
+            const color = easyArray[y * width + x];
 
+            // Extract RGBA components from the 32-bit color value
+            const r = (color >> 24) & 0xFF;
+            const g = (color >> 16) & 0xFF;
+            const b = (color >> 8) & 0xFF;
+            const a = color & 0xFF;
+
+            myButton.push(r, g, b, a);
+        }
+    }
+
+    return myButton;
+}
+
+function CreateNormalButton(normalArray) {
+    let myButton = [];
+    const width = 64;
+    const height = 64;
+    for (let y = height ; y > 0; y--) {
+        for (let x = 0; x < width; x++) {
+            const color = normalArray[y * width + x];
+
+            // Extract RGBA components from the 32-bit color value
+            const r = (color >> 24) & 0xFF;
+            const g = (color >> 16) & 0xFF;
+            const b = (color >> 8) & 0xFF;
+            const a = color & 0xFF;
+
+            myButton.push(r, g, b, a);
+        }
+    }
+
+    return myButton;
+}
+
+function CreateHardButton(hardArray) {
+    let myButton = [];
+    const width = 64;
+    const height = 64;
+    for (let y = height ; y > 0; y--) {
+        for (let x = 0; x < width; x++) {
+            const color = hardArray[y * width + x];
+
+            // Extract RGBA components from the 32-bit color value
+            const r = (color >> 24) & 0xFF;
+            const g = (color >> 16) & 0xFF;
+            const b = (color >> 8) & 0xFF;
+            const a = color & 0xFF;
+
+            myButton.push(r, g, b, a);
+        }
+    }
+
+    return myButton;
+}
 
 
 function CreateCrate() {

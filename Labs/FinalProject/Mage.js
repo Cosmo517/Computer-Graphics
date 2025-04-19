@@ -5,8 +5,9 @@ class Mage extends Enemy {
 		this.isTrigger = false;
 		this.buffer = gl.createBuffer();
 		this.collisionRadius = 0.5;
-		this.health = 5;
-		this.moveSpeed = 0.03;
+		this.health = 5 * m.difficulty;
+		this.totalHealth = 5 * m.difficulty;
+		this.moveSpeed = 0.03 * m.difficulty;
 
 		this.needsReversed = false;
 		this.reverseDirection = false;
@@ -51,7 +52,7 @@ class Mage extends Enemy {
 			if (this.health <= 0) {
 				this.audio.play();
 				m.destroyObject(this.id);
-			} else if (this.health <= 2 && !this.hasAudioPlayed) {
+			} else if (this.health <= this.totalHealth / 2 && !this.hasAudioPlayed) {
 				this.hasAudioPlayed = true;
 				this.audio.play();
 			}

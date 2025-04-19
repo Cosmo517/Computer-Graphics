@@ -277,6 +277,9 @@
 		<script src="Quad.js"></script>
 		<script src="Explosion.js"></script>
 		<script src="PlayButton.js"></script>
+		<script src="EasyButton.js"></script>
+		<script src="MediumButton.js"></script>
+		<script src="HardButton.js"></script>
 		<script src="PointLight.js"></script>
 		<script src="Ground.js"></script>
 		<script src="Wall.js"></script>
@@ -307,6 +310,7 @@
 					this.Keys = [];
 
 					this.audio = new Audio("./sound/BackgroundMusic.mp3");
+					this.difficulty = 1;
 					
 					// Handle Levels
 					this.totalLevels = 3;
@@ -329,6 +333,33 @@
 						loc: [0, 0, 9], 
 						rot: [0, 0, 0],
 						tag: "PlayButton",
+						collisionLocation: [0, 0, 0],
+					});
+
+					this.createObject({ 
+						type: 2, 
+						prefab: EasyButton, 
+						loc: [-3, -2, 9], 
+						rot: [0, 0, 0],
+						tag: "EasyButton",
+						collisionLocation: [0, 0, 0],
+					});
+
+					this.createObject({ 
+						type: 2, 
+						prefab: MediumButton, 
+						loc: [0, -2, 9], 
+						rot: [0, 0, 0],
+						tag: "NormalButton",
+						collisionLocation: [0, 0, 0],
+					});
+
+					this.createObject({ 
+						type: 2, 
+						prefab: HardButton, 
+						loc: [3, -2, 9], 
+						rot: [0, 0, 0],
+						tag: "HardButton",
 						collisionLocation: [0, 0, 0],
 					});
 
@@ -646,6 +677,19 @@
 							this.readLevel(this.currentLevel);
 							this.audio.play();
 							this.audio.volume = 0.3; // 0 - 1
+							console.log(this.difficulty)
+						}
+
+						if (x > -0.44 && x < -0.22 && y < -0.19 && y > -0.54) {
+							this.difficulty = 0.5;
+						}
+
+						if (x > -0.10 && x < 0.10 && y < -0.19 && y > -0.54) {
+							this.difficulty = 1;
+						}
+
+						if (x > 0.23 && x < 0.44 && y < -0.19 && y > -0.54) {
+							this.difficulty = 2;
 						}
 					}
 				}

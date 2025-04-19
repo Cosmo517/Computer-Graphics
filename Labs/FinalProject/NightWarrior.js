@@ -5,9 +5,10 @@ class NightWarrior extends Enemy {
 		this.isTrigger = false;
 		this.buffer = gl.createBuffer();
 		this.collisionRadius = 1;
-		this.health = 10;
+		this.health = 10 * m.difficulty;
+		this.totalHealth = 10 * m.difficulty;
 		this.changeDirection = true;
-		this.moveSpeed = 0.03;
+		this.moveSpeed = 0.04 * m.difficulty;
 
 		this.audio = new Audio("./sound/NightWarrior.mp3");
 		this.hasAudioPlayed = false;
@@ -58,7 +59,7 @@ class NightWarrior extends Enemy {
 			if (this.health <= 0) {
 				this.audio.play();
 				m.destroyObject(this.id);
-			} else if (this.health <= 5 && !this.hasAudioPlayed) {
+			} else if (this.health <= this.totalHealth / 2 && !this.hasAudioPlayed) {
 				this.hasAudioPlayed = true;
 				this.audio.play();
 			}

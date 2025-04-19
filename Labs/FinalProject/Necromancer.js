@@ -5,7 +5,8 @@ class Necromancer extends Enemy {
 		this.isTrigger = false;
 		this.buffer = gl.createBuffer();
 		this.collisionRadius = 1.3;
-		this.health = 8;
+		this.health = 8 * m.difficulty;
+		this.totalHealth = 8 * m.difficulty;
 		this.changeDirection = true;
 		this.moveSpeed = 0.03;
 		this.reloadSpeed = 120;
@@ -68,7 +69,7 @@ class Necromancer extends Enemy {
 			if (this.health <= 0) {
 				this.audio.play();
 				m.destroyObject(this.id);
-			} else if (this.health <= 4 && !this.hasAudioPlayed) {
+			} else if (this.health <= this.totalHealth / 2 && !this.hasAudioPlayed) {
 				this.hasAudioPlayed = true;
 				this.audio.play();
 			}
