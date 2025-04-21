@@ -8,8 +8,8 @@ class Necromancer extends Enemy {
 		this.health = 8 * m.difficulty;
 		this.totalHealth = 8 * m.difficulty;
 		this.changeDirection = true;
-		this.moveSpeed = 0.03;
-		this.reloadSpeed = 120;
+		this.moveSpeed = 0.01;
+		this.reloadSpeed = 200;
 		this.timeSinceLastShot = 31;
 		this.player = null;
 		this.audio = new Audio("./sound/Necromancer.mp3");
@@ -79,7 +79,7 @@ class Necromancer extends Enemy {
 
 	update() {
         this.frameTimer++;
-        if (this.frameTimer % 12 === 0) {
+        if (this.frameTimer % 24 === 0) {
             this.spriteCounter++;
             if (this.spriteCounter >= this.NecromancerSprites.length) {
                 this.spriteCounter = 0;

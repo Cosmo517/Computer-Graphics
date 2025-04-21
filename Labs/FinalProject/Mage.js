@@ -7,7 +7,7 @@ class Mage extends Enemy {
 		this.collisionRadius = 0.5;
 		this.health = 5 * m.difficulty;
 		this.totalHealth = 5 * m.difficulty;
-		this.moveSpeed = 0.03 * m.difficulty;
+		this.moveSpeed = 0.02 * m.difficulty;
 
 		this.needsReversed = false;
 		this.reverseDirection = false;

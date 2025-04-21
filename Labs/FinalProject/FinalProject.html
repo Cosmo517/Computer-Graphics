@@ -326,8 +326,6 @@
 					const worldLoc = gl.getUniformLocation(this.myWEBGL.program, 'worldRotation');
 					gl.uniform3fv(worldLoc, new Float32Array([0, 0, 0]));
 
-					console.log("Displaying Menu")
-
 					this.createObject({ 
 						type: 2, 
 						prefab: PlayButton, 
@@ -396,6 +394,8 @@
 							}
 						}
 						this.reset()
+						this.audio.currentTime = 0;
+						this.audio.pause()
 						this.currentLevel = 0;
 						this.showMenu();
 					}
@@ -502,7 +502,6 @@
 				}
 
 				addStaticObjects() {
-					console.log("Um")
 					this.createObject({ 
 						type: 0, 
 						prefab: Ground, 
@@ -669,7 +668,6 @@
 					// console.log(realX + ", " + realY);
 					const x = -1 + 2 * realX / myCanvas.width;
 					const y = -1 + 2 * (myCanvas.height - realY) / myCanvas.height;
-					console.log("The click occurred on " + x + ", " + y);
 					
 					// Use the following to allow "play" and other options to be selected
 					if (this.currentLevel == 0) {
@@ -678,7 +676,6 @@
 							this.readLevel(this.currentLevel);
 							this.audio.play();
 							this.audio.volume = 0.3; // 0 - 1
-							console.log(this.difficulty)
 						}
 
 						if (x > -0.44 && x < -0.22 && y < -0.19 && y > -0.54) {

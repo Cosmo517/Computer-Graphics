@@ -8,7 +8,7 @@ class NightWarrior extends Enemy {
 		this.health = 10 * m.difficulty;
 		this.totalHealth = 10 * m.difficulty;
 		this.changeDirection = true;
-		this.moveSpeed = 0.04 * m.difficulty;
+		this.moveSpeed = 0.02 * m.difficulty;
 
 		this.audio = new Audio("./sound/NightWarrior.mp3");
 		this.hasAudioPlayed = false;

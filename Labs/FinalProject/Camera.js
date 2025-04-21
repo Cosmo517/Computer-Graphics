@@ -1,7 +1,7 @@
 class Camera extends GameObject {
 	constructor() {
 		super();
-		this.moveSpeed = 0.05;
+		this.moveSpeed = 0.03;
 		this.rotateSpeed = 0.02;
 		this.spawnLoc = this.loc;
 		this.collisionRadius = 0.6;
@@ -13,7 +13,7 @@ class Camera extends GameObject {
 		this.isWalkPlaying = false;
 
 		this.timeSinceLastShot = 0;
-		this.reloadSpeed = 60;
+		this.reloadSpeed = 90;
 	}
 
 	onCollisionEnter(other) {
@@ -65,7 +65,7 @@ class Camera extends GameObject {
 			this.transform.doRotations(this.rot);
 			let tempF = this.transform.forward;
 			for (let i = 0; i < 3; i++) {
-				bulletLoc[i] += tempF[i] * (this.moveSpeed * 25); 
+				bulletLoc[i] += tempF[i] * (this.moveSpeed * 40); 
 			}
 			m.createObject({
 				type: 0,
